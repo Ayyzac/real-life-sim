@@ -16,7 +16,10 @@ import { ageInYears } from '../core/character';
 import { DAYS_PER_WEEK } from '../core/clock';
 import type { Character } from '../core/types';
 import { FOCUSES } from '../data/focuses';
+import { ownedPossessions, replacedBy } from '../core/belongings';
 import { BUSINESSES, findBusiness } from '../data/businesses';
+import { LIFESTYLES, findLifestyle } from '../data/lifestyles';
+import { POSSESSIONS } from '../data/possessions';
 import { JOBS, findJob } from '../data/jobs';
 import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
@@ -59,6 +62,7 @@ export function LocationMenu({ character }: { character: Character }): React.JSX
 
       <p className="panel__hint">{location.blurb}</p>
 
+      {location.id === 'home' && <HomeSection character={character} />}
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}
@@ -399,5 +403,121 @@ function SportsSection({ character }: { character: Character }): React.JSX.Eleme
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Home: how you live, and what you own (GDD 9).
+ *
+ * This is where the money finally goes. Until Phase 5 a careful player died
+ * rich and with nothing to show for it.
+ */
+function HomeSection({ character }: { character: Character }): React.JSX.Element {
+  const current = findLifestyle(character.lifestyleId);
+  const belongings = ownedPossessions(character);
+  // Only what the things themselves cost to run. The lifestyle is billed
+  // separately, and mixing them made a bicycle look like it cost $210 a week
+  // to keep.
+  const upkeepPerDay = belongings.reduce((total, p) => total + (p.upkeepPerDay ?? 0), 0);
+
+  return (
+    <>
+      <h3 className="panel__subtitle">How you live</h3>
+      <div className="choices">
+        {LIFESTYLES.map((lifestyle) => {
+          const active = lifestyle.id === current.id;
+          const effects = Object.entries(lifestyle.perDay) as [string, number][];
+
+          return (
+            <button
+              key={lifestyle.id}
+              type="button"
+              className={`choice ${active ? 'choice--on' : ''}`}
+              onClick={() => gameStore.dispatch({ type: 'setLifestyle', lifestyleId: lifestyle.id })}
+              aria-pressed={active}
+            >
+              <strong className="choice__title">
+                {lifestyle.label}
+                {active && <span className="badge">current</span>}
+              </strong>
+              <span className="choice__text">{lifestyle.description}</span>
+              <span className="choice__effects">
+                <span
+                  className={lifestyle.extraCostPerDay > 0 ? 'eff eff--down' : 'eff eff--up'}
+                >
+                  {lifestyle.extraCostPerDay === 0
+                    ? 'no extra cost'
+                    : `${signedMoney(-lifestyle.extraCostPerDay * DAYS_PER_WEEK)}/wk`}
+                </span>
+                {effects.map(([key, value]) => (
+                  <span key={key} className={value >= 0 ? 'eff eff--up' : 'eff eff--down'}>
+                    {key} {signed(value * DAYS_PER_WEEK)}/wk
+                  </span>
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <h3 className="panel__subtitle">What you own</h3>
+      {character.owned.length === 0 ? (
+        <p className="panel__hint">Nothing yet. Everything below is paid for outright.</p>
+      ) : (
+        <p className="panel__hint">
+          {belongings.map((p) => p.name).join(' \u00b7 ')}
+          {upkeepPerDay > 0 && <> &mdash; upkeep {money(upkeepPerDay * DAYS_PER_WEEK)}/wk</>}
+        </p>
+      )}
+
+      <div className="jobs">
+        {POSSESSIONS.map((possession) => {
+          const owned = character.owned.includes(possession.id);
+          const affordable = character.stats.money >= possession.price;
+          const replaces = replacedBy(character.owned, possession.id);
+          const effects = Object.entries(possession.perDay) as [string, number][];
+
+          return (
+            <div key={possession.id} className={`job ${owned || affordable ? '' : 'job--locked'}`}>
+              <div>
+                <strong>{possession.name}</strong>{' '}
+                <span className="job__pay">{money(possession.price)}</span>
+                <p className="choice__text">{possession.blurb}</p>
+                <p className="choice__effects">
+                  {effects.map(([key, value]) => (
+                    <span key={key} className={value >= 0 ? 'eff eff--up' : 'eff eff--down'}>
+                      {key} {signed(value * DAYS_PER_WEEK)}/wk
+                    </span>
+                  ))}
+                  {possession.restBonusPerDay !== undefined && (
+                    <span className="eff eff--up">
+                      rest +{possession.restBonusPerDay * DAYS_PER_WEEK} energy/wk
+                    </span>
+                  )}
+                  {possession.upkeepPerDay !== undefined && (
+                    <span className="eff eff--down">
+                      upkeep {money(possession.upkeepPerDay * DAYS_PER_WEEK)}/wk
+                    </span>
+                  )}
+                </p>
+                {replaces && !owned && (
+                  <p className="job__req">Replaces your {replaces.name}. Nothing back for it.</p>
+                )}
+              </div>
+              <button
+                type="button"
+                className="btn"
+                disabled={owned || !affordable}
+                onClick={() =>
+                  gameStore.dispatch({ type: 'buyPossession', possessionId: possession.id })
+                }
+              >
+                {owned ? 'Owned' : affordable ? 'Buy' : 'Too dear'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

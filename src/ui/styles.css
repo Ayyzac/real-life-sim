@@ -564,3 +564,41 @@ body {
   gap: 6px;
   align-content: start;
 }
+
+/* ---------- portraits, faces, belongings ---------- */
+
+.portrait {
+  display: inline-block;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.dashboard__who {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.face {
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.face:hover {
+  border-color: var(--muted);
+}
+
+.face--on {
+  border-color: var(--good);
+  box-shadow: 0 0 0 1px var(--good) inset;
+}

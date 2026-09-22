@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/balance';
+import { dailyUpkeep } from './belongings';
 import { findFocus } from '../data/focuses';
 import { tradeOneDay } from './careers/business';
 import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
@@ -152,10 +153,17 @@ export function applyDailyRules(state: WorldState): WorldState {
     }
   }
 
+  // What the character owns and how they live, every day (GDD §9). A better
+  // home is worth more on the days they actually rest in it.
+  const upkeep = dailyUpkeep(character);
+  stats.energy += upkeep.perDay.energy ?? 0;
+  stats.mood += upkeep.perDay.mood ?? 0;
+  stats.health += upkeep.perDay.health ?? 0;
+  if (focus.restores) stats.energy += upkeep.restBonusPerDay;
+
   // ponytail: money is allowed to go negative instead of blocking the activity.
-  // Simplest honest model for now; a real affordability rule belongs in
-  // Phase 5 balancing.
-  stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0);
+  // Buying, however, is not: you cannot spend money you do not have (store.ts).
+  stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0) + upkeep.costPerDay;
 
   stats.mood += BALANCE.moodDriftPerDay;
   stats.health -= ageingHealthLossPerDay(ageInYears(character));

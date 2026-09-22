@@ -372,6 +372,85 @@ describe('GameStore', () => {
     expect(club.getState()?.milestones[0]?.text).toContain('Retired from Running');
   });
 
+  // ---------- belongings and lifestyle (GDD §9) ----------
+
+  it('buying takes the money and records what was bought', () => {
+    const shopper = rich(5_000);
+
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+
+    expect(shopper.getState()?.character.owned).toEqual(['bicycle']);
+    expect(shopper.getState()?.character.stats.money).toBe(5_000 - 1_500);
+  });
+
+  it('refuses a purchase the character cannot pay for', () => {
+    // Living costs may push you into debt; shopping may not.
+    const shopper = rich(100);
+    const before = shopper.getState();
+
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+
+    expect(shopper.getState()).toBe(before);
+  });
+
+  it('refuses to buy the same thing twice', () => {
+    const shopper = rich(50_000);
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+    const before = shopper.getState();
+
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+
+    expect(shopper.getState()).toBe(before);
+  });
+
+  it('a better home replaces the old one, with nothing back', () => {
+    const shopper = rich(500_000);
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'flat' });
+    const afterFlat = shopper.getState()!.character.stats.money;
+
+    shopper.dispatch({ type: 'buyPossession', possessionId: 'house' });
+
+    expect(shopper.getState()?.character.owned).toEqual(['house']);
+    expect(shopper.getState()?.character.stats.money).toBe(afterFlat - 260_000);
+  });
+
+  it('refuses to buy while an event is waiting', () => {
+    const shopper = rich(50_000);
+    const world = shopper.getState()!;
+    const stuck = new GameStore(
+      memorySaves({ ...world, pendingEvent: { eventId: 'friend_invites', daysRemaining: 1 } }),
+    );
+
+    stuck.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+
+    expect(stuck.getState()?.character.owned).toEqual([]);
+  });
+
+  it('changing how you live is free and takes effect at once', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const before = store.getState()!.character.stats.money;
+
+    store.dispatch({ type: 'setLifestyle', lifestyleId: 'luxurious' });
+
+    expect(store.getState()?.character.lifestyleId).toBe('luxurious');
+    expect(store.getState()?.character.stats.money).toBe(before);
+  });
+
+  it('ignores choosing the life you are already living', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const before = store.getState();
+
+    store.dispatch({ type: 'setLifestyle', lifestyleId: before!.character.lifestyleId });
+
+    expect(store.getState()).toBe(before);
+  });
+
+  it('remembers the face chosen at character creation', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', appearanceRow: 11, seed: 5 });
+
+    expect(store.getState()?.character.appearanceRow).toBe(11);
+  });
+
   it('reset wipes both the world and the save file', () => {
     store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
 

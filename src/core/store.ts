@@ -7,6 +7,8 @@ import {
   upgradeCost,
 } from './careers/business';
 import { findSport, meetsRequirements as meetsSportRequirements } from './careers/sports';
+import { findPossession, replacedBy, withPurchase } from './belongings';
+import { findLifestyle } from '../data/lifestyles';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
@@ -26,7 +28,7 @@ import type { FocusId, LocationId, WorldState } from './types';
  */
 
 export type GameIntent =
-  | { type: 'newGame'; name: string; backgroundId: string; seed?: number }
+  | { type: 'newGame'; name: string; backgroundId: string; appearanceRow?: number; seed?: number }
   | { type: 'advanceDay' }
   | { type: 'advanceWeek' }
   | { type: 'setFocus'; focusId: FocusId }
@@ -39,6 +41,8 @@ export type GameIntent =
   | { type: 'closeBusiness' }
   | { type: 'joinSport'; sportId: string }
   | { type: 'leaveSport' }
+  | { type: 'buyPossession'; possessionId: string }
+  | { type: 'setLifestyle'; lifestyleId: string }
   | { type: 'reset' };
 
 interface StoreEvents {
@@ -78,6 +82,57 @@ export class GameStore {
     switch (intent.type) {
       case 'newGame':
         return createWorld(intent satisfies NewGameOptions);
+
+      case 'buyPossession': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+
+        const possession = findPossession(intent.possessionId);
+        // Unlike living costs, a purchase cannot be made on money you do not
+        // have. Debt is a consequence of living; it is not a way to shop.
+        if (state.character.stats.money < possession.price) return state;
+        if (state.character.owned.includes(possession.id)) return state;
+
+        const replaced = replacedBy(state.character.owned, possession.id);
+        const bought = {
+          day: state.clockDay,
+          tone: 'good' as const,
+          text: replaced
+            ? `Traded the ${replaced.name} for ${possession.name}, ${possession.price}.`
+            : `Bought ${possession.name} for ${possession.price}.`,
+        };
+        return {
+          ...state,
+          eventLog: [bought, ...state.eventLog],
+          milestones: [bought, ...state.milestones],
+          character: {
+            ...state.character,
+            stats: {
+              ...state.character.stats,
+              money: state.character.stats.money - possession.price,
+            },
+            owned: withPurchase(state.character.owned, possession.id),
+          },
+        };
+      }
+
+      case 'setLifestyle': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        const lifestyle = findLifestyle(intent.lifestyleId);
+        if (state.character.lifestyleId === lifestyle.id) return state;
+
+        return {
+          ...state,
+          eventLog: [
+            {
+              day: state.clockDay,
+              tone: 'neutral',
+              text: `Started living ${lifestyle.label.toLowerCase()}.`,
+            },
+            ...state.eventLog,
+          ],
+          character: { ...state.character, lifestyleId: lifestyle.id },
+        };
+      }
 
       case 'reset':
         return null;

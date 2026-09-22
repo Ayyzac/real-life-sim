@@ -1,24 +1,37 @@
 import { BACKGROUNDS, findBackground } from '../data/backgrounds';
 import { BALANCE } from '../data/balance';
 import { DEFAULT_FOCUS_ID } from '../data/focuses';
+import { DEFAULT_LIFESTYLE_ID } from '../data/lifestyles';
 import { createRng } from './rng';
 import type { Character, EventLogEntry, WorldState } from './types';
 
-export const SCHEMA_VERSION = 2;
+/**
+ * 3 since Phase 5, which added appearance, lifestyle and possessions.
+ * Unlike every earlier bump, version 2 saves are MIGRATED rather than thrown
+ * away - see LocalStorageSaveProvider.
+ */
+export const SCHEMA_VERSION = 3;
 
 export interface NewGameOptions {
   name: string;
   backgroundId: string;
+  /** Which of the tilesheet's people to look like. Cosmetic only. */
+  appearanceRow?: number;
   /** Pass a fixed seed in tests; omit it and the run is seeded from the clock. */
   seed?: number;
 }
+
+/** How many people the tilesheet offers to look like. */
+export const APPEARANCE_COUNT = 18;
+
+export const DEFAULT_APPEARANCE_ROW = 3;
 
 /** Whole years lived, derived from days (docs/ARCHITECTURE.md §2). */
 export function ageInYears(character: Character): number {
   return character.startAgeYears + Math.floor(character.ageInDays / 365);
 }
 
-export function createWorld({ name, backgroundId, seed }: NewGameOptions): WorldState {
+export function createWorld({ name, backgroundId, appearanceRow, seed }: NewGameOptions): WorldState {
   const background = findBackground(backgroundId);
   const actualSeed = seed ?? (Date.now() >>> 0);
   const rng = createRng(actualSeed);
@@ -44,6 +57,9 @@ export function createWorld({ name, backgroundId, seed }: NewGameOptions): World
     career: { type: 'none' },
     focusId: DEFAULT_FOCUS_ID,
     location: 'home',
+    appearanceRow: clampAppearance(appearanceRow ?? DEFAULT_APPEARANCE_ROW),
+    lifestyleId: DEFAULT_LIFESTYLE_ID,
+    owned: [],
   };
 
   const birth: EventLogEntry = {
@@ -63,6 +79,12 @@ export function createWorld({ name, backgroundId, seed }: NewGameOptions): World
     pendingEvent: null,
     deceased: false,
   };
+}
+
+/** Keeps a hand-edited or migrated save from pointing at a sprite row that does not exist. */
+export function clampAppearance(row: number): number {
+  if (!Number.isFinite(row)) return DEFAULT_APPEARANCE_ROW;
+  return Math.min(APPEARANCE_COUNT - 1, Math.max(0, Math.floor(row)));
 }
 
 export { BACKGROUNDS };

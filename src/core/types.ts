@@ -70,6 +70,15 @@ export interface Character {
   /** What the character spends their days on until the player changes it. */
   focusId: FocusId;
   location: LocationId;
+  /**
+   * Which of the tilesheet's 18 people this character looks like. Purely
+   * cosmetic - no rule anywhere reads it (GDD §3.2).
+   */
+  appearanceRow: number;
+  /** Id of an entry in src/data/lifestyles.ts. Paid for every day. */
+  lifestyleId: string;
+  /** Ids of entries in src/data/possessions.ts, owned outright. */
+  owned: string[];
 }
 
 /**

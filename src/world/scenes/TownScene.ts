@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 
+import { clampAppearance, DEFAULT_APPEARANCE_ROW } from '../../core/character';
 import { createRng } from '../../core/rng';
 import type { GameStore } from '../../core/store';
 import type { LocationId, WorldState } from '../../core/types';
@@ -9,7 +10,6 @@ import {
   DISTRICTS,
   GROUND,
   GROUND_TILES,
-  PLAYER_SHEET_ROW,
   PROPS,
   SHEET_SPACING,
   TILE_SIZE,
@@ -80,7 +80,7 @@ const ARROW_CENTRE = {
 export class TownScene extends Phaser.Scene {
   private readonly walkable = buildWalkable();
   private player?: Phaser.GameObjects.Image;
-  private playerFrames = personFrames(PLAYER_SHEET_ROW);
+  private playerFrames = personFrames(DEFAULT_APPEARANCE_ROW);
   private crowd?: Crowd;
   private lockOverlay?: Phaser.GameObjects.Container;
   private arrows: { left?: Phaser.GameObjects.Text; right?: Phaser.GameObjects.Text } = {};
@@ -121,6 +121,11 @@ export class TownScene extends Phaser.Scene {
     this.crowd = createCrowd(this, TEXTURE, createRng(0x7ac0).next, DEPTH.crowd);
 
     const world = this.store.getState();
+    // The player picked a face at character creation (GDD §3.2); it is
+    // cosmetic, so nothing else in the scene cares which one.
+    this.playerFrames = personFrames(
+      clampAppearance(world?.character.appearanceRow ?? DEFAULT_APPEARANCE_ROW),
+    );
     this.lastLocation = world?.character.location;
     this.tile = doorOf(world?.character.location ?? 'home');
 

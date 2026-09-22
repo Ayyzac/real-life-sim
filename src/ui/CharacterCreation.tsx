@@ -1,16 +1,19 @@
 import { useState } from 'react';
 
+import { APPEARANCE_COUNT, DEFAULT_APPEARANCE_ROW } from '../core/character';
 import { BACKGROUNDS } from '../data/backgrounds';
+import { Portrait } from './Portrait';
 import { gameStore } from './useGame';
 
-/** GDD §3.2: a name and a background. Deliberately not a wizard. */
+/** GDD §3.2: a name, a face and a background. Deliberately not a wizard. */
 export function CharacterCreation(): React.JSX.Element {
   const [name, setName] = useState('');
   const [backgroundId, setBackgroundId] = useState(BACKGROUNDS[0]!.id);
+  const [appearanceRow, setAppearanceRow] = useState(DEFAULT_APPEARANCE_ROW);
 
   const start = (event: React.FormEvent): void => {
     event.preventDefault();
-    gameStore.dispatch({ type: 'newGame', name, backgroundId });
+    gameStore.dispatch({ type: 'newGame', name, backgroundId, appearanceRow });
   };
 
   return (
@@ -29,6 +32,25 @@ export function CharacterCreation(): React.JSX.Element {
           autoFocus
         />
       </label>
+
+      <fieldset className="field">
+        <legend className="field__label">Look</legend>
+        <p className="panel__hint">Appearance only. It changes nothing about how the game plays.</p>
+        <div className="faces">
+          {Array.from({ length: APPEARANCE_COUNT }, (_, row) => (
+            <button
+              type="button"
+              key={row}
+              className={`face ${appearanceRow === row ? 'face--on' : ''}`}
+              onClick={() => setAppearanceRow(row)}
+              aria-label={`Appearance ${row + 1}`}
+              aria-pressed={appearanceRow === row}
+            >
+              <Portrait row={row} scale={2} />
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       <fieldset className="field">
         <legend className="field__label">Background</legend>

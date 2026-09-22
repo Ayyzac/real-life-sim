@@ -4,6 +4,8 @@ import { findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
 import { findBusiness } from '../data/businesses';
 import { findSport } from '../data/sports';
+import { findLifestyle } from '../data/lifestyles';
+import { Portrait } from './Portrait';
 import { profitPerDay } from '../core/careers/business';
 import { DAYS_PER_WEEK } from '../core/clock';
 import { BALANCE } from '../data/balance';
@@ -87,12 +89,15 @@ export function Dashboard({
   return (
     <section className="panel dashboard">
       <header className="dashboard__head">
-        <div>
+        <div className="dashboard__who">
+          <Portrait row={character.appearanceRow} scale={2} />
+          <div>
           <h2 className="dashboard__name">{character.name}</h2>
           <p className="dashboard__meta">
             Age {ageInYears(character)} &middot; Week {weekNumber(clockDay)} &middot;{' '}
             {careerLine(character)}
           </p>
+          </div>
         </div>
         <div className={`dashboard__money ${stats.money < 0 ? 'dashboard__money--debt' : ''}`}>
           {money(stats.money)}
@@ -121,7 +126,8 @@ export function Dashboard({
       </dl>
 
       <p className="dashboard__focus">
-        Doing: <strong>{findFocus(character.focusId).label}</strong>
+        Doing: <strong>{findFocus(character.focusId).label}</strong> &middot; living{' '}
+        <strong>{findLifestyle(character.lifestyleId).label.toLowerCase()}</strong>
       </p>
 
       {stats.energy < BALANCE.lowEnergyThreshold && (

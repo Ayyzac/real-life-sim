@@ -62,12 +62,12 @@ Dipecah empat bagian atas permintaan user (22 Sep 2026) supaya tiap bagian bisa
 dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 `docs/GDD.md` §9–§10 dan `docs/ARCHITECTURE.md` §11.
 
-### A — Uang punya tujuan
-- [ ] `SCHEMA_VERSION` naik ke 3, **dengan migrasi** dari versi 2 (karakter yang sedang hidup lanjut, tidak dibuang)
-- [ ] Barang permanen yang bisa dibeli (`src/data/possessions.ts`)
-- [ ] Taraf gaya hidup yang bisa dinaik-turunkan
-- [ ] Pilihan penampilan sprite saat pembuatan karakter — menutup utang GDD §3.2
-- [ ] **Checkpoint:** uang yang ditabung akhirnya bisa dibelanjakan
+### A — Uang punya tujuan — SELESAI
+- [x] `SCHEMA_VERSION` naik ke 3, **dengan migrasi** dari versi 2 (karakter yang sedang hidup lanjut, tidak dibuang)
+- [x] Barang permanen yang bisa dibeli (`src/data/possessions.ts`) — 6 entri, rumah dan kendaraan saling menggantikan
+- [x] Taraf gaya hidup yang bisa dinaik-turunkan (`src/data/lifestyles.ts`) — 4 taraf, `ordinary` persis seperti sebelumnya
+- [x] Pilihan penampilan sprite saat pembuatan karakter — menutup utang GDD §3.2
+- [x] **Checkpoint:** uang yang ditabung akhirnya bisa dibelanjakan
 
 ### B — Keluarga & hubungan
 - [ ] Orang di sekitar pemain: nama, peran, kedekatan

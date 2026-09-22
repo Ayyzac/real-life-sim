@@ -35,6 +35,11 @@ export interface FocusDefinition {
    * closer (src/core/careers/sports.ts).
    */
   trainsSport?: boolean;
+  /**
+   * This is the focus that actually recovers you. A better home makes it
+   * worth more (src/core/belongings.ts).
+   */
+  restores?: boolean;
 }
 
 export const FOCUSES: readonly FocusDefinition[] = [
@@ -44,6 +49,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
     description: 'Sleep, recover, do nothing much. The only real way back to full energy.',
     locationId: 'home',
     effects: { energy: 16, mood: 1.2, health: 0.25 },
+    restores: true,
   },
   {
     id: 'work',
