@@ -39,6 +39,11 @@ export function App(): React.JSX.Element {
 
       <Dashboard character={world.character} clockDay={world.clockDay} />
 
+      <section className="panel world">
+        <GameCanvas />
+        <p className="panel__hint">Click a building to walk there. Doors open the menu below.</p>
+      </section>
+
       {waiting ? (
         <EventDialog pending={world.pendingEvent!} />
       ) : (
@@ -50,10 +55,6 @@ export function App(): React.JSX.Element {
 
       <EventLog entries={world.eventLog} />
 
-      <details className="panel world">
-        <summary className="world__summary">World map (arrives in Phase 2)</summary>
-        <GameCanvas />
-      </details>
 
       <button
         type="button"
@@ -68,7 +69,7 @@ export function App(): React.JSX.Element {
       </button>
 
       <footer className="app__footer">
-        Phase 1 complete &mdash; the walkable town map arrives in Phase 2.
+        Phase 2 &mdash; a town you can walk around.
       </footer>
     </main>
   );

@@ -1,8 +1,6 @@
-import { useState } from 'react';
-
 import { meetsRequirements, salaryPerDay } from '../core/careers/job';
 import { DAYS_PER_WEEK } from '../core/clock';
-import type { Character, LocationId } from '../core/types';
+import type { Character } from '../core/types';
 import { FOCUSES } from '../data/focuses';
 import { JOBS, findJob } from '../data/jobs';
 import { LOCATIONS } from '../data/locations';
@@ -10,12 +8,14 @@ import { money, signed } from './format';
 import { gameStore } from './useGame';
 
 /**
- * The place menus. In Phase 2 the player will reach these by walking into a
- * building on the Phaser map instead of clicking a tab - same menus, different
- * doorway (docs/ROADMAP.md Phase 2).
+ * The place menus, reachable two ways: walk into a building on the map, or
+ * click a tab here. Both are doors onto the same `character.location`, which
+ * is why the open tab is read from the world state rather than kept in local
+ * component state - otherwise the map and the tabs could disagree about where
+ * the character is standing.
  */
 export function LocationMenu({ character }: { character: Character }): React.JSX.Element {
-  const [openLocation, setOpenLocation] = useState<LocationId>(character.location);
+  const openLocation = character.location;
   const location = LOCATIONS.find((l) => l.id === openLocation) ?? LOCATIONS[0]!;
   const focuses = FOCUSES.filter((focus) => focus.locationId === location.id);
 
@@ -27,7 +27,7 @@ export function LocationMenu({ character }: { character: Character }): React.JSX
             key={place.id}
             type="button"
             className={`tab ${place.id === openLocation ? 'tab--on' : ''}`}
-            onClick={() => setOpenLocation(place.id)}
+            onClick={() => gameStore.dispatch({ type: 'enterLocation', locationId: place.id })}
             aria-current={place.id === openLocation}
           >
             {place.label}

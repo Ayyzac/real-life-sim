@@ -540,16 +540,10 @@ body {
   flex-shrink: 0;
 }
 
-.world__summary {
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
 .game-canvas {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  margin-top: 12px;
+  /* 25x14 tiles: must match the canvas, or Phaser letterboxes the map. */
+  aspect-ratio: 25 / 14;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -560,4 +554,7 @@ body {
   display: block;
   width: 100% !important;
   height: 100% !important;
+  /* Keep the pixel art crisp when the canvas is scaled up by the layout. */
+  image-rendering: pixelated;
+  cursor: pointer;
 }

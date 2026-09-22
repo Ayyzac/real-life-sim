@@ -6,7 +6,7 @@ import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
-import type { FocusId, WorldState } from './types';
+import type { FocusId, LocationId, WorldState } from './types';
 
 /**
  * The single seam between the simulation and everything that draws it.
@@ -24,6 +24,7 @@ export type GameIntent =
   | { type: 'advanceDay' }
   | { type: 'advanceWeek' }
   | { type: 'setFocus'; focusId: FocusId }
+  | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
   | { type: 'takeJob'; jobId: string }
   | { type: 'quitJob' }
@@ -88,6 +89,18 @@ export class GameStore {
         return {
           ...state,
           character: { ...state.character, focusId: focus.id, location: focus.locationId },
+        };
+      }
+
+      case 'enterLocation': {
+        // Same guard as every other action: while an event waits, nothing
+        // else may happen, or the player could walk away from a stopped week.
+        if (!state || state.deceased || state.pendingEvent) return state;
+        if (state.character.location === intent.locationId) return state;
+        // Moving is not choosing: the focus stays exactly where it was.
+        return {
+          ...state,
+          character: { ...state.character, location: intent.locationId },
         };
       }
 

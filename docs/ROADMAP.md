@@ -27,13 +27,15 @@ Tujuan: buktikan simulation core-nya hidup dan seru, lewat UI sederhana dulu (mi
 - [x] Test Vitest untuk `Clock`, `EventEngine`, dan sistem kerja — 115 test
 - [x] **Checkpoint:** user bisa main satu "kehidupan" penuh dari lahir sampai mati, lewat UI menu saja, dan progresnya tersimpan
 
-## Fase 2 — Dunia yang dijelajahi (Phaser + aset Kenney)
+## Fase 2 — Dunia yang dijelajahi (Phaser + aset Kenney) — SELESAI
 Tujuan: tambahkan lapisan visual di atas loop yang sudah terbukti jalan di Fase 1.
-- [ ] Import aset pixel art dari Kenney (lihat `docs/ASSETS.md`) — tileset kota kecil + sprite karakter
-- [ ] Peta dasar: Rumah, Tempat Kerja, Gym, Rumah Sakit, satu lokasi sosial
-- [ ] Kontrol jalan karakter di peta (putuskan skema kontrol saat implementasi, catat di `docs/ARCHITECTURE.md`)
-- [ ] Masuk ke lokasi → membuka menu React yang sudah ada dari Fase 1 (job, dst.) — bukan sistem baru, cuma cara masuknya berubah
-- [ ] **Checkpoint:** user bisa jalan-jalan di peta, masuk ke tempat kerja, dan itu memicu aksi yang sama seperti Fase 1
+- [x] Import aset pixel art dari Kenney (lihat `docs/ASSETS.md`) — tileset kota kecil + sprite karakter
+- [x] Peta dasar: Rumah, Tempat Kerja, Gym, Rumah Sakit, satu lokasi sosial (Kafe)
+- [x] Kontrol jalan karakter di peta — **klik-untuk-jalan**, dicatat di `docs/ARCHITECTURE.md` §11
+- [x] Masuk ke lokasi → membuka menu React yang sudah ada dari Fase 1 (job, dst.) — bukan sistem baru, cuma cara masuknya berubah
+- [x] Kota ramai: NPC berjalan + lalu lintas, murni hiasan
+- [x] Test: pencarian jalan, validitas peta, dan `enterLocation` diblokir saat ada event menunggu
+- [x] **Checkpoint:** user bisa jalan-jalan di peta, masuk ke tempat kerja, dan itu memicu aksi yang sama seperti Fase 1
 
 ## Fase 3 — Jalur karier: Bisnis
 - [ ] Data `businesses.ts` (beberapa jenis usaha sederhana)

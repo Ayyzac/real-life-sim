@@ -254,6 +254,46 @@ Dipilih karena persis "kota modern" di `GDD.md` §1 dan sudah disebut namanya di
 LICENSE dari paket ikut disimpan, dan sumbernya dicatat di `docs/ASSETS.md`.
 Ini satu-satunya unduhan di fase ini.
 
+### 2026-09-22 — Fase 2 (hasil implementasi)
+
+Yang berubah, dan yang digigit di jalan. Entri di atas adalah keputusannya;
+ini adalah apa yang sebenarnya terjadi saat dikerjakan.
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| `GameStore` **diserahkan** ke Phaser, bukan di-impor | `createPhaserGame(parent, store)`; `TownScene` menerimanya lewat constructor. | Kalau scene mengimpor `gameStore` dari `src/ui/useGame.ts`, lapisan dunia jadi bergantung pada lapisan UI. Sekarang arah ketergantungannya tetap satu arah, dan scene tetap memakai pintu yang sama dengan React: `dispatch` + `subscribe`. |
+| Gedung & properti sebagai **objek data**, hanya lantai sebagai gambar ASCII | `GROUND` adalah 14 baris berisi 25 huruf; gedung, pohon, dan mobil adalah daftar objek. | Menggambar gedung sebagai ASCII berarti satu huruf per warna dinding per baris jendela — tidak terbaca dan gampang salah. Bentuk gedung selalu persegi, jadi lebih jujur ditulis sebagai `{x, y, width, height}`. |
+| Grid bisa-dilewati **dihitung**, tidak disimpan | `buildWalkable()` menurunkannya dari lantai + gedung + properti setiap kali dipanggil. | Kalau disimpan terpisah, ia akan melenceng dari petanya diam-diam — persis jenis bug yang tidak menimbulkan error. |
+| Pintu **bisa dilewati**, sisanya tidak | Sampai di petak pintu = membuka menu lokasi. | Pemain berjalan sampai ke pintu, bukan berhenti di depannya lalu menebak-nebak. Petak pintu hanya bisa dicapai dari trotoar di bawahnya, jadi tidak mungkin terlewati tanpa sengaja. |
+| RNG keramaian **terpisah** dari RNG simulasi | `createCrowd` diberi `createRng(0x7ac0).next` sendiri. | Kalau hiasan menarik dari RNG simulasi, jumlah NPC akan menggeser urutan undian event — dan `WorldState.rng` ikut tersimpan di save, jadi efeknya permanen. Hiasan tidak boleh mengubah permainan. |
+| Gedung beton diberi **tint** | `TownBuilding.tint`, dipakai Kerja (biru) dan Rumah Sakit (mint). | Dinding beton di paket Kenney warnanya sama persis dengan trotoar. Tanpa tint, dua gedung itu terbaca sebagai pelataran kosong, bukan bangunan. |
+| `BootScene.ts` dihapus | Placeholder Fase 0 diganti `TownScene.ts`. | Tugasnya (membuktikan kanvas Phaser hidup) sudah selesai dan sekarang dibuktikan oleh peta sungguhan. |
+| Tab lokasi tidak lagi punya state sendiri | `LocationMenu` membaca `character.location`; mengklik tab mengirim `enterLocation`. | Ini yang membuat peta dan tab jadi dua pintu ke satu state. Sudah diuji dua arah di browser: klik gedung → tab ikut pindah; klik tab → karakter berjalan di peta. |
+
+**Dua jebakan Phaser yang benar-benar menggigit** (keduanya gagal tanpa pesan
+error apa pun — catat di sini supaya sesi berikutnya tidak membuangnya lagi):
+
+| Jebakan | Gejala | Penyelesaian |
+|---|---|---|
+| `Phaser.Input.Events.POINTER_DOWN` bernilai `undefined` di build ini | `this.input.on(undefined, ...)` mendaftarkan listener yang **tidak pernah dipanggil**, dan tidak ada error sama sekali. Peta tampak normal, klik tidak melakukan apa-apa. | Pakai nama event literal: `'pointerdown'`, `'shutdown'`, `'destroy'`. |
+| Phaser menyimpan (cache) posisi kanvas | `pointer.x/y` meleset sampai ~500 px, bahkan memberi baris negatif di atas peta. Phaser hanya membaca ulang posisi kanvas saat jendela di-resize, padahal kanvas ini duduk di bawah panel React yang tingginya berubah setiap dialog event muncul. | `toCanvasPoint()` di `TownScene` mengukur sendiri dari DOM (`getBoundingClientRect`) setiap klik. **Jangan** kembali memakai `pointer.worldX`. |
+
+**Performa keramaian — angka sungguhan, bukan perkiraan.** Diukur di browser
+dengan jumlah penuh (24 NPC + 8 mobil, `CROWD` di `src/data/town.ts`):
+
+| Ukuran | Hasil |
+|---|--:|
+| Frame per detik | **165 fps** (mentok di refresh rate monitor, bukan di gamenya) |
+| Frame terlama dari 660 frame | **7,3 ms** (anggaran 60 fps = 16,7 ms) |
+
+Keramaian tidak mendekati batas. Kalau suatu saat perlu lebih ramai,
+`CROWD.people` dan `CROWD.cars` tinggal dinaikkan — tapi ukur ulang, jangan
+menebak.
+
+**Ukuran bundel sesudah Fase 2:** 1,45 MB (400 KB gzip). Hampir tidak berubah
+dari Fase 0 — tilesheet-nya cuma 18 KB dan disajikan sebagai berkas statis,
+tidak ikut di-bundle.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.

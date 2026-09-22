@@ -1,0 +1,328 @@
+import Phaser from 'phaser';
+
+import { createRng } from '../../core/rng';
+import type { GameStore } from '../../core/store';
+import type { LocationId, WorldState } from '../../core/types';
+import { LOCATIONS } from '../../data/locations';
+import {
+  BUILDINGS,
+  GROUND,
+  GROUND_TILES,
+  PLAYER_SHEET_ROW,
+  PROPS,
+  SHEET_SPACING,
+  TILE_SIZE,
+  TOWN_COLUMNS,
+  TOWN_ROWS,
+  TOWN_ZOOM,
+  buildWalkable,
+  doorOf,
+  locationAt,
+  personFrames,
+} from '../../data/town';
+import { createCrowd, type Crowd } from '../crowd';
+import { findPath, type Point } from '../pathfinding';
+
+/**
+ * The town map: the Phase 2 replacement for the Phase 0 placeholder.
+ *
+ * It talks to the simulation exactly the way the React UI does - reading
+ * through `store.getState()`, listening through `store.subscribe`, and asking
+ * for changes through `store.dispatch` (CLAUDE.md rule 5). It never calls the
+ * engine, and the engine has no idea it exists.
+ *
+ * The map and the location tabs are two doors onto one piece of state: click a
+ * building and the character walks there and the tab follows; click a tab and
+ * the character walks there on the map.
+ */
+
+const TEXTURE = 'town';
+/** Tiles per second. Fast enough not to be a wait, slow enough to read. */
+const WALK_SPEED = 6;
+
+const DEPTH = { ground: 0, building: 1, prop: 2, crowd: 5, player: 6, lock: 10 };
+
+export class TownScene extends Phaser.Scene {
+  private readonly walkable = buildWalkable();
+  private player?: Phaser.GameObjects.Image;
+  private playerFrames = personFrames(PLAYER_SHEET_ROW);
+  private crowd?: Crowd;
+  private lockOverlay?: Phaser.GameObjects.Container;
+
+  /** Squares still to step onto, and where the character is heading overall. */
+  private path: Point[] = [];
+  private tile: Point = { x: 0, y: 0 };
+  private unsubscribe?: () => void;
+  private lastLocation?: LocationId;
+
+  constructor(private readonly store: GameStore) {
+    super('Town');
+  }
+
+  preload(): void {
+    // BASE_URL keeps this working under the /real-life-sim/ path on GitHub
+    // Pages as well as at the root in development.
+    this.load.spritesheet(TEXTURE, `${import.meta.env.BASE_URL}assets/town/tilemap.png`, {
+      frameWidth: TILE_SIZE,
+      frameHeight: TILE_SIZE,
+      spacing: SHEET_SPACING,
+    });
+  }
+
+  create(): void {
+    this.drawGround();
+    this.drawBuildings();
+    this.drawProps();
+
+    // The crowd draws from its own RNG, deliberately not the simulation's:
+    // decoration must never shift the sequence the game rolls its events from.
+    this.crowd = createCrowd(this, TEXTURE, createRng(0x7ac0).next, DEPTH.crowd);
+
+    const world = this.store.getState();
+    this.lastLocation = world?.character.location;
+    this.tile = doorOf(world?.character.location ?? 'home');
+
+    this.player = this.add
+      .image(centre(this.tile.x), centre(this.tile.y), TEXTURE, this.playerFrames.down)
+      .setDepth(DEPTH.player);
+
+    this.buildLockOverlay();
+    this.refreshLock(world);
+
+    const camera = this.cameras.main;
+    camera.setZoom(TOWN_ZOOM);
+    camera.centerOn((TOWN_COLUMNS * TILE_SIZE) / 2, (TOWN_ROWS * TILE_SIZE) / 2);
+
+    // Literal event names on purpose: Phaser.Input.Events.POINTER_DOWN comes
+    // through this build as undefined, which registers a listener that never
+    // fires and reports no error at all.
+    this.input.on('pointerdown', this.onPointerDown, this);
+    this.unsubscribe = this.store.subscribe(this.onStoreChanged);
+
+    this.events.once('shutdown', this.teardown, this);
+    this.events.once('destroy', this.teardown, this);
+  }
+
+  override update(_time: number, delta: number): void {
+    this.crowd?.update(delta);
+    this.stepAlongPath(delta);
+  }
+
+  // --- drawing ------------------------------------------------------------
+
+  private drawGround(): void {
+    GROUND.forEach((row, y) => {
+      [...row].forEach((char, x) => {
+        const ground = GROUND_TILES[char];
+        if (!ground) return;
+        this.add
+          .image(x * TILE_SIZE, y * TILE_SIZE, TEXTURE, ground.tile)
+          .setOrigin(0)
+          .setDepth(DEPTH.ground);
+      });
+    });
+  }
+
+  private drawBuildings(): void {
+    for (const building of BUILDINGS) {
+      const doorY = building.y + building.height - 1;
+
+      for (let y = building.y; y < building.y + building.height; y += 1) {
+        for (let x = building.x; x < building.x + building.width; x += 1) {
+          const isDoor = x === building.doorX && y === doorY;
+          const frame = isDoor
+            ? building.doorTile
+            : y === building.y + 1
+              ? building.bandTile
+              : building.wallTile;
+
+          const image = this.add
+            .image(x * TILE_SIZE, y * TILE_SIZE, TEXTURE, frame)
+            .setOrigin(0)
+            .setDepth(DEPTH.building);
+          // The door keeps its own colours; only the walls get repainted.
+          if (building.tint !== undefined && !isDoor) image.setTint(building.tint);
+        }
+      }
+
+      // On the building's own top row, not above it: the northern buildings
+      // start at row 0, so anything above them is off the map.
+      this.add
+        .text(centre(building.x + (building.width - 1) / 2), centre(building.y), label(building.locationId), {
+          fontFamily: 'monospace',
+          fontSize: '8px',
+          color: '#e8edf7',
+          backgroundColor: '#1b2231',
+          padding: { x: 2, y: 1 },
+        })
+        .setOrigin(0.5)
+        .setDepth(DEPTH.building);
+    }
+  }
+
+  private drawProps(): void {
+    for (const prop of PROPS) {
+      this.add
+        .image(prop.x * TILE_SIZE, prop.y * TILE_SIZE, TEXTURE, prop.tile)
+        .setOrigin(0)
+        .setDepth(DEPTH.prop);
+    }
+  }
+
+  private buildLockOverlay(): void {
+    const width = TOWN_COLUMNS * TILE_SIZE;
+    const height = TOWN_ROWS * TILE_SIZE;
+
+    const shade = this.add.rectangle(0, 0, width, height, 0x0b0e16, 0.62).setOrigin(0);
+    const text = this.add
+      .text(width / 2, height / 2, 'Answer the question first', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#ffd479',
+      })
+      .setOrigin(0.5);
+
+    this.lockOverlay = this.add.container(0, 0, [shade, text]).setDepth(DEPTH.lock).setVisible(false);
+  }
+
+  // --- walking ------------------------------------------------------------
+
+  private onPointerDown = (pointer: Phaser.Input.Pointer): void => {
+    if (this.isLocked(this.store.getState())) return;
+
+    const canvasPoint = this.toCanvasPoint(pointer);
+    if (!canvasPoint) return;
+
+    const point = this.cameras.main.getWorldPoint(canvasPoint.x, canvasPoint.y);
+    const target = {
+      x: Math.floor(point.x / TILE_SIZE),
+      y: Math.floor(point.y / TILE_SIZE),
+    };
+
+    // A click on a wall, a tree or the road simply does nothing. Better than
+    // walking somewhere the player did not ask for.
+    const route = findPath(this.walkable, this.tile, target);
+    if (route) this.path = route;
+  };
+
+  /**
+   * Where the click landed on the canvas, measured fresh from the DOM.
+   *
+   * Phaser caches the canvas position and only re-reads it on a window resize.
+   * This canvas sits under a React panel whose height changes whenever an event
+   * dialog opens or the job list grows, so the cached position goes stale and
+   * clicks land somewhere else entirely - it was reading clicks as far as 500
+   * pixels off, including above the top of the map.
+   */
+  private toCanvasPoint(pointer: Phaser.Input.Pointer): { x: number; y: number } | null {
+    const event = pointer.event as MouseEvent & { changedTouches?: TouchList };
+    const touch = event.changedTouches?.[0];
+    const clientX = touch ? touch.clientX : event.clientX;
+    const clientY = touch ? touch.clientY : event.clientY;
+    if (typeof clientX !== 'number' || typeof clientY !== 'number') return null;
+
+    const canvas = this.game.canvas;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  private stepAlongPath(delta: number): void {
+    const player = this.player;
+    const next = this.path[0];
+    if (!player || !next) return;
+
+    const targetX = centre(next.x);
+    const targetY = centre(next.y);
+    const step = (WALK_SPEED * TILE_SIZE * delta) / 1000;
+
+    this.faceTowards(targetX - player.x, targetY - player.y);
+
+    const remaining = Phaser.Math.Distance.Between(player.x, player.y, targetX, targetY);
+    if (remaining <= step) {
+      player.setPosition(targetX, targetY);
+      this.tile = { x: next.x, y: next.y };
+      this.path.shift();
+      if (this.path.length === 0) this.onArrived();
+      return;
+    }
+
+    const angle = Math.atan2(targetY - player.y, targetX - player.x);
+    player.setPosition(player.x + Math.cos(angle) * step, player.y + Math.sin(angle) * step);
+  }
+
+  private faceTowards(dx: number, dy: number): void {
+    const player = this.player;
+    if (!player) return;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      player.setFrame(this.playerFrames.side);
+      player.setFlipX(dx < 0);
+      return;
+    }
+    player.setFlipX(false);
+    player.setFrame(dy < 0 ? this.playerFrames.up : this.playerFrames.down);
+  }
+
+  /** Arriving on a doorstep is what opens that place's menu. */
+  private onArrived(): void {
+    this.player?.setFrame(this.playerFrames.down);
+    this.player?.setFlipX(false);
+
+    const locationId = locationAt(this.tile.x, this.tile.y);
+    if (!locationId) return;
+
+    this.lastLocation = locationId;
+    this.store.dispatch({ type: 'enterLocation', locationId });
+  }
+
+  // --- reacting to the rest of the game -----------------------------------
+
+  private onStoreChanged = (): void => {
+    const world = this.store.getState();
+    this.refreshLock(world);
+    if (!world) return;
+
+    const location = world.character.location;
+    if (location === this.lastLocation) return;
+    this.lastLocation = location;
+
+    // Something outside the map moved the character - a location tab, or
+    // picking a focus that lives somewhere else. Walk there so the two views
+    // never disagree about where the character is standing.
+    const route = findPath(this.walkable, this.tile, doorOf(location));
+    if (route) this.path = route;
+  };
+
+  private isLocked(world: WorldState | null): boolean {
+    return world === null || world.deceased || world.pendingEvent !== null;
+  }
+
+  private refreshLock(world: WorldState | null): void {
+    const locked = this.isLocked(world);
+    this.lockOverlay?.setVisible(locked);
+    if (locked) this.path = [];
+  }
+
+  private teardown(): void {
+    this.unsubscribe?.();
+    this.unsubscribe = undefined;
+    this.input.off('pointerdown', this.onPointerDown, this);
+    this.crowd?.destroy();
+    this.crowd = undefined;
+  }
+}
+
+/** Centre of a tile, in pixels. Sprites are drawn from their middle. */
+function centre(tile: number): number {
+  return tile * TILE_SIZE + TILE_SIZE / 2;
+}
+
+/** The same names the location tabs use, from the same data file. */
+function label(locationId: LocationId): string {
+  return LOCATIONS.find((l) => l.id === locationId)?.label ?? locationId;
+}

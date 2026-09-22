@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { createPhaserGame } from '../world/phaserGame';
+import { gameStore } from './useGame';
 
 /**
  * The single seam between React and Phaser.
@@ -16,11 +17,11 @@ export function GameCanvas(): React.JSX.Element {
     const container = containerRef.current;
     if (!container) return;
 
-    const game = createPhaserGame(container);
+    const game = createPhaserGame(container, gameStore);
     return () => {
       game.destroy(true);
     };
   }, []);
 
-  return <div className="game-canvas" ref={containerRef} role="img" aria-label="Game world" />;
+  return <div className="game-canvas" ref={containerRef} role="img" aria-label="Town map" />;
 }

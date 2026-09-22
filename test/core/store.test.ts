@@ -135,6 +135,52 @@ describe('GameStore', () => {
     expect(store.getState()?.character.career).toEqual({ type: 'none' });
   });
 
+  it('walking into a place moves the character without changing their focus', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const focusBefore = store.getState()?.character.focusId;
+
+    store.dispatch({ type: 'enterLocation', locationId: 'gym' });
+
+    expect(store.getState()?.character.location).toBe('gym');
+    expect(store.getState()?.character.focusId).toBe(focusBefore);
+  });
+
+  it('ignores walking somewhere the character already is', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    store.dispatch({ type: 'enterLocation', locationId: 'gym' });
+    const before = store.getState();
+
+    store.dispatch({ type: 'enterLocation', locationId: 'gym' });
+
+    expect(store.getState()).toBe(before);
+  });
+
+  it('refuses to move while an event is waiting for an answer', () => {
+    // Without this guard the map would be a way to walk out of a stopped week
+    // and never answer the question.
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const world = store.getState()!;
+    const stuck: WorldState = {
+      ...world,
+      pendingEvent: { eventId: 'friend_invites', daysRemaining: 3 },
+    };
+    const blocked = new GameStore(memorySaves(stuck));
+
+    blocked.dispatch({ type: 'enterLocation', locationId: 'hospital' });
+
+    expect(blocked.getState()?.character.location).toBe(world.character.location);
+  });
+
+  it('refuses to move once the character is dead', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const world = store.getState()!;
+    const dead = new GameStore(memorySaves({ ...world, deceased: true }));
+
+    dead.dispatch({ type: 'enterLocation', locationId: 'hospital' });
+
+    expect(dead.getState()?.character.location).toBe(world.character.location);
+  });
+
   it('reset wipes both the world and the save file', () => {
     store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
 
