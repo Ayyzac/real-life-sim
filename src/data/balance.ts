@@ -120,6 +120,56 @@ export const BALANCE = {
     prizeBonusAtFullReputation: 1,
   },
 
+  /**
+   * The people around the player (GDD §10, user decisions 22 Sep 2026).
+   *
+   * They live their own lives: they age, work, marry, have children and die
+   * whether the player is paying attention or not. The caps are not a style
+   * choice - the save sits in localStorage under a size test, and an unpruned
+   * 70 years of acquaintances would break saving silently mid-game.
+   */
+  relationships: {
+    /** Living people the player knows at once. New faces wait for a gap. */
+    maxLivingPeople: 12,
+    /** Condensed one-line memories kept for the Life Summary. */
+    memoryLimit: 40,
+
+    /** Closeness fades unless something keeps it up. */
+    closenessDriftPerDay: -0.05,
+    /** What a day of Socialising adds to everyone you know. */
+    closenessPerSocialDay: 0.9,
+    /** Below this for long enough and they drift out of your life. */
+    driftAwayBelow: 5,
+    driftAwayAfterDays: 420,
+
+    /** Chance per day that you meet somebody new, when there is room. */
+    meetChancePerDay: 0.0018,
+    /** Chance per day that a person's own life moves on in some way. */
+    npcLifeChancePerDay: 0.003,
+
+    /** Old age for the people around you, on the same curve idea as §6. */
+    npcDeathStartAgeYears: 62,
+    npcDeathChancePerDayPerYearOver: 0.00003,
+
+    /** Marrying: a lump sum, a closeness bar, and being old enough. */
+    weddingCost: 18_000,
+    marriageClosenessRequired: 70,
+    marriageMinAgeYears: 20,
+
+    /** Each child, every day, for as long as they are dependent. */
+    childCostPerDay: 16,
+    childMoodPerDay: 0.35,
+    childDependentUntilAgeYears: 18,
+    /** Chance per day of a child arriving, once married. */
+    childChancePerDay: 0.0016,
+    maxChildren: 4,
+
+    /** A partner is worth having around. */
+    partnerMoodPerDay: 0.6,
+    /** Losing someone hurts in proportion to how close you were. */
+    griefMoodPerCloseness: 0.45,
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

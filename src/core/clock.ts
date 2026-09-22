@@ -3,6 +3,7 @@ import { dailyUpkeep } from './belongings';
 import { findFocus } from '../data/focuses';
 import { tradeOneDay } from './careers/business';
 import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
+import { partnerOf, relationshipsOneDay, rollRelationships } from './relationships';
 import { workOneDay } from './careers/job';
 import { ageInYears } from './character';
 import { applyEffect, findChoice, findEvent, needsDecision, rollEvent } from './events';
@@ -153,6 +154,11 @@ export function applyDailyRules(state: WorldState): WorldState {
     }
   }
 
+  // The people around the character, every day (GDD §10): everyone ages,
+  // closeness fades unless it is kept up, and the family costs what it costs.
+  const social = relationshipsOneDay(state.people, focus.socialises === true);
+  stats.mood += social.moodPerDay;
+
   // What the character owns and how they live, every day (GDD §9). A better
   // home is worth more on the days they actually rest in it.
   const upkeep = dailyUpkeep(character);
@@ -163,7 +169,7 @@ export function applyDailyRules(state: WorldState): WorldState {
 
   // ponytail: money is allowed to go negative instead of blocking the activity.
   // Buying, however, is not: you cannot spend money you do not have (store.ts).
-  stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0) + upkeep.costPerDay;
+  stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0) + upkeep.costPerDay + social.costPerDay;
 
   stats.mood += BALANCE.moodDriftPerDay;
   stats.health -= ageingHealthLossPerDay(ageInYears(character));
@@ -177,6 +183,7 @@ export function applyDailyRules(state: WorldState): WorldState {
   const afterRules: WorldState = {
     ...state,
     clockDay: state.clockDay + 1,
+    people: social.people,
     eventLog,
     milestones,
     character: {
@@ -224,6 +231,39 @@ function playDueMatch(state: WorldState, rng: Rng): WorldState {
   };
 }
 
+/**
+ * The part of other people's lives that is down to chance: somebody dies,
+ * drifts away, has news, or a new face turns up.
+ *
+ * Out here with the event roll rather than in applyDailyRules, for the same
+ * reason matches are: the certain rules have to stay testable to the number.
+ */
+function rollOtherLives(state: WorldState, rng: Rng): WorldState {
+  const outcome = rollRelationships(
+    state.people,
+    state.memories,
+    state.clockDay,
+    partnerOf(state.people) !== undefined,
+    rng,
+  );
+  if (!outcome.text) return state;
+
+  const entry: EventLogEntry = { day: state.clockDay, tone: outcome.tone, text: outcome.text };
+  const stats = clampStats({
+    ...state.character.stats,
+    mood: state.character.stats.mood + outcome.moodChange,
+  });
+
+  return {
+    ...state,
+    people: outcome.people,
+    memories: outcome.memories,
+    eventLog: withLogEntry(state.eventLog, entry),
+    milestones: outcome.milestone ? withMilestone(state.milestones, entry) : state.milestones,
+    character: { ...state.character, stats },
+  };
+}
+
 /** A full day: the certain rules above, then at most one random event. */
 function simulateOneDay(state: WorldState): WorldState {
   const rng = restoreRng(state.rng);
@@ -231,6 +271,7 @@ function simulateOneDay(state: WorldState): WorldState {
   if (next.deceased) return { ...next, rng: rng.snapshot() };
 
   next = playDueMatch(next, rng);
+  next = rollOtherLives(next, rng);
 
   const event = rollEvent(next.character, rng);
   if (event) {

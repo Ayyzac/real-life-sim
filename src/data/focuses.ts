@@ -40,6 +40,11 @@ export interface FocusDefinition {
    * worth more (src/core/belongings.ts).
    */
   restores?: boolean;
+  /**
+   * Time spent on people. This is what keeps closeness up
+   * (src/core/relationships.ts).
+   */
+  socialises?: boolean;
 }
 
 export const FOCUSES: readonly FocusDefinition[] = [
@@ -96,6 +101,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
     locationId: 'cafe',
     effects: { energy: -5, mood: 4, charisma: 0.035 },
     costPerDay: 12,
+    socialises: true,
   },
   {
     id: 'treatment',

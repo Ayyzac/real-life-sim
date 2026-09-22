@@ -3,6 +3,7 @@ import { BALANCE } from '../data/balance';
 import { DEFAULT_FOCUS_ID } from '../data/focuses';
 import { DEFAULT_LIFESTYLE_ID } from '../data/lifestyles';
 import { createRng } from './rng';
+import { startingPeople } from './relationships';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
@@ -76,6 +77,9 @@ export function createWorld({ name, backgroundId, appearanceRow, seed }: NewGame
     eventLog: [birth],
     milestones: [birth],
     peakMoney: character.stats.money,
+    // Nobody starts life alone (GDD §10.1).
+    people: startingPeople(rng),
+    memories: [],
     pendingEvent: null,
     deceased: false,
   };

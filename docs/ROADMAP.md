@@ -69,12 +69,13 @@ dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 - [x] Pilihan penampilan sprite saat pembuatan karakter — menutup utang GDD §3.2
 - [x] **Checkpoint:** uang yang ditabung akhirnya bisa dibelanjakan
 
-### B — Keluarga & hubungan
-- [ ] Orang di sekitar pemain: nama, peran, kedekatan
-- [ ] NPC punya hidup sendiri: menua, bekerja, menikah, punya anak, meninggal
-- [ ] Orang yang meninggal/pergi dipadatkan jadi kenangan, supaya save tetap kecil
-- [ ] Menikah dan tanggungan sebagai penyerap uang
-- [ ] **Checkpoint:** pemain punya lingkungan sosial yang berubah sendiri seiring waktu
+### B — Keluarga & hubungan — SELESAI
+- [x] Orang di sekitar pemain: nama, peran, umur, pekerjaan, kedekatan 0-100
+- [x] NPC punya hidup sendiri: menua, ganti pekerjaan, meninggal karena usia; pemain menikah dan punya anak
+- [x] Orang yang meninggal/pergi dipadatkan jadi kenangan, supaya save tetap kecil
+- [x] Menikah (sekali bayar) dan anak (harian) sebagai penyerap uang
+- [x] Life Summary menyebut siapa yang masih ada dan siapa yang hilang
+- [x] **Checkpoint:** pemain punya lingkungan sosial yang berubah sendiri seiring waktu
 
 ### C — Isi & keseimbangan
 - [ ] Perbanyak isi kira-kira dua kali lipat: ~45 event, ~10 pekerjaan, ~6 usaha, ~5 cabang olahraga

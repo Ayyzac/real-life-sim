@@ -602,3 +602,38 @@ body {
   border-color: var(--good);
   box-shadow: 0 0 0 1px var(--good) inset;
 }
+
+/* ---------- people ---------- */
+
+.people {
+  display: grid;
+  gap: 8px;
+}
+
+.person {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+
+.person__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.person__track {
+  margin-top: 6px;
+  max-width: 220px;
+}
+
+.person__closeness {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}

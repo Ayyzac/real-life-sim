@@ -14,7 +14,8 @@ import {
 } from '../core/careers/sports';
 import { ageInYears } from '../core/character';
 import { DAYS_PER_WEEK } from '../core/clock';
-import type { Character } from '../core/types';
+import type { Character, WorldState } from '../core/types';
+import { People } from './People';
 import { FOCUSES } from '../data/focuses';
 import { ownedPossessions, replacedBy } from '../core/belongings';
 import { BUSINESSES, findBusiness } from '../data/businesses';
@@ -33,7 +34,8 @@ import { gameStore } from './useGame';
  * component state - otherwise the map and the tabs could disagree about where
  * the character is standing.
  */
-export function LocationMenu({ character }: { character: Character }): React.JSX.Element {
+export function LocationMenu({ world }: { world: WorldState }): React.JSX.Element {
+  const character = world.character;
   const openLocation = character.location;
   const location = LOCATIONS.find((l) => l.id === openLocation) ?? LOCATIONS[0]!;
   // Minding a shop you do not own is not an option, so it is not offered.
@@ -66,6 +68,7 @@ export function LocationMenu({ character }: { character: Character }): React.JSX
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}
+      {location.id === 'cafe' && <People world={world} />}
 
       <div className="choices">
         {focuses.map((focus) => {

@@ -1,7 +1,8 @@
 import { findBackground } from '../data/backgrounds';
 import { findJob } from '../data/jobs';
 import { ageInYears } from './character';
-import type { Attributes, EventLogEntry, WorldState } from './types';
+import type { Attributes, EventLogEntry, Memory, Person, WorldState } from './types';
+import { childrenOf, partnerOf } from './relationships';
 
 /**
  * The closing screen (GDD §6): a life read back to the player.
@@ -23,6 +24,12 @@ export interface LifeSummary {
   attributes: Attributes;
   /** Oldest first, so the summary reads forwards like a life does. */
   milestones: EventLogEntry[];
+  /** Who was still there at the end (GDD §10). */
+  survivors: Person[];
+  /** Everyone who died or drifted away, newest first. */
+  memories: Memory[];
+  /** Partner and children, in plain words, or null for a life lived alone. */
+  household: string | null;
   /** One line that tries to sum the whole thing up. */
   epitaph: string;
 }
@@ -35,8 +42,15 @@ export interface LifeSummary {
 function epitaphFor(state: WorldState, ageAtDeath: number, peakMoney: number): string {
   const { career, attributes } = state.character;
   const employed = career.type === 'job';
+  const children = childrenOf(state.people).length;
 
   if (ageAtDeath < 40) return 'A life cut short. There was so much still ahead.';
+  // People come before money in the closing line, because they should.
+  // Children alone are enough: simulation shows a partner usually dies first,
+  // and "married for sixty years" should not be erased by outliving them.
+  if (children > 0) return 'They raised a family, and that was the point.';
+  if (partnerOf(state.people)) return 'They were not alone at the end.';
+  if (state.people.length === 0) return 'They outlived everyone they knew.';
   if (peakMoney >= 250_000) return 'They wanted for nothing, in the end.';
   if (employed && career.level >= 2) return 'They were good at what they did, and people knew it.';
   if (attributes.intelligence >= 70) return 'They never stopped learning.';
@@ -44,6 +58,17 @@ function epitaphFor(state: WorldState, ageAtDeath: number, peakMoney: number): s
   if (attributes.charisma >= 70) return 'A room was warmer for them being in it.';
   if (ageAtDeath >= 85) return 'A long, ordinary life. Most people would take it.';
   return 'An ordinary life, lived all the way through.';
+}
+
+function householdLine(people: readonly Person[]): string | null {
+  const partner = partnerOf(people);
+  const children = childrenOf(people).length;
+  if (!partner && children === 0) return null;
+
+  const parts: string[] = [];
+  if (partner) parts.push(`married to ${partner.name}`);
+  if (children > 0) parts.push(`${children} ${children === 1 ? 'child' : 'children'}`);
+  return parts.join(', ');
 }
 
 export function buildLifeSummary(state: WorldState): LifeSummary {
@@ -62,6 +87,9 @@ export function buildLifeSummary(state: WorldState): LifeSummary {
     finalJob: character.career.type === 'job' ? findJob(character.career.jobId).title : null,
     attributes: character.attributes,
     milestones: [...state.milestones].reverse(),
+    survivors: state.people,
+    memories: state.memories,
+    household: householdLine(state.people),
     epitaph: epitaphFor(state, ageAtDeath, state.peakMoney),
   };
 }

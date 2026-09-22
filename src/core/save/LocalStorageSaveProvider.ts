@@ -92,7 +92,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
     // Even a current save can have been hand-edited; fill any gap rather than
     // letting undefined reach the daily rules.
     return {
-      ...(parsed as WorldState),
+      ...withPhase5World(parsed),
       character: withPhase5Fields(character),
     };
   }
@@ -100,7 +100,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   // Version 2 -> 3: appearance, lifestyle and possessions did not exist.
   if (version === 2) {
     return {
-      ...(parsed as WorldState),
+      ...withPhase5World(parsed),
       schemaVersion: SCHEMA_VERSION,
       character: withPhase5Fields(character),
     };
@@ -109,6 +109,19 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   // Version 1 and below predate the event system; there is nothing sensible
   // to carry across.
   return null;
+}
+
+/**
+ * A migrated character starts their remembered life from here: they keep
+ * everyone they will meet from now on, but the years already lived did not
+ * record anybody.
+ */
+function withPhase5World(parsed: Partial<WorldState>): WorldState {
+  return {
+    ...(parsed as WorldState),
+    people: Array.isArray(parsed.people) ? parsed.people : [],
+    memories: Array.isArray(parsed.memories) ? parsed.memories : [],
+  };
 }
 
 function withPhase5Fields(character: Partial<Character>): Character {

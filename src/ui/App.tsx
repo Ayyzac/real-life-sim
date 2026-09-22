@@ -37,7 +37,7 @@ export function App(): React.JSX.Element {
     <main className="app">
       <h1 className="app__title">Real Life Sim</h1>
 
-      <Dashboard character={world.character} clockDay={world.clockDay} />
+      <Dashboard character={world.character} clockDay={world.clockDay} people={world.people} />
 
       <section className="panel world">
         <GameCanvas />
@@ -49,7 +49,7 @@ export function App(): React.JSX.Element {
       ) : (
         <>
           <TimeControls />
-          <LocationMenu character={world.character} />
+          <LocationMenu world={world} />
         </>
       )}
 

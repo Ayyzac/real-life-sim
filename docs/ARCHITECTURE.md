@@ -431,6 +431,44 @@ teknisnya dan alasan di baliknya.
 bagian bisa dicoba dan bukan menunggu semuanya selesai. Bagian A memuat
 perubahan bentuk save, jadi migrasi ikut di situ — bukan ditunda ke akhir.
 
+#### Fase 5B — keluarga & hubungan (hasil implementasi)
+
+Sistem terbesar di proyek ini, dan satu-satunya yang membuat data save tumbuh
+seiring waktu. Aturannya di `docs/GDD.md` §10.
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| `people` dan `memories` di **`WorldState`**, bukan `Character` | Orang-orang adalah dunia di sekitar karakter; `Character` tetap berisi statistiknya sendiri. | Life Summary membaca `WorldState`, dan `eventLog`/`milestones` sudah tinggal di sana. |
+| Bagian pasti dipisah dari lemparan dadu | `relationshipsOneDay()` (menua, kedekatan luntur, biaya anak) dipanggil dari `applyDailyRules`; `rollRelationships()` (kematian, menjauh, kelahiran, kenalan baru) dipanggil dari `simulateOneDay` bersama RNG. | Pola yang sama dengan event Fase 1 dan pertandingan Fase 4: aturan harian harus bisa dites sampai ke angkanya, tanpa dadu mengubah hasilnya. |
+| **Paling banyak satu kejadian sosial per hari** | `rollRelationships` mengembalikan satu hasil dan berhenti. | Tanpa ini, log berubah jadi dinding teks di kehidupan yang panjang. |
+| Kedekatan naik untuk **semua orang sekaligus** saat bersosialisasi | Fokus `socialize` ditandai `socialises: true` di data. | Alternatifnya (memilih siapa yang ditemui) berarti UI per-orang dan RNG memilih target. Untuk satu angka per orang, menaikkan semuanya sudah cukup dan jauh lebih sedikit kode. |
+| Keluarga tidak bisa "menjauh" | Hanya `friend` dan `colleague` yang hilang karena diabaikan. | Orang tua tidak hilang dari hidup Anda karena lupa menelepon. Anak juga tidak. |
+| Batas menikah: umur 20 | Ditemukan saat menguji di browser: teman awal berumur 17 muncul sebagai calon pasangan. | Ditambahkan sebagai angka di `balance.ts`, bukan aturan di mesin. |
+| `SCHEMA_VERSION` tetap **3** | Migrasi Fase 5A sudah mengisi `people: []` dan `memories: []` untuk save lama. | Karakter yang dimigrasi mulai mencatat orang dari sekarang; tahun-tahun yang sudah lewat memang tidak merekam siapa pun. |
+
+**Hasil simulasi seumur hidup** (3 seed, pemain cermat). Ini yang dipakai untuk
+menyetel angkanya:
+
+| Cara main | Kenalan seumur hidup | Masih ada di akhir | Menikah | Anak | Ukuran save |
+|---|--:|--:|:--:|--:|--:|
+| Rajin bersosialisasi | 20-23 | 9-11 | ya, umur 28-29 | 3-4 | ~16 KB |
+| Kerja terus | 42-48 | 0-5 | tidak pernah | 0 | ~18 KB |
+
+Yang dibaca dari tabel itu:
+- Konsekuensinya terbaca jelas tanpa perlu dijelaskan: pemain yang hanya bekerja
+  **tidak pernah menikah dan kehilangan hampir semua orang**, lalu terus bertemu
+  orang asing baru yang juga pergi. Itu muncul sendiri dari aturannya, bukan
+  ditulis khusus.
+- **Save 16-18 KB**, jauh di bawah batas 100 KB yang dipatok test — bukti
+  pemadatan kenangan bekerja.
+- Pasangan hampir selalu meninggal lebih dulu. Karena itu kalimat penutup Life
+  Summary diubah: cukup punya anak, tidak harus pasangan yang masih hidup.
+  "Menikah enam puluh tahun" tidak boleh terhapus hanya karena hidup lebih lama.
+
+Dua angka diperbaiki setelah membaca simulasi pertama: peluang bertemu orang
+baru diturunkan (99 kenalan seumur hidup terlalu ramai) dan kurva kematian NPC
+dilunakkan (mereka mati di awal 70-an, terlalu muda).
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

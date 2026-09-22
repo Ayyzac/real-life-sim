@@ -9,6 +9,7 @@ import {
 import { findSport, meetsRequirements as meetsSportRequirements } from './careers/sports';
 import { findPossession, replacedBy, withPurchase } from './belongings';
 import { findLifestyle } from '../data/lifestyles';
+import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
@@ -43,6 +44,7 @@ export type GameIntent =
   | { type: 'leaveSport' }
   | { type: 'buyPossession'; possessionId: string }
   | { type: 'setLifestyle'; lifestyleId: string }
+  | { type: 'marry'; personId: string }
   | { type: 'reset' };
 
 interface StoreEvents {
@@ -131,6 +133,37 @@ export class GameStore {
             ...state.eventLog,
           ],
           character: { ...state.character, lifestyleId: lifestyle.id },
+        };
+      }
+
+      case 'marry': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+
+        // The guard list is the same one the UI shows, so a button and the
+        // store can never disagree about who you are allowed to marry.
+        const candidate = marriageCandidates(state.people).find((p) => p.id === intent.personId);
+        if (!candidate) return state;
+        if (state.character.stats.money < RELATIONSHIP_BALANCE.weddingCost) return state;
+
+        const married = {
+          day: state.clockDay,
+          tone: 'good' as const,
+          text: `Married ${candidate.name}.`,
+        };
+        return {
+          ...state,
+          eventLog: [married, ...state.eventLog],
+          milestones: [married, ...state.milestones],
+          people: state.people.map((p) =>
+            p.id === candidate.id ? { ...p, kind: 'partner' as const, closeness: 100 } : p,
+          ),
+          character: {
+            ...state.character,
+            stats: {
+              ...state.character.stats,
+              money: state.character.stats.money - RELATIONSHIP_BALANCE.weddingCost,
+            },
+          },
         };
       }
 

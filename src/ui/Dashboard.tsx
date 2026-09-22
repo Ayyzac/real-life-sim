@@ -1,10 +1,11 @@
 import { ageInYears } from '../core/character';
-import type { Character } from '../core/types';
+import type { Character, Person } from '../core/types';
 import { findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
 import { findBusiness } from '../data/businesses';
 import { findSport } from '../data/sports';
 import { findLifestyle } from '../data/lifestyles';
+import { childrenOf, partnerOf } from '../core/relationships';
 import { Portrait } from './Portrait';
 import { profitPerDay } from '../core/careers/business';
 import { DAYS_PER_WEEK } from '../core/clock';
@@ -33,6 +34,17 @@ function StatBar({ label, value, tone }: StatBarProps): React.JSX.Element {
       </div>
     </div>
   );
+}
+
+/** Partner and children, if there are any. Empty for someone living alone. */
+function household(people: readonly Person[]): string {
+  const partner = partnerOf(people);
+  const children = childrenOf(people).length;
+  const parts: string[] = [];
+
+  if (partner) parts.push(`married to ${partner.name}`);
+  if (children > 0) parts.push(`${children} ${children === 1 ? 'child' : 'children'}`);
+  return parts.join(', ');
 }
 
 function careerLine(character: Character): string {
@@ -78,9 +90,11 @@ function businessWeek(character: Character): { name: string; profit: number } | 
 export function Dashboard({
   character,
   clockDay,
+  people,
 }: {
   character: Character;
   clockDay: number;
+  people: readonly Person[];
 }): React.JSX.Element {
   const { stats, attributes } = character;
   const week = businessWeek(character);
@@ -128,6 +142,7 @@ export function Dashboard({
       <p className="dashboard__focus">
         Doing: <strong>{findFocus(character.focusId).label}</strong> &middot; living{' '}
         <strong>{findLifestyle(character.lifestyleId).label.toLowerCase()}</strong>
+        {household(people) && <> &middot; {household(people)}</>}
       </p>
 
       {stats.energy < BALANCE.lowEnergyThreshold && (

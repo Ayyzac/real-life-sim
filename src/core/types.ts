@@ -112,6 +112,42 @@ export interface EventLogEntry {
   tone: 'good' | 'bad' | 'neutral';
 }
 
+/** How someone came into the player's life (GDD §10). */
+export type RelationKind = 'family' | 'friend' | 'colleague' | 'partner' | 'child';
+
+/**
+ * One person the player knows, simulated in full while they are alive.
+ *
+ * Deliberately small: every field here is multiplied by however many people
+ * are in the save, and the save has to stay under localStorage's ceiling.
+ */
+export interface Person {
+  id: string;
+  name: string;
+  kind: RelationKind;
+  /** Their own age, counted in days like the player's so it never jolts. */
+  ageDays: number;
+  /** 0-100. What the player has put into knowing them. */
+  closeness: number;
+  /** Flavour only - a label, not a JobDefinition. Null for children. */
+  job: string | null;
+  /** Days spent at rock-bottom closeness, before they drift away for good. */
+  neglectedDays: number;
+}
+
+/**
+ * Somebody who has died or drifted away, kept as one line.
+ *
+ * This is the whole reason the save stays small: the cast keeps changing over
+ * seventy years, but only the living are simulated (GDD §10.3).
+ */
+export interface Memory {
+  name: string;
+  kind: RelationKind;
+  text: string;
+  day: number;
+}
+
 export interface WorldState {
   /** Bumped whenever the saved shape changes, so old saves can be migrated. */
   schemaVersion: number;
@@ -128,6 +164,10 @@ export interface WorldState {
   milestones: EventLogEntry[];
   /** Highest money ever held. The Life Summary reports it. */
   peakMoney: number;
+  /** Everyone the player currently knows, alive and simulated (GDD §10). */
+  people: Person[];
+  /** One line each for those who have died or drifted away. Trimmed. */
+  memories: Memory[];
   /** Non-null while an event is waiting for the player to choose. */
   pendingEvent: PendingEvent | null;
   deceased: boolean;

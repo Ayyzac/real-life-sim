@@ -41,7 +41,34 @@ export function LifeSummary({ world }: { world: WorldState }): React.JSX.Element
           <dt>Started as</dt>
           <dd>{life.background}</dd>
         </div>
+        <div>
+          <dt>Family</dt>
+          <dd>{life.household ?? 'None'}</dd>
+        </div>
       </dl>
+
+      {life.survivors.length > 0 && (
+        <>
+          <h3 className="panel__subtitle">Who was still there</h3>
+          <p className="panel__hint">
+            {life.survivors.map((person) => person.name).join(' · ')}
+          </p>
+        </>
+      )}
+
+      {life.memories.length > 0 && (
+        <>
+          <h3 className="panel__subtitle">Who they lost along the way</h3>
+          <ul className="log__list">
+            {life.memories.map((memory, index) => (
+              <li key={`${memory.name}-${index}`} className="log__item">
+                <span className="log__week">W{weekNumber(memory.day)}</span>
+                <span>{memory.text}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h3 className="panel__subtitle">The moments that stuck</h3>
       <ul className="log__list summary__milestones">
