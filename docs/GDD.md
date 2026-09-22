@@ -29,6 +29,13 @@ Waktu **tidak pernah maju sendiri** tanpa pemain menekan tombol (lihat `CLAUDE.m
 ### 3.2 Pembuatan karakter (character creation)
 Sederhana untuk v1: nama, jenis kelamin/penampilan sprite, dan 1–2 pilihan latar belakang awal (mempengaruhi stat awal, bukan menulis cerita panjang). Tidak perlu wizard rumit.
 
+**Diputuskan user 22 Sep 2026 (Fase 5):** pemain memilih satu dari **18 sprite**
+yang sudah ada di tilesheet kota. Penampilan **murni tampilan** — tidak
+mempengaruhi satu aturan pun, termasuk keluarga: siapa pun bisa menikah dan
+punya anak. Alasannya sengaja: tiap cabang aturan yang diikat ke jenis kelamin
+menambah jalur yang harus diseimbangkan dan dites, dengan imbalan permainan
+yang kecil.
+
 ## 4. Jalur karier
 
 Di v1 semuanya **disederhanakan (abstraksi angka)** sesuai kesepakatan — kedalaman ditambah belakangan.
@@ -95,6 +102,17 @@ Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing d
 - Banyak save slot sekaligus
 - Simulasi bisnis/olahraga yang dalam (staf individual, kompetitor AI kompleks, pertandingan real-time) — ini arah pengembangan v2+, bukan v1
 
+**Perubahan scope, 22 Sep 2026 (Fase 5).** Satu hal dipindahkan dari daftar ini
+ke DALAM scope atas permintaan eksplisit user: **NPC yang punya hidup sendiri**
+(menua, bekerja, menikah, punya anak, meninggal tanpa campur tangan pemain).
+`ROADMAP.md` menetapkan bahwa hal di luar roadmap hanya boleh dikerjakan kalau
+user meminta secara eksplisit **dan dokumennya diubah dulu** — ini catatan
+perubahan itu. Rinciannya di §10.
+
+Yang **tetap** di luar scope: multiplayer, LLM saat main, aplikasi terpisah,
+monetisasi, save cloud, grafis 3D, meta-progression lintas kehidupan, banyak
+save slot, dan simulasi bisnis/olahraga yang dalam.
+
 ## 8. Daftar layar UI (v1)
 
 1. Layar utama / dashboard karakter (selalu terlihat sebagian, mis. bar status di atas)
@@ -104,3 +122,62 @@ Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing d
 5. Layar kematian / Life Summary
 6. Layar pembuatan karakter baru
 7. Menu pengaturan sederhana (volume, reset save)
+
+## 9. Barang, gaya hidup, dan uang (Fase 5)
+
+Sampai Fase 4 uang menumpuk tanpa guna — pemain cermat mati dengan ratusan ribu
+sampai jutaan di rekening. Tiga penyerap ditambahkan sekaligus (keputusan user,
+22 Sep 2026). Ketiganya bekerja dengan cara yang berbeda supaya pilihan terasa
+berbeda.
+
+### 9.1 Barang permanen
+Sekali beli, efeknya seumur hidup karakter. Contoh: rumah yang lebih baik
+membuat Istirahat memulihkan lebih banyak energi; kendaraan mengurangi energi
+yang terbuang tiap hari. Harganya besar, jadi benar-benar menyerap tabungan.
+Didefinisikan sebagai data, satu entri per barang.
+
+### 9.2 Gaya hidup
+Satu taraf hidup yang dipilih pemain (sederhana → mewah). Makin tinggi, biaya
+hidup harian makin besar tapi mood dan kesehatan ikut terangkat. Menyerap
+terus-menerus, bukan sekali bayar. Bisa diturunkan lagi kalau uang menipis.
+
+### 9.3 Keluarga
+Lihat §10. Menikah butuh biaya besar sekali bayar; tiap tanggungan menambah
+biaya harian dan menaikkan mood.
+
+### 9.4 Target keseimbangan
+**Satu kehidupan cukup untuk salah satu, bukan semuanya**: rumah bagus ATAU
+keluarga besar ATAU gaya hidup mewah. Uang jadi bahan pilihan, bukan hitungan
+mundur, dan tiap kehidupan berikutnya bisa terasa berbeda dari yang sebelumnya.
+Pemain ceroboh tetap bisa jatuh miskin.
+
+## 10. Keluarga & hubungan (Fase 5)
+
+`§1` selalu menyebut pemain mengurus "kesehatan, **hubungan**, dan keuangan",
+tapi hubungan tidak pernah dibuat sampai fase penutup ini.
+
+### 10.1 Orang di sekitar pemain
+Orang muncul lewat event: keluarga asal, teman, rekan kerja, pasangan. Tiap
+orang punya nama, peran, dan satu angka **kedekatan** 0–100 yang naik kalau
+pemain meluangkan waktu dan turun kalau diabaikan.
+
+### 10.2 Mereka punya hidup sendiri
+Keputusan user, 22 Sep 2026 — ini bagian yang dipindahkan ke dalam scope
+(lihat §7). NPC **menua, bekerja, menikah, punya anak, dan meninggal** tanpa
+campur tangan pemain. Dunia bergerak walau pemain tidak menyentuhnya.
+
+### 10.3 Batas data — wajib, bukan pilihan
+Save hidup di localStorage dan ada test yang menjaganya tetap kecil. Karena itu:
+
+- Orang yang **masih hidup dan dikenal** disimulasikan penuh.
+- Orang yang **meninggal atau menghilang** dipadatkan jadi satu baris kenangan:
+  nama, peran, dan apa yang terjadi. Muncul di Life Summary, tidak disimulasikan
+  lagi.
+
+Tanpa aturan ini, 70 tahun kenalan akan menembus batas penyimpanan dan game
+gagal menyimpan diam-diam di tengah permainan.
+
+### 10.4 Yang tetap tidak dibuat
+Pohon keluarga lintas generasi yang bisa ditelusuri, percakapan bebas, dan NPC
+yang bisa diajak bicara di peta. Hubungan tetap berupa angka dan event, bukan
+dialog.

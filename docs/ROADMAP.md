@@ -56,11 +56,37 @@ Tujuan: tambahkan lapisan visual di atas loop yang sudah terbukti jalan di Fase 
 - [x] Balancing diperiksa lewat simulasi seumur hidup, hasilnya dipatok test
 - [x] **Checkpoint:** user bisa memilih jalur atlet, berlatih, dan bertanding
 
-## Fase 5 — Konten & polish
-- [ ] Perbanyak event kehidupan, pekerjaan, jenis bisnis, cabang olahraga (semua tinggal nambah data, sesuai pola Fase 1–4)
-- [ ] Balancing angka (uang, energi, peluang event) supaya terasa adil dan seru
-- [ ] Perbaikan save/load (robust terhadap error, migrasi versi kalau perlu)
-- [ ] Polish visual & suara (lihat `docs/ASSETS.md` untuk sumber SFX gratis)
+## Fase 5 — Konten, kedalaman & polish (fase penutup)
+
+Dipecah empat bagian atas permintaan user (22 Sep 2026) supaya tiap bagian bisa
+dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
+`docs/GDD.md` §9–§10 dan `docs/ARCHITECTURE.md` §11.
+
+### A — Uang punya tujuan
+- [ ] `SCHEMA_VERSION` naik ke 3, **dengan migrasi** dari versi 2 (karakter yang sedang hidup lanjut, tidak dibuang)
+- [ ] Barang permanen yang bisa dibeli (`src/data/possessions.ts`)
+- [ ] Taraf gaya hidup yang bisa dinaik-turunkan
+- [ ] Pilihan penampilan sprite saat pembuatan karakter — menutup utang GDD §3.2
+- [ ] **Checkpoint:** uang yang ditabung akhirnya bisa dibelanjakan
+
+### B — Keluarga & hubungan
+- [ ] Orang di sekitar pemain: nama, peran, kedekatan
+- [ ] NPC punya hidup sendiri: menua, bekerja, menikah, punya anak, meninggal
+- [ ] Orang yang meninggal/pergi dipadatkan jadi kenangan, supaya save tetap kecil
+- [ ] Menikah dan tanggungan sebagai penyerap uang
+- [ ] **Checkpoint:** pemain punya lingkungan sosial yang berubah sendiri seiring waktu
+
+### C — Isi & keseimbangan
+- [ ] Perbanyak isi kira-kira dua kali lipat: ~45 event, ~10 pekerjaan, ~6 usaha, ~5 cabang olahraga
+- [ ] Penyetelan menyeluruh lewat simulasi seumur hidup, target di GDD §9.4
+- [ ] **Checkpoint:** satu kehidupan terasa tidak mengulang, dan uang terasa jadi pilihan
+
+### D — Suara & penutup
+- [ ] Efek suara CC0 (tanpa musik), termasuk membereskan AudioContext yang dimatikan sejak Fase 0
+- [ ] Menu pengaturan: volume dan reset save — menutup utang GDD §8 butir 7
+- [ ] Save tahan error (save rusak tidak boleh membuat game gagal dibuka)
+- [ ] Ukur ulang FPS dengan jujur, dan periksa ukuran bundel
+- [ ] **Checkpoint:** game terasa utuh dari layar pertama sampai Life Summary
 
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.

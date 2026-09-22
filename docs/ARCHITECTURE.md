@@ -409,8 +409,30 @@ besar daripada biaya hidup (jadi tidak pernah ada alasan berhenti), lantai
 penurunan usia terlalu murah hati (atlet umur 60 masih menang separuh), dan lari
 serta basket tidak layak dipilih dibanding kerja kantoran.
 
+### 2026-09-22 — Fase 5 (keputusan, ditulis sebelum kode)
+
+Fase penutup. Semua di bawah ini dijawab user lewat pertanyaan satu per satu
+pada 22 Sep 2026. Aturan mainnya ada di `docs/GDD.md` §9–§10; ini sisi
+teknisnya dan alasan di baliknya.
+
+| Keputusan | Isi | Alasan / konsekuensi |
+|---|---|---|
+| **Tiga penyerap uang sekaligus** | Barang permanen, taraf gaya hidup, dan keluarga. | User memilih ketiganya. Ini bukan polish melainkan tiga sistem baru — sudah disampaikan ke user sebelum dikerjakan. Ketiganya menyerap dengan cara berbeda (sekali bayar / terus-menerus / terus-menerus + sekali bayar) supaya pilihannya terasa berbeda. |
+| **NPC punya hidup sendiri** | Menua, bekerja, menikah, punya anak, meninggal tanpa campur tangan pemain. | Permintaan eksplisit user. **Ini memindahkan sesuatu dari luar scope ke dalam scope** — `ROADMAP.md` mensyaratkan dokumen diubah dulu, dan itu sudah dilakukan di `GDD.md` §7. Sistem terbesar di seluruh proyek. |
+| **Daftar orang dibatasi** | Yang hidup disimulasikan penuh; yang meninggal/pergi dipadatkan jadi satu baris kenangan. | **Wajib, bukan pilihan gaya.** Save hidup di localStorage dan dipatok test di bawah 100 KB. Tanpa pemadatan, 70 tahun kenalan menembus batas dan `save()` gagal **diam-diam** di tengah permainan — kelas bug terburuk di proyek ini. |
+| `SCHEMA_VERSION` → **3, dengan migrasi** | Save versi 2 dibaca dan dilengkapi: keluarga kosong, belum punya barang, gaya hidup sederhana, sprite bawaan. | Pertama kalinya proyek ini menulis migrasi. Sampai Fase 4 save lama selalu dibuang, dengan alasan "belum ada pemain". Di fase penutup alasan itu habis: setelah ini orang benar-benar main, dan fitur terbanyak datang justru saat save paling rentan. |
+| Penampilan karakter **murni tampilan** | 18 sprite dari tilesheet yang sudah ada. Tidak mempengaruhi aturan apa pun. | Menutup utang GDD §3.2 dengan kode paling sedikit. Mengikat aturan ke jenis kelamin akan menambah cabang di sistem yang sudah paling besar, dan tiap cabang butuh testnya sendiri. |
+| Isi **dua kali lipat**, bukan sebanyak mungkin | ~45 event, ~10 pekerjaan, ~6 usaha, ~5 cabang olahraga. | Tiap entri baru menggeser keseimbangan. Dengan sistem keluarga yang juga baru, jumlah yang lebih besar tidak bisa dijamin masih masuk akal tanpa waktu penyetelan yang jauh lebih lama. |
+| **Efek suara saja, tanpa musik** | Paket CC0, plus menu pengaturan dengan volume. | Musik yang sama selama berjam-jam menyiksa, dan `ASSETS.md` mencatat lisensi musik gratis lebih rumit daripada SFX. Menyalakan audio berarti **membereskan dulu** `audio: { noAudio: true }` yang dipasang di Fase 0 untuk menghindari error AudioContext saat React memuat ulang komponen. |
+| Target kesulitan | Satu kehidupan cukup untuk **salah satu**: rumah bagus / keluarga besar / gaya hidup mewah. | Uang jadi bahan pilihan, bukan hitungan mundur. Ini angka yang dituju seluruh penyetelan Fase 5. |
+| **ESLint/Prettier: tidak dipasang** | Item terakhir di daftar "Belum diputuskan" ditutup. | TypeScript ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting; satu penulis kode berarti format tidak pernah bertengkar. |
+
+**Dikerjakan bertahap (A–D di `ROADMAP.md`)** atas permintaan user, supaya tiap
+bagian bisa dicoba dan bukan menunggu semuanya selesai. Bagian A memuat
+perubahan bentuk save, jadi migrasi ikut di situ — bukan ditunda ke akhir.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
-- **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.
+- ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.
 - ~~**Skema kontrol karakter** di peta (WASD vs klik-jalan)~~ — **sudah diputuskan**: klik-untuk-jalan. Lihat entri Fase 2 di atas.
 - **Ukuran bundel:** build Fase 0 sudah 1,4 MB (388 KB gzip), hampir semuanya Phaser. Wajar, tapi kalau nanti terasa lambat dibuka, itu bahan polish Fase 5 — bukan masalah sekarang.
