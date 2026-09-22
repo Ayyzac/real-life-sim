@@ -16,5 +16,6 @@ export const LOCATIONS: readonly LocationDefinition[] = [
   { id: 'work', label: 'Work', blurb: 'Find a job, or put in the hours.' },
   { id: 'gym', label: 'Gym', blurb: 'Trade energy for muscle.' },
   { id: 'cafe', label: 'Cafe', blurb: 'People are good for you. They cost money.' },
+  { id: 'business', label: 'Business', blurb: 'Your own shop. Or the empty unit where one could be.' },
   { id: 'hospital', label: 'Hospital', blurb: 'Expensive, but it works.' },
 ];

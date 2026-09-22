@@ -2,6 +2,9 @@ import { ageInYears } from '../core/character';
 import type { Character } from '../core/types';
 import { findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
+import { findBusiness } from '../data/businesses';
+import { profitPerDay } from '../core/careers/business';
+import { DAYS_PER_WEEK } from '../core/clock';
 import { BALANCE } from '../data/balance';
 import { money, weekNumber } from './format';
 
@@ -30,10 +33,38 @@ function StatBar({ label, value, tone }: StatBarProps): React.JSX.Element {
 }
 
 function careerLine(character: Character): string {
-  if (character.career.type !== 'job') return 'Unemployed';
-  const job = findJob(character.career.jobId);
-  const level = character.career.level > 0 ? ` (level ${character.career.level})` : '';
-  return `${job.title}${level}`;
+  const career = character.career;
+
+  if (career.type === 'job') {
+    const job = findJob(career.jobId);
+    return `${job.title}${career.level > 0 ? ` (level ${career.level})` : ''}`;
+  }
+
+  if (career.type === 'business') {
+    const business = findBusiness(career.businessId);
+    return `${business.name}${career.level > 0 ? ` (level ${career.level})` : ''}`;
+  }
+
+  return 'Unemployed';
+}
+
+/**
+ * What the business will make this week if nothing changes.
+ *
+ * There is no automatic bankruptcy (user decision, 22 Sep 2026), so a business
+ * left alone can quietly drain a lifetime of savings. This is the warning that
+ * stops "quietly".
+ */
+function businessWeek(character: Character): { name: string; profit: number } | null {
+  const career = character.career;
+  if (career.type !== 'business') return null;
+
+  const business = findBusiness(career.businessId);
+  const attended = findFocus(character.focusId).runsBusiness === true;
+  return {
+    name: business.name,
+    profit: profitPerDay(business, career.level, attended) * DAYS_PER_WEEK,
+  };
 }
 
 export function Dashboard({
@@ -44,6 +75,8 @@ export function Dashboard({
   clockDay: number;
 }): React.JSX.Element {
   const { stats, attributes } = character;
+  const week = businessWeek(character);
+  const losing = week && week.profit < 0 ? week : null;
 
   return (
     <section className="panel dashboard">
@@ -88,6 +121,12 @@ export function Dashboard({
       {stats.energy < BALANCE.lowEnergyThreshold && (
         <p className="warning" role="status">
           Running on empty. While energy stays this low you lose health every day. Rest at Home.
+        </p>
+      )}
+
+      {losing !== null && (
+        <p className="warning" role="status">
+          {losing.name} is losing {money(-losing.profit)} a week. Mind the shop, or close it.
         </p>
       )}
 

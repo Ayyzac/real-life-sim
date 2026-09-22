@@ -11,6 +11,11 @@ export function signed(value: number): string {
   return rounded > 0 ? `+${rounded}` : `${rounded}`;
 }
 
+/** Money with an explicit sign, for figures that can go either way. */
+export function signedMoney(amount: number): string {
+  return amount > 0 ? `+${money(amount)}` : money(amount);
+}
+
 export function weekNumber(clockDay: number): number {
   return Math.floor(clockDay / 7) + 1;
 }

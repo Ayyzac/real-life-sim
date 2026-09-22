@@ -68,6 +68,27 @@ export const BALANCE = {
    */
   criticalHealth: 15,
 
+  /**
+   * Running a business (GDD §4.2, user decisions 22 Sep 2026).
+   *
+   * The whole point of a business over a job is that it earns while you are
+   * doing something else - but only part of it does. Costs are charged in
+   * full every day regardless, so a big business left alone LOSES money.
+   * That is deliberate: it is what makes attention worth something.
+   */
+  business: {
+    /**
+     * Cost of reaching each level. Index 0 is the level you open at.
+     *
+     * Chosen so the first one is a real decision early on rather than loose
+     * change. How much they matter against a whole lifetime of income is a
+     * Phase 5 balancing question, not this phase's.
+     */
+    upgradeCost: [0, 5_000, 20_000, 60_000],
+    /** Takings multiplier per level: level 2 earns 1 + 2 * 0.3 = 1.6x. */
+    revenueBonusPerLevel: 0.3,
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

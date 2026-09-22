@@ -99,6 +99,7 @@ export const BUILDINGS: readonly TownBuilding[] = [
   { locationId: 'gym', x: 17, y: 0, width: 5, height: 4, wallTile: 180, bandTile: 153, doorTile: 310, doorX: 19 },
   // South side: doors face down onto the pavement at row 13.
   { locationId: 'cafe', x: 3, y: 9, width: 5, height: 4, wallTile: 72, bandTile: 45, doorTile: 336, doorX: 5 },
+  { locationId: 'business', x: 9, y: 9, width: 5, height: 4, wallTile: 41, bandTile: 68, doorTile: 312, doorX: 11, tint: 0xe8c97a },
   { locationId: 'hospital', x: 15, y: 9, width: 6, height: 4, wallTile: 41, bandTile: 68, doorTile: 257, doorX: 17, tint: 0xa8ded0 },
 ];
 
@@ -117,8 +118,8 @@ export const PROPS: readonly TownProp[] = [
   { x: 23, y: 2, tile: 346 },
   { x: 24, y: 0, tile: 292 },
   { x: 1, y: 10, tile: 238 },
-  { x: 10, y: 10, tile: 291 },
-  { x: 12, y: 10, tile: 346 },
+  { x: 0, y: 11, tile: 291 },
+  { x: 24, y: 10, tile: 346 },
   { x: 22, y: 10, tile: 292 },
   { x: 23, y: 11, tile: 345 },
 ];

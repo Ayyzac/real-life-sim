@@ -37,12 +37,14 @@ Tujuan: tambahkan lapisan visual di atas loop yang sudah terbukti jalan di Fase 
 - [x] Test: pencarian jalan, validitas peta, dan `enterLocation` diblokir saat ada event menunggu
 - [x] **Checkpoint:** user bisa jalan-jalan di peta, masuk ke tempat kerja, dan itu memicu aksi yang sama seperti Fase 1
 
-## Fase 3 — Jalur karier: Bisnis
-- [ ] Data `businesses.ts` (beberapa jenis usaha sederhana)
-- [ ] `careers/business.ts` — pendapatan/biaya per tick, 1–2 keputusan pemain (mis. investasi promosi)
-- [ ] Event acak khusus bisnis
-- [ ] Lokasi baru: tempat usaha pemain (kalau relevan secara visual)
-- [ ] **Checkpoint:** user bisa memilih buka usaha alih-alih kerja biasa, dan melihat kasnya berubah tiap hari
+## Fase 3 — Jalur karier: Bisnis — SELESAI
+- [x] Data `businesses.ts` (tiga jenis usaha: warung, toko online, bengkel)
+- [x] `careers/business.ts` — pendapatan/biaya per hari, plus keputusan pemain (investasi promosi, tutup usaha)
+- [x] Event acak khusus bisnis (4 entri, salah satunya butuh keputusan)
+- [x] Lokasi baru: gedung "Business" ke-6 di peta, dengan tabnya sendiri
+- [x] Peringatan di dashboard saat usaha merugi (pengganti bangkrut otomatis, sesuai pilihan user)
+- [x] Balancing diperiksa lewat simulasi seumur hidup, hasilnya dipatok test
+- [x] **Checkpoint:** user bisa memilih buka usaha alih-alih kerja biasa, dan melihat kasnya berubah tiap hari
 
 ## Fase 4 — Jalur karier: Olahraga
 - [ ] Data `sports.ts` (beberapa cabang olahraga)

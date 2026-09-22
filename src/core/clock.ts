@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/balance';
 import { findFocus } from '../data/focuses';
+import { tradeOneDay } from './careers/business';
 import { workOneDay } from './careers/job';
 import { ageInYears } from './character';
 import { applyEffect, findChoice, findEvent, needsDecision, rollEvent } from './events';
@@ -130,6 +131,15 @@ export function applyDailyRules(state: WorldState): WorldState {
       eventLog = withLogEntry(eventLog, entry);
       milestones = withMilestone(milestones, entry);
     }
+  }
+
+  // A business trades every day, attended or not (GDD §4.2). Minding the shop
+  // takes the full day's money; anything else takes the reduced share while
+  // the costs stay the same, so an ignored business can run at a loss.
+  if (career.type === 'business') {
+    const traded = tradeOneDay(career, focus.runsBusiness === true);
+    career = traded.career;
+    stats.money += traded.profit;
   }
 
   // ponytail: money is allowed to go negative instead of blocking the activity.

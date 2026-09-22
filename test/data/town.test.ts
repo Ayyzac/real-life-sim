@@ -80,12 +80,23 @@ describe('town map', () => {
     }
   });
 
-  it('never stands a prop inside a building or on the pavement', () => {
+  it('keeps every prop on the grass, off the pavement and out of the buildings', () => {
     const walkable = buildWalkable();
 
     for (const prop of PROPS) {
       expect(GROUND[prop.y]?.[prop.x], `prop at ${prop.x},${prop.y}`).toBe('g');
       expect(walkable[prop.y]?.[prop.x]).toBe(false);
+
+      // Grass under a building is still grass, so the check above would not
+      // notice a tree drawn on top of a shop.
+      for (const building of BUILDINGS) {
+        const inside =
+          prop.x >= building.x &&
+          prop.x < building.x + building.width &&
+          prop.y >= building.y &&
+          prop.y < building.y + building.height;
+        expect(inside, `prop at ${prop.x},${prop.y} is inside ${building.locationId}`).toBe(false);
+      }
     }
   });
 

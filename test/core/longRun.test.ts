@@ -6,6 +6,8 @@ import { FOCUSES } from '../../src/data/focuses';
 import type { WorldState } from '../../src/core/types';
 import { playUntilDeath, playWeeks, resolveAll } from '../helpers/play';
 import { advanceWeek } from '../../src/core/clock';
+import { upgradeCost } from '../../src/core/careers/business';
+import { findBusiness } from '../../src/data/businesses';
 
 /**
  * A full life is thousands of clicks. These tests play one out to catch what
@@ -131,5 +133,112 @@ describe('the agreed shape of a lifespan', () => {
 
     expect(reckless.deceased).toBe(true);
     expect(recklessAge).toBeLessThan(carefulAge - 15);
+  });
+});
+
+/**
+ * Plays a whole life running one business: works an ordinary job until the
+ * capital is there, then opens up and reinvests when it can comfortably
+ * afford to. `neglect` studies instead of minding the shop.
+ */
+function liveAsOwner(seed: number, businessId: string, neglect: boolean): WorldState {
+  const business = findBusiness(businessId);
+  let state = createWorld({ name: 'Owner', backgroundId: 'scholarship', seed });
+
+  for (let week = 0; week < 6000 && !state.deceased; week += 1) {
+    const { career, stats } = state.character;
+    const busy = neglect ? 'study' : 'mind_business';
+    let next = state.character;
+
+    if (career.type !== 'business') {
+      next =
+        stats.money < business.startupCost
+          ? {
+              ...next,
+              focusId: upkeepFocus(state, 'work'),
+              career:
+                career.type === 'job'
+                  ? career
+                  : { type: 'job', jobId: 'office_clerk', tenureDays: 0, level: 0 },
+            }
+          : {
+              ...next,
+              focusId: upkeepFocus(state, busy),
+              stats: { ...stats, money: stats.money - business.startupCost },
+              career: { type: 'business', businessId, daysOpen: 0, level: 0 },
+            };
+    } else {
+      const cost = upgradeCost(career.level);
+      const grow = cost !== null && stats.money >= cost * 3;
+      next = {
+        ...next,
+        focusId: upkeepFocus(state, busy),
+        stats: { ...stats, money: stats.money - (grow && cost !== null ? cost : 0) },
+        career: grow ? { ...career, level: career.level + 1 } : career,
+      };
+    }
+
+    state = resolveAll(advanceWeek({ ...state, character: next }));
+  }
+
+  return state;
+}
+
+/** Fix whatever is worst first, otherwise get on with `busy`. */
+function upkeepFocus(state: WorldState, busy: string): string {
+  const { health, energy, mood } = state.character.stats;
+  if (health < 40) return 'treatment';
+  if (energy < 45) return 'rest';
+  if (mood < 35) return 'socialize';
+  return busy;
+}
+
+/**
+ * Business balance, pinned the same way the lifespan is.
+ *
+ * These numbers were not guessed: whole lifetimes were simulated and read off
+ * (docs/ARCHITECTURE.md §11). What is pinned here is the SHAPE - which way
+ * round the options come out - rather than exact totals, so tuning stays
+ * possible without the tests turning into busywork.
+ */
+describe('the agreed shape of a business', () => {
+  it('rewards minding the shop more than an ordinary job does', () => {
+    for (const seed of [1, 4242]) {
+      const owner = liveAsOwner(seed, 'repair_workshop', false);
+      const employee = liveCarefully(seed);
+
+      expect(owner.peakMoney, `seed ${seed}`).toBeGreaterThan(employee.peakMoney);
+    }
+  });
+
+  it('makes the dearer business the better one, for someone who turns up', () => {
+    // A business that costs more to open has to be worth more to run, or
+    // there is no reason to ever buy it.
+    const stall = liveAsOwner(1, 'market_stall', false);
+    const shop = liveAsOwner(1, 'online_shop', false);
+    const workshop = liveAsOwner(1, 'repair_workshop', false);
+
+    expect(shop.peakMoney).toBeGreaterThan(stall.peakMoney);
+    expect(workshop.peakMoney).toBeGreaterThan(shop.peakMoney);
+  });
+
+  it('lets a workshop nobody runs swallow a lifetime of money', () => {
+    // The player chose no automatic bankruptcy (22 Sep 2026), so this is
+    // allowed to happen - the Dashboard warning is what stops it happening
+    // silently.
+    const ignored = liveAsOwner(1, 'repair_workshop', true);
+
+    expect(ignored.character.stats.money).toBeLessThan(0);
+  });
+
+  it('keeps a lifetime inside the agreed lifespan whichever career is taken', () => {
+    for (const businessId of ['market_stall', 'online_shop', 'repair_workshop']) {
+      const end = liveAsOwner(7, businessId, false);
+      const age = ageInYears(end.character);
+
+      expect(end.deceased, businessId).toBe(true);
+      expect(age, `${businessId} died at ${age}`).toBeGreaterThanOrEqual(80);
+      expect(age, `${businessId} died at ${age}`).toBeLessThanOrEqual(100);
+    }
   });
 });

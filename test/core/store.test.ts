@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GameStore } from '../../src/core/store';
+import { MAX_BUSINESS_LEVEL, upgradeCost } from '../../src/core/careers/business';
+import { findBusiness } from '../../src/data/businesses';
 import type { SaveProvider } from '../../src/core/save/SaveProvider';
 import type { WorldState } from '../../src/core/types';
 
@@ -179,6 +181,126 @@ describe('GameStore', () => {
     dead.dispatch({ type: 'enterLocation', locationId: 'hospital' });
 
     expect(dead.getState()?.character.location).toBe(world.character.location);
+  });
+
+  // ---------- business (GDD §4.2) ----------
+
+  /** A fresh world with enough cash to actually open something. */
+  function rich(money: number, patch: Partial<WorldState['character']> = {}): GameStore {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const world = store.getState()!;
+    return new GameStore(
+      memorySaves({
+        ...world,
+        character: { ...world.character, stats: { ...world.character.stats, money }, ...patch },
+      }),
+    );
+  }
+
+  it('opening a business pays for it and takes the career slot', () => {
+    const shop = rich(5_000);
+
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+
+    expect(shop.getState()?.character.career).toEqual({
+      type: 'business',
+      businessId: 'market_stall',
+      daysOpen: 0,
+      level: 0,
+    });
+    expect(shop.getState()?.character.stats.money).toBe(5_000 - findBusiness('market_stall').startupCost);
+  });
+
+  it('refuses a business the character cannot pay for', () => {
+    const shop = rich(100);
+    const before = shop.getState();
+
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+
+    expect(shop.getState()).toBe(before);
+  });
+
+  it('refuses a business the character is not qualified for', () => {
+    // The athlete background has the money here but not the intelligence.
+    const shop = rich(50_000, { attributes: { intelligence: 10, physical: 40, charisma: 10 } });
+    const before = shop.getState();
+
+    shop.dispatch({ type: 'openBusiness', businessId: 'online_shop' });
+
+    expect(shop.getState()).toBe(before);
+  });
+
+  it('refuses to open a business while the character still has a job', () => {
+    const shop = rich(50_000);
+    shop.dispatch({ type: 'takeJob', jobId: 'cashier' });
+    const before = shop.getState();
+
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+
+    expect(shop.getState()).toBe(before);
+  });
+
+  it('refuses to take a job while the character owns a business', () => {
+    // Without this the business, and the money spent on it, would vanish.
+    const shop = rich(50_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    const before = shop.getState();
+
+    shop.dispatch({ type: 'takeJob', jobId: 'cashier' });
+
+    expect(shop.getState()).toBe(before);
+  });
+
+  it('refuses to open a business while an event is waiting', () => {
+    const shop = rich(50_000);
+    const world = shop.getState()!;
+    const stuck = new GameStore(
+      memorySaves({ ...world, pendingEvent: { eventId: 'friend_invites', daysRemaining: 2 } }),
+    );
+
+    stuck.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+
+    expect(stuck.getState()?.character.career).toEqual({ type: 'none' });
+  });
+
+  it('investing costs money and grows the business', () => {
+    const shop = rich(50_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    const afterOpening = shop.getState()!.character.stats.money;
+
+    shop.dispatch({ type: 'upgradeBusiness' });
+
+    expect(shop.getState()?.character.career).toMatchObject({ level: 1 });
+    expect(shop.getState()?.character.stats.money).toBe(afterOpening - upgradeCost(0)!);
+  });
+
+  it('refuses an investment the character cannot pay for', () => {
+    const shop = rich(1_300);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    const before = shop.getState();
+
+    shop.dispatch({ type: 'upgradeBusiness' });
+
+    expect(shop.getState()).toBe(before);
+  });
+
+  it('stops investing at the top level, so money cannot buy endless income', () => {
+    const shop = rich(500_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    for (let i = 0; i < 10; i += 1) shop.dispatch({ type: 'upgradeBusiness' });
+
+    expect(shop.getState()?.character.career).toMatchObject({ level: MAX_BUSINESS_LEVEL });
+  });
+
+  it('closing a business gives nothing back and leaves the character unemployed', () => {
+    const shop = rich(5_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    const afterOpening = shop.getState()!.character.stats.money;
+
+    shop.dispatch({ type: 'closeBusiness' });
+
+    expect(shop.getState()?.character.career).toEqual({ type: 'none' });
+    expect(shop.getState()?.character.stats.money).toBe(afterOpening);
   });
 
   it('reset wipes both the world and the save file', () => {

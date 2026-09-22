@@ -294,6 +294,56 @@ menebak.
 dari Fase 0 — tilesheet-nya cuma 18 KB dan disajikan sebagai berkas statis,
 tidak ikut di-bundle.
 
+### 2026-09-22 — Fase 3 (jalur karier bisnis)
+
+Aturan mainnya ada di `docs/GDD.md` §4.2. Yang di sini adalah keputusan teknis
+dan **angka hasil simulasi**, bukan tebakan.
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| `CareerState` dapat varian ketiga | `{ type: 'business'; businessId; daysOpen; level }` | Bentuknya sengaja dibuat sekeluarga dengan varian `job`, jadi mesin harian dan UI menanganinya dengan pola yang sama. |
+| `SCHEMA_VERSION` **tetap 2** | Menambah varian ke union tidak mengubah save lama: karakter lama tetap `none` atau `job`. | Menaikkan versi akan membuang save pemain tanpa perlu. Aturan "ubah bentuk save = naikkan angkanya" berlaku untuk perubahan yang merusak, bukan penambahan. |
+| Share "ditelantarkan" ada di **data per usaha**, bukan satu angka global | `BusinessDefinition.neglectedShare`: warung 0,55 · toko online 0,65 · bengkel 0,25. | Inilah yang membuat ketiganya terasa berbeda. Dengan satu angka global, ketiga usaha cuma versi besar-kecil dari benda yang sama. |
+| Tingkat usaha dibatasi 3 | `BALANCE.business.upgradeCost` punya 4 entri; `upgradeCost()` mengembalikan `null` di puncak. | Tanpa batas, pemain bertabungan besar bisa membeli pemasukan tak terbatas. Dipatok test. |
+| `takeJob` **menolak** pemilik usaha | Guard di `store.ts`, plus penjelasan di UI papan lowongan. | Tanpa ini, mengambil pekerjaan menghapus usaha **berikut modal yang sudah dibayar**, tanpa error dan tanpa peringatan. |
+| Peringatan rugi di dashboard | Muncul saat laba mingguan usaha negatif. | User memilih **tanpa bangkrut otomatis**. Peringatan ini yang memastikan kerugian tidak terjadi diam-diam — sejalan dengan prinsip "kematian selalu didahului tanda" di Fase 1. Ditambahkan atas inisiatif Claude; boleh dicoret kalau user tidak mau. |
+| Event bisnis murni data | 4 entri baru di `events.ts` dengan `eligibility: hasBusiness`. | Mesin event tidak disentuh sama sekali — bukti pola "konten = data" masih bekerja tiga fase kemudian. |
+
+**Hasil simulasi seumur hidup** (3 seed, dirata-rata; uang di akhir hidup).
+Inilah yang dipakai untuk menyetel angkanya — bukan perkiraan:
+
+| Cara main | Uang seumur hidup |
+|---|--:|
+| Kerja kantoran (clerk) | $348.000 |
+| Warung, ditunggui | $469.000 |
+| Programmer (pekerjaan bergaji tertinggi) | $1.374.000 |
+| Toko online, sambil kuliah (pasif) | $1.093.000 |
+| Toko online, ditunggui | $1.885.000 |
+| Bengkel, ditunggui | $2.167.000 |
+| **Warung, ditelantarkan sambil kuliah** | **−$450.000** |
+| **Bengkel, ditelantarkan** | **−$968.000** |
+
+Yang dibaca dari tabel itu:
+- Usaha termahal harus jadi yang terbaik kalau ditunggui, kalau tidak tidak ada
+  alasan membelinya. Percobaan pertama **gagal di titik ini** — bengkel kalah
+  dari toko online meski modalnya dua kali lipat. Pemasukan bengkel dinaikkan
+  128 → 150/hari, dan urutannya benar. Ini ditemukan lewat simulasi, bukan
+  lewat membaca kode.
+- Toko online yang ditelantarkan tetap menghasilkan banyak — itu memang
+  "penghasilan pasif" yang dijanjikan, dan alasan utama memilih jalur bisnis.
+- Bengkel yang ditelantarkan menghabiskan hampir sejuta seumur hidup. Itu
+  disengaja dan diperingatkan di dashboard.
+- **Umur harapan tidak bergeser**: 85-88 tahun di semua jalur. Kurva kematian
+  Fase 1 tidak tersentuh.
+
+Yang dipatok sebagai test (`test/core/longRun.test.ts`) adalah **urutannya**,
+bukan angka persisnya, supaya menyetel balancing tidak langsung memerahkan test
+tanpa alasan.
+
+**Celah "uang menumpuk" belum tertutup.** Modal + investasi seluruhnya sekitar
+$94.000 seumur hidup, melawan pemasukan jutaan. Bisnis memberi uang *tujuan*,
+belum memberinya *batas*. Penyerap berikutnya ada di Fase 5.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.

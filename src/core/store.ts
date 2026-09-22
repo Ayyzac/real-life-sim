@@ -1,6 +1,11 @@
 import { findFocus } from '../data/focuses';
 import { EventBus } from './bus';
 import { meetsRequirements } from './careers/job';
+import {
+  findBusiness,
+  meetsRequirements as meetsBusinessRequirements,
+  upgradeCost,
+} from './careers/business';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
@@ -28,6 +33,9 @@ export type GameIntent =
   | { type: 'chooseEventOption'; choiceId: string }
   | { type: 'takeJob'; jobId: string }
   | { type: 'quitJob' }
+  | { type: 'openBusiness'; businessId: string }
+  | { type: 'upgradeBusiness' }
+  | { type: 'closeBusiness' }
   | { type: 'reset' };
 
 interface StoreEvents {
@@ -111,6 +119,10 @@ export class GameStore {
         // the thing that has to be right.
         if (!meetsRequirements(state.character.attributes, job)) return state;
 
+        // One career slot (ARCHITECTURE §5). Without this guard, taking a job
+        // would silently delete a business the player paid to open.
+        if (state.character.career.type === 'business') return state;
+
         const hired = { day: state.clockDay, tone: 'good' as const, text: `Hired as ${job.title}.` };
         return {
           ...state,
@@ -120,6 +132,86 @@ export class GameStore {
             ...state.character,
             career: { type: 'job', jobId: job.id, tenureDays: 0, level: 0 },
           },
+        };
+      }
+
+      case 'openBusiness': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        // One career slot: the old one has to be given up first, deliberately
+        // as a separate decision rather than a silent swap.
+        if (state.character.career.type !== 'none') return state;
+
+        const business = findBusiness(intent.businessId);
+        if (!meetsBusinessRequirements(state.character.attributes, business)) return state;
+        // Capital is real (user decision, 22 Sep 2026): no opening a business
+        // you cannot pay for. This is what finally gives saving a purpose.
+        if (state.character.stats.money < business.startupCost) return state;
+
+        const opened = {
+          day: state.clockDay,
+          tone: 'good' as const,
+          text: `Opened ${business.name} for ${business.startupCost}.`,
+        };
+        return {
+          ...state,
+          eventLog: [opened, ...state.eventLog],
+          milestones: [opened, ...state.milestones],
+          character: {
+            ...state.character,
+            stats: {
+              ...state.character.stats,
+              money: state.character.stats.money - business.startupCost,
+            },
+            career: { type: 'business', businessId: business.id, daysOpen: 0, level: 0 },
+          },
+        };
+      }
+
+      case 'upgradeBusiness': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        const career = state.character.career;
+        if (career.type !== 'business') return state;
+
+        const cost = upgradeCost(career.level);
+        if (cost === null || state.character.stats.money < cost) return state;
+
+        const business = findBusiness(career.businessId);
+        const level = career.level + 1;
+        const grown = {
+          day: state.clockDay,
+          tone: 'good' as const,
+          text: `Put ${cost} into ${business.name}. Now level ${level}.`,
+        };
+        return {
+          ...state,
+          eventLog: [grown, ...state.eventLog],
+          milestones: [grown, ...state.milestones],
+          character: {
+            ...state.character,
+            stats: { ...state.character.stats, money: state.character.stats.money - cost },
+            career: { ...career, level },
+          },
+        };
+      }
+
+      case 'closeBusiness': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        const career = state.character.career;
+        if (career.type !== 'business') return state;
+
+        const business = findBusiness(career.businessId);
+        // Nothing comes back. Walking away is a loss, which is what makes the
+        // decision to open one carry weight.
+        const closed = {
+          day: state.clockDay,
+          tone: 'neutral' as const,
+          text: `Closed ${business.name} after ${Math.floor(career.daysOpen / 7)} weeks.`,
+        };
+        return {
+          ...state,
+          eventLog: [closed, ...state.eventLog],
+          milestones: [closed, ...state.milestones],
+          character: { ...state.character, career: { type: 'none' } },
         };
       }
 

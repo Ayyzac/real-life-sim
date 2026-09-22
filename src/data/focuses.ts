@@ -24,6 +24,12 @@ export interface FocusDefinition {
   costPerDay?: number;
   /** Income comes from the job system (src/core/careers/job.ts) instead. */
   worksJob?: boolean;
+  /**
+   * Minding the shop. A business earns every day either way; this is what
+   * turns the reduced takings into the full ones
+   * (src/core/careers/business.ts).
+   */
+  runsBusiness?: boolean;
 }
 
 export const FOCUSES: readonly FocusDefinition[] = [
@@ -41,6 +47,14 @@ export const FOCUSES: readonly FocusDefinition[] = [
     locationId: 'work',
     effects: { energy: -5, mood: -0.5 },
     worksJob: true,
+  },
+  {
+    id: 'mind_business',
+    label: 'Mind the shop',
+    description: 'Be there all day. Your business takes full money instead of ticking over.',
+    locationId: 'business',
+    effects: { energy: -6, mood: -0.3, charisma: 0.025 },
+    runsBusiness: true,
   },
   {
     id: 'study',

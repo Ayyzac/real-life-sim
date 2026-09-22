@@ -43,6 +43,7 @@ export interface LifeEvent {
 }
 
 const hasJob = (c: Character): boolean => c.career.type === 'job';
+const hasBusiness = (c: Character): boolean => c.career.type === 'business';
 
 export const EVENTS: readonly LifeEvent[] = [
   // ---------- everyday, no decision needed ----------
@@ -270,6 +271,62 @@ export const EVENTS: readonly LifeEvent[] = [
         effect: { mood: -16 },
         outcome: 'You could not help family when they asked.',
         tone: 'bad',
+      },
+    ],
+  },
+
+  // ---------- business owners only (GDD §4.2) ----------
+  {
+    id: 'busy_season',
+    title: 'A run on the place',
+    text: 'Word gets round and for a few days you cannot restock fast enough.',
+    weight: 11,
+    eligibility: hasBusiness,
+    effect: { money: 900, energy: -10, mood: 6 },
+    tone: 'good',
+  },
+  {
+    id: 'equipment_breaks',
+    title: 'Something important breaks',
+    text: 'It goes at the worst possible moment, the way these things do.',
+    weight: 10,
+    eligibility: hasBusiness,
+    effect: { money: -650, mood: -8 },
+    tone: 'bad',
+  },
+  {
+    id: 'new_competitor',
+    title: 'Someone opens up nearby',
+    text: 'Newer, shinier, and taking a bite out of your week.',
+    weight: 8,
+    eligibility: hasBusiness,
+    effect: { money: -400, mood: -6 },
+    tone: 'bad',
+  },
+  {
+    id: 'bulk_order',
+    title: 'A big order comes in',
+    text: 'More than you normally handle in a month, and they want it fast.',
+    weight: 10,
+    eligibility: hasBusiness,
+    milestone: true,
+    tone: 'neutral',
+    choices: [
+      {
+        id: 'take',
+        label: 'Take the order',
+        detail: 'Good money. You will not sleep much.',
+        effect: { money: 1800, energy: -26, mood: -6, charisma: 0.2 },
+        outcome: 'You took the big order and got it out of the door.',
+        tone: 'good',
+      },
+      {
+        id: 'decline',
+        label: 'Turn it down',
+        detail: 'Keeps your week. Costs the money.',
+        effect: { mood: -4, energy: 4 },
+        outcome: 'You turned down an order that was too big to handle.',
+        tone: 'neutral',
       },
     ],
   },

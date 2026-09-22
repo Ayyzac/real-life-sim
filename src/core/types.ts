@@ -23,18 +23,20 @@ export interface Attributes {
   charisma: number;
 }
 
-export type LocationId = 'home' | 'work' | 'gym' | 'hospital' | 'cafe';
+export type LocationId = 'home' | 'work' | 'gym' | 'hospital' | 'cafe' | 'business';
 
 /** Id of an entry in src/data/focuses.ts. */
 export type FocusId = string;
 
 /**
- * One career slot per character (docs/ARCHITECTURE.md §5). Business and sports
- * arrive in Phases 3 and 4; the union already has room for them.
+ * One career slot per character (docs/ARCHITECTURE.md §5). A business and a
+ * job cannot be held at once - taking one gives up the other. Sports arrives
+ * in Phase 4; the union already has room for it.
  */
 export type CareerState =
   | { type: 'none' }
-  | { type: 'job'; jobId: string; tenureDays: number; level: number };
+  | { type: 'job'; jobId: string; tenureDays: number; level: number }
+  | { type: 'business'; businessId: string; daysOpen: number; level: number };
 
 export interface Character {
   id: string;

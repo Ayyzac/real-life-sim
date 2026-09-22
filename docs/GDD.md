@@ -41,6 +41,18 @@ Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing d
 - v1: direpresentasikan sebagai angka **pendapatan per tick − biaya per tick**, dipengaruhi sedikit pilihan pemain (misal: "investasi promosi" menaikkan pendapatan tapi menguras kas). Event acak bisa mempengaruhi bisnis (pelanggan ramai, kompetitor baru, dst.).
 - Tidak ada simulasi staf individual, rantai pasok, atau kompetitor AI kompleks di v1 — itu masuk daftar pengembangan lanjutan.
 
+**Aturan yang sudah diputuskan user (22 Sep 2026). Jangan ditanya ulang.**
+
+| Hal | Keputusan | Kenapa begitu |
+|---|---|---|
+| Cara menghasilkan | **Pasif, tapi butuh perhatian.** Usaha berdagang setiap hari apapun fokus pemain, tapi hanya sebagian pemasukannya yang masuk. Fokus "Mind the shop" memberi pemasukan penuh. | Inilah yang membedakan bisnis dari pekerjaan: uang jalan sendiri, tapi menelantarkannya ada harganya. |
+| Biaya harian | **Selalu ditagih penuh**, ditunggui atau tidak. | Akibatnya usaha besar yang ditelantarkan **rugi**, bukan sekadar menghasilkan lebih sedikit. Ini risiko yang sengaja diambil pemain. |
+| Modal awal | **Wajib punya uangnya.** Tidak bisa membuka usaha yang tidak terbayar. | Ini penyerap uang pertama di game, menjawab celah "uang menumpuk tanpa guna" tanpa menaikkan biaya hidup. |
+| Satu slot karier | Punya usaha **dan** pekerjaan sekaligus tidak bisa. Harus melepas yang satu dulu, sebagai keputusan tersendiri. | Sesuai `ARCHITECTURE.md` §5. Kalau tidak dijaga, mengambil pekerjaan akan menghapus usaha berikut modal yang sudah dibayar. |
+| Bangkrut | **Tidak ada bangkrut otomatis.** Usaha yang rugi terus jalan sampai pemain menutupnya sendiri. | Keputusan user. Risikonya (tabungan seumur hidup habis diam-diam) ditutup dengan **peringatan di dashboard** saat usaha merugi — bukan dengan menutup usaha tanpa izin pemain. |
+| Menutup usaha | **Tidak ada uang kembali.** | Membuat keputusan membuka usaha punya bobot. Kalau terasa terlalu kejam, ini satu angka yang gampang diubah. |
+| Tingkat usaha | Investasi promosi menaikkan pemasukan, **dibatasi 3 tingkat**. | Tanpa batas, "belanja uang untuk dapat uang lebih" jadi mesin uang tak terbatas begitu pemain punya tabungan. |
+
 ### 4.3 Olahraga (opsional, dipilih pemain)
 - Pemain memilih satu cabang olahraga dari daftar data (misal: sepak bola, lari, basket).
 - v1: karakter punya stat "kemampuan olahraga" yang naik lewat latihan (aksi di lokasi gym/lapangan). Pertandingan diselesaikan lewat **simulasi berbasis statistik** (bandingkan angka kemampuan vs lawan + sedikit acak), bukan game aksi real-time.
