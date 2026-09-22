@@ -211,8 +211,51 @@ Uang baru benar-benar penting di usia tua — itulah alasan menabung, dan sebagi
 
 **Invarian yang tidak dijaga tipe data:** `WorldState.clockDay` dan `character.ageInDays` **harus selalu sama**. Keduanya naik bersama di `applyDailyRules`, tapi tidak ada yang memaksanya. Saat melenceng, Life Summary mencetak tanggal ngawur tanpa error. Sudah dipatok test di `clock.test.ts`.
 
+### 2026-09-22 — Fase 2 (diputuskan di chat, sebelum implementasi)
+
+Diambil di sesi chat 22 Sep 2026 dan ditulis ke sini **sebelum kode ditulis**,
+supaya sesi berikutnya tidak perlu menebak. Anggap FINAL — jangan tanya ulang.
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| **Tampilan tetap 2D** | 2D pixel art top-down. **Bukan 3D.** | User sempat mengira kesepakatan awal adalah game 3D seperti Stardew Valley. Dicek ke dokumen: tidak. `GDD.md` menyebut 2D di empat tempat (§1, §2, §5) dan §7 menaruh "Grafis 3D" **di luar scope v1**; `ASSETS.md` memperingatkan memilih aset top-down 2D, "bukan isometrik/3D". Stardew Valley sendiri game 2D. User sudah diberi tahu dan **memilih tetap 2D**. **Kalau 3D disinggung lagi, tunjukkan fakta ini dulu sebelum mengerjakan apa pun.** |
+| **Skema kontrol: klik-untuk-jalan** | Pemain mengklik tujuan, karakter berjalan sendiri ke sana. Bukan WASD. | Keputusan user. Ini menutup item "belum diputuskan" yang diminta `ROADMAP.md` Fase 2 untuk dicatat di sini. |
+| Ukuran kota | **5 lokasi**: Rumah, Kerja, Gym, Kafe, Rumah Sakit. | Keputusan user. Kota kecil sesuai `GDD.md` §5; cukup untuk membuktikan loop peta tanpa membengkakkan pekerjaan. |
+| Tab lokasi Fase 1 **tetap ada** | Tab lama bertahan sebagai jalan pintas di samping peta. | Keputusan user: peta jadi pilihan, bukan pajak. **Konsekuensi teknis wajib:** tab aktif harus dibaca dari `character.location`, bukan `useState` lokal seperti sekarang. Peta dan tab adalah dua pintu ke satu state yang sama — kalau tidak, keduanya bisa menampilkan lokasi berbeda. |
+| Keramaian: **kota ramai** | Banyak NPC berjalan + mobil lewat, **murni hiasan**: tidak berinteraksi, tidak menyentuh state simulasi. | Keputusan user, diambil **setelah** diperingatkan soal risiko performa. Tidak melanggar `CLAUDE.md` aturan 3 karena ini animasi render, bukan perubahan state. **Kewajiban:** FPS harus diukur sungguhan di browser dengan jumlah penuh dan angkanya dilaporkan apa adanya. Kalau tidak sanggup 60fps, sampaikan angkanya dan tanya — jangan diam-diam menguranginya. |
+| Sprite pemain | **Satu sprite** dulu. | Keputusan user. Pilihan tampilan sprite saat pembuatan karakter (`GDD.md` §3.2) tetap jadi utang yang dibayar nanti. |
+| Ukuran peta & kamera | Grid **25×14 tile @16px = 400×224**, di-zoom 2× jadi **800×448**. **Tanpa kamera bergerak.** | Pas satu layar di kanvas yang sudah ada. Peta 5 lokasi tidak butuh kamera; menambahkannya nanti murah. |
+| Peta sebagai **data** | `src/data/town.ts`: grid tile, daftar pintu (posisi tile → `LocationId` yang sudah ada), tile yang bisa dilewati, jumlah NPC & mobil. | `CLAUDE.md` aturan 2 — konten adalah data, bukan kode. Mengubah tata letak kota = mengedit data, bukan menulis logika baru. |
+| Pencarian jalan: **BFS, bukan A\*** | `src/world/pathfinding.ts`, TypeScript murni **tanpa impor Phaser**, bisa dites headless. | Grid cuma ~350 kotak dan semua langkah berbiaya sama, jadi BFS sudah optimal dan setengah kodenya A\*. Tanpa pathfinding, klik-untuk-jalan akan menyangkut di balik gedung — bug yang langsung terlihat user. |
+| Scene baru | `src/world/scenes/TownScene.ts` menggantikan `BootScene.ts` (placeholder Fase 0 dibuang). Pemain muncul di pintu `character.location` saat dimuat. | |
+| Peta naik jadi tampilan utama | Di `src/ui/App.tsx`, kanvas keluar dari `<details>`. | Peta adalah isi Fase 2; menyembunyikannya di balik disclosure membuat fase ini tak terasa. |
+| `enterLocation` **ditolak saat ada event menunggu** | Intent baru `{ type: 'enterLocation'; locationId }` di `src/core/store.ts` harus diblokir selama `pendingEvent` ada. Dipatok test. | Lihat Fase 1 Demo B: minggu bisa terhenti di tengah. Kalau peta tetap bisa dipakai saat dialog event terbuka, "minggu yang terhenti" bisa dilangkahi. |
+
+**Tidak dikerjakan di Fase 2** (sengaja, jangan diselundupkan masuk): interior
+gedung, pilihan tampilan sprite, kamera bergerak, peta lebih besar, NPC yang
+bisa diajak bicara.
+
+#### Aset Fase 2 — sudah diverifikasi, jangan riset ulang
+
+**Kenney "RPG Urban Pack"** — https://kenney.nl/assets/rpg-urban-pack
+
+| Hal | Isi |
+|---|---|
+| Kategori | 2D (bukan isometrik, bukan 3D) |
+| Ukuran tile | 16×16 |
+| Jumlah file | 480 |
+| Lisensi | **CC0** — bebas dipakai, termasuk komersial, tanpa atribusi wajib |
+| Tag | `city`, `urban`, `character`, `pixel` |
+| Isi | Kota modern top-down: jalan, zebra cross, gedung, mobil, pohon, sprite orang beberapa arah |
+
+Dipilih karena persis "kota modern" di `GDD.md` §1 dan sudah disebut namanya di
+`ASSETS.md`. **Unduhan (zip ±1-2 MB) butuh izin user lebih dulu**; tujuannya
+`public/assets/town/` (Vite menyalin apa adanya, tidak ikut di-bundle), berkas
+LICENSE dari paket ikut disimpan, dan sumbernya dicatat di `docs/ASSETS.md`.
+Ini satu-satunya unduhan di fase ini.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.
-- **Skema kontrol karakter** di peta (WASD vs klik-jalan): dijadwalkan Fase 2, lihat `docs/ROADMAP.md`.
+- ~~**Skema kontrol karakter** di peta (WASD vs klik-jalan)~~ — **sudah diputuskan**: klik-untuk-jalan. Lihat entri Fase 2 di atas.
 - **Ukuran bundel:** build Fase 0 sudah 1,4 MB (388 KB gzip), hampir semuanya Phaser. Wajar, tapi kalau nanti terasa lambat dibuka, itu bahan polish Fase 5 — bukan masalah sekarang.
