@@ -4,11 +4,11 @@ Setiap fase berakhir dengan sesuatu yang **benar-benar bisa dicoba di browser** 
 
 ## Fase 0 — Fondasi & pipeline deploy
 Tujuan: buktikan dulu jalur "kode → live di internet, gratis" beres, sebelum membangun game apapun.
-- [ ] Scaffold proyek: Vite + React + TypeScript + Phaser 3 terpasang, saling terhubung minimal (satu halaman React yang me-render satu canvas Phaser kosong)
-- [ ] Struktur folder awal sesuai `docs/ARCHITECTURE.md` §8
-- [ ] Repo git diinisialisasi, `.gitignore` benar (jangan commit `node_modules`)
-- [ ] GitHub Actions workflow: build otomatis + deploy ke GitHub Pages tiap push ke `main`
-- [ ] **Checkpoint:** user bisa membuka satu link publik dan melihat halaman kosong/placeholder yang jalan
+- [x] Scaffold proyek: Vite + React + TypeScript + Phaser 3 terpasang, saling terhubung minimal (satu halaman React yang me-render satu canvas Phaser kosong)
+- [x] Struktur folder awal sesuai `docs/ARCHITECTURE.md` §8
+- [x] Repo git diinisialisasi, `.gitignore` benar (jangan commit `node_modules`)
+- [x] GitHub Actions workflow: build otomatis + deploy ke GitHub Pages tiap push ke `main`
+- [x] **Checkpoint:** user bisa membuka satu link publik dan melihat halaman kosong/placeholder yang jalan
 
 ## Fase 1 — Loop hidup inti (tanpa dunia visual dulu)
 Tujuan: buktikan simulation core-nya hidup dan seru, lewat UI sederhana dulu (mirip BitLife berbasis menu) — sebelum repot dengan dunia 2D.

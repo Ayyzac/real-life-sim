@@ -141,3 +141,27 @@ test/
 - `npm run build` (Vite) menghasilkan folder `dist/` statis.
 - Deploy ke **GitHub Pages** lewat GitHub Actions (workflow build otomatis tiap push ke `main`), atau alternatif Cloudflare Pages — keduanya gratis tanpa batas untuk proyek personal seperti ini.
 - **Milestone paling awal (lihat `docs/ROADMAP.md` Fase 0): pastikan pipeline deploy ini jalan duluan**, bahkan sebelum ada game logic — supaya kita tahu "cara mainnya" (link publik) sudah beres dari awal.
+
+## 11. Keputusan tercatat
+
+Ditulis di sini supaya keputusan tidak hilang atau berubah-ubah antar sesi kerja
+(lihat §3 dan `CLAUDE.md`). Tambahkan entri baru ke bawah, jangan menghapus yang lama.
+
+### 2026-09-22 — Fase 0
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Nama repo & URL live | `Ayyzac/real-life-sim` → https://ayyzac.github.io/real-life-sim/ | Repo harus **publik**: GitHub Pages di repo private butuh GitHub Pro berbayar, melanggar batasan $0 di `CLAUDE.md`. |
+| `base` di `vite.config.ts` | `'/real-life-sim/'` | Wajib sama persis dengan nama repo. Kalau tidak, GitHub Pages menyajikan HTML-nya tapi semua aset 404 dan halaman tampil kosong. **Kalau nama repo diganti, nilai ini harus ikut diganti.** |
+| Bahasa teks dalam game | **Inggris** untuk semua teks yang dilihat pemain. Dokumen desain, komentar diskusi dengan user, dan penjelasan tetap Bahasa Indonesia. | Keputusan user, 22 Sep 2026. Belum ada sistem i18n — teks masih ditulis langsung di komponen. Kalau nanti butuh dua bahasa, itu keputusan terpisah. |
+| Versi Phaser | Dikunci `^3.90.0` | `npm install phaser` sekarang memberi **Phaser 4.2.1**, yang dilarang `CLAUDE.md`. Jangan jalankan `npm update phaser` tanpa memeriksa ini. |
+| Versi lain saat Fase 0 | Vite 8, React 19, TypeScript 7 (strict), Vitest 5, Node 24 | Node 24 dipakai di CI agar sama dengan mesin developer. |
+| Penegakan aturan core | `scripts/check-core-purity.mjs`, dijalankan lokal (`npm run check:core-purity`) dan di CI | §1 menyebut "aturan keras" tapi tidak ada yang menegakkannya. Skrip ini menggagalkan build kalau ada file di `src/core/**` yang mengimpor `react`, `react-dom`, atau `phaser`. Sudah diuji: sengaja dilanggar → exit code 1. |
+| Gerbang mutu CI | `typecheck` → `test` → `check:core-purity` → `build`, berurutan sebelum deploy | Kode rusak tidak boleh sampai ke link publik. |
+| Animasi di `BootScene` | Boleh, hanya render | `CLAUDE.md` aturan 3 melarang *state simulasi* maju sendiri, bukan animasi. Tidak ada `setInterval` yang menyentuh state. |
+
+### Belum diputuskan (tanyakan user sebelum mengerjakan)
+
+- **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.
+- **Skema kontrol karakter** di peta (WASD vs klik-jalan): dijadwalkan Fase 2, lihat `docs/ROADMAP.md`.
+- **Ukuran bundel:** build Fase 0 sudah 1,4 MB (388 KB gzip), hampir semuanya Phaser. Wajar, tapi kalau nanti terasa lambat dibuka, itu bahan polish Fase 5 — bukan masalah sekarang.
