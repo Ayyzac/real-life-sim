@@ -2,6 +2,7 @@ import { ageInYears } from '../core/character';
 import type { Character } from '../core/types';
 import { findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
+import { BALANCE } from '../data/balance';
 import { money, weekNumber } from './format';
 
 interface StatBarProps {
@@ -83,6 +84,18 @@ export function Dashboard({
       <p className="dashboard__focus">
         Doing: <strong>{findFocus(character.focusId).label}</strong>
       </p>
+
+      {stats.energy < BALANCE.lowEnergyThreshold && (
+        <p className="warning" role="status">
+          Running on empty. While energy stays this low you lose health every day. Rest at Home.
+        </p>
+      )}
+
+      {stats.health < 35 && (
+        <p className="warning" role="status">
+          Your health is failing. The Hospital repairs it fastest, the Gym more cheaply.
+        </p>
+      )}
     </section>
   );
 }
