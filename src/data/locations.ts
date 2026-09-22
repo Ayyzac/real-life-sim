@@ -18,4 +18,5 @@ export const LOCATIONS: readonly LocationDefinition[] = [
   { id: 'cafe', label: 'Cafe', blurb: 'People are good for you. They cost money.' },
   { id: 'business', label: 'Business', blurb: 'Your own shop. Or the empty unit where one could be.' },
   { id: 'hospital', label: 'Hospital', blurb: 'Expensive, but it works.' },
+  { id: 'stadium', label: 'Stadium', blurb: 'Where an athlete trains, and where the fixtures are.' },
 ];

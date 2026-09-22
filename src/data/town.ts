@@ -17,10 +17,36 @@ export const SHEET_COLUMNS = 27;
 /** The spaced tilesheet, chosen over the packed one to avoid texture bleed. */
 export const SHEET_SPACING = 1;
 
-/** 25x14 tiles at 16px, drawn at 2x, is 800x448 - one screen, no camera. */
-export const TOWN_COLUMNS = 25;
+/**
+ * The town is two districts side by side. One district fills the screen
+ * exactly (25x14 tiles at 16px, drawn at 2x = 800x448); the camera slides
+ * between them.
+ *
+ * Phase 2 recorded "no moving camera, no bigger map" and also that adding one
+ * later would be cheap. This is that later (user request, 22 Sep 2026).
+ */
+export const VIEW_COLUMNS = 25;
 export const TOWN_ROWS = 14;
 export const TOWN_ZOOM = 2;
+
+export interface District {
+  id: string;
+  label: string;
+  /** Left-hand column of this district in the full grid. */
+  x: number;
+}
+
+export const DISTRICTS: readonly District[] = [
+  { id: 'downtown', label: 'Downtown', x: 0 },
+  { id: 'eastside', label: 'Eastside', x: VIEW_COLUMNS },
+];
+
+export const TOWN_COLUMNS = DISTRICTS.length * VIEW_COLUMNS;
+
+/** Which district a column belongs to. */
+export function districtOf(x: number): number {
+  return Math.min(DISTRICTS.length - 1, Math.max(0, Math.floor(x / VIEW_COLUMNS)));
+}
 
 /** One character in the `GROUND` art below. */
 export interface GroundTile {
@@ -44,24 +70,25 @@ export const GROUND_TILES: Readonly<Record<string, GroundTile>> = {
 };
 
 /**
- * 25 characters per row, 14 rows. Rows 0-3 and 9-12 are where the buildings
- * stand, so their grass mostly ends up hidden.
+ * 50 characters per row, 14 rows - both districts in one grid, so the
+ * character can simply walk from one to the other and the pathfinder needs to
+ * know nothing about districts at all.
  */
 export const GROUND: readonly string[] = [
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  '.........................',
-  '=======zz=======zz=======',
-  '-------zz-------zz-------',
-  '=======zz=======zz=======',
-  '.........................',
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  'ggggggggggggggggggggggggg',
-  '.........................',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  '..................................................',
+  '=======zz=======zz==============zz=======zz=======',
+  '-------zz-------zz--------------zz-------zz-------',
+  '=======zz=======zz==============zz=======zz=======',
+  '..................................................',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  'gggggggggggggggggggggggggggggggggggggggggggggggggg',
+  '..................................................',
 ];
 
 /**
@@ -101,6 +128,8 @@ export const BUILDINGS: readonly TownBuilding[] = [
   { locationId: 'cafe', x: 3, y: 9, width: 5, height: 4, wallTile: 72, bandTile: 45, doorTile: 336, doorX: 5 },
   { locationId: 'business', x: 9, y: 9, width: 5, height: 4, wallTile: 41, bandTile: 68, doorTile: 312, doorX: 11, tint: 0xe8c97a },
   { locationId: 'hospital', x: 15, y: 9, width: 6, height: 4, wallTile: 41, bandTile: 68, doorTile: 257, doorX: 17, tint: 0xa8ded0 },
+  // Eastside. Deliberately the biggest building in town.
+  { locationId: 'stadium', x: 29, y: 0, width: 9, height: 4, wallTile: 41, bandTile: 68, doorTile: 338, doorX: 33, tint: 0x9fd8a8 },
 ];
 
 /** Scenery. Blocks walking, so keep them off the pavement. */
@@ -122,6 +151,15 @@ export const PROPS: readonly TownProp[] = [
   { x: 24, y: 10, tile: 346 },
   { x: 22, y: 10, tile: 292 },
   { x: 23, y: 11, tile: 345 },
+  { x: 26, y: 1, tile: 292 },
+  { x: 27, y: 2, tile: 291 },
+  { x: 39, y: 1, tile: 346 },
+  { x: 47, y: 2, tile: 291 },
+  { x: 26, y: 10, tile: 238 },
+  { x: 30, y: 10, tile: 291 },
+  { x: 34, y: 11, tile: 292 },
+  { x: 44, y: 10, tile: 345 },
+  { x: 48, y: 11, tile: 346 },
 ];
 
 /**
@@ -129,8 +167,8 @@ export const PROPS: readonly TownProp[] = [
  * simulation, so these numbers only cost frames, never balance.
  */
 export const CROWD = {
-  people: 24,
-  cars: 8,
+  people: 40,
+  cars: 14,
   /** Pavement rows the crowd walks along, top to bottom. */
   walkRows: [4, 8, 13],
   /** Middle of each traffic lane, in pixels from the top of the map. */

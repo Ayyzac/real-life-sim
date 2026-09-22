@@ -58,6 +58,18 @@ Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing d
 - v1: karakter punya stat "kemampuan olahraga" yang naik lewat latihan (aksi di lokasi gym/lapangan). Pertandingan diselesaikan lewat **simulasi berbasis statistik** (bandingkan angka kemampuan vs lawan + sedikit acak), bukan game aksi real-time.
 - Hasil pertandingan mempengaruhi uang (hadiah/gaji), mood, dan reputasi sederhana.
 
+**Aturan yang sudah diputuskan user (22 Sep 2026). Jangan ditanya ulang.**
+
+| Hal | Keputusan | Kenapa begitu |
+|---|---|---|
+| Kapan bertanding | **Otomatis.** Pertandingan datang sendiri setiap sekian **hari latihan**, hasilnya masuk log. Tidak ada tombol "bertanding". | Cocok dengan ritme "satu klik = satu minggu". Tombol yang bisa ditekan berkali-kali akan dipencet sampai menang. |
+| Hari istirahat | Menunda pertandingan, **bukan menghanguskannya**. Hitungannya hanya maju di hari latihan. | Lebih memaafkan, dan tetap membuat latihan terasa berarti. |
+| Penghasilan | **Hadiah pertandingan saja.** Tidak ada gaji. Menang besar, kalah hampir tidak dapat apa-apa. | Keputusan user. Inilah yang membuat olahraga terasa berbeda: kerja = stabil, bisnis = pasif, olahraga = berisiko. |
+| Usia | **Kemampuan menurun setelah usia puncak (32), tanpa pensiun paksa.** Atlet tua makin sering kalah dan hadiahnya mengecil. | Keputusan user, sejalan dengan penolakan bangkrut otomatis di §4.2: keputusan berhenti tetap di tangan pemain. Karier atlet jadi punya jendela waktu yang nyata. |
+| Reputasi | Naik saat menang, turun saat kalah, 0-100, dan **mengali besarnya hadiah**. | "Reputasi sederhana" yang diminta dokumen ini, tanpa sistem terpisah. |
+| Lokasi | Gedung **Stadion** di distrik kedua peta. | Lihat catatan peta dua distrik di `ARCHITECTURE.md` §11. |
+| Satu slot karier | Olahraga, kerja, dan bisnis tidak bisa dipegang bersamaan. | Sama seperti §4.2. |
+
 ## 5. Dunia yang dijelajahi
 
 - Gaya visual: **pixel art top-down retro**, gaya Stardew Valley / paket "Tiny" ala Kenney.

@@ -8,6 +8,8 @@ import { playUntilDeath, playWeeks, resolveAll } from '../helpers/play';
 import { advanceWeek } from '../../src/core/clock';
 import { upgradeCost } from '../../src/core/careers/business';
 import { findBusiness } from '../../src/data/businesses';
+import { meetsRequirements as meetsSportRequirements } from '../../src/core/careers/sports';
+import { findSport } from '../../src/data/sports';
 
 /**
  * A full life is thousands of clicks. These tests play one out to catch what
@@ -239,6 +241,121 @@ describe('the agreed shape of a business', () => {
       expect(end.deceased, businessId).toBe(true);
       expect(age, `${businessId} died at ${age}`).toBeGreaterThanOrEqual(80);
       expect(age, `${businessId} died at ${age}`).toBeLessThanOrEqual(100);
+    }
+  });
+});
+
+/**
+ * Plays a life as an athlete: earns a cushion in a job, trains up to the entry
+ * bar, competes, and retires at `retireAtAge` into an ordinary job.
+ */
+function liveAsAthlete(seed: number, sportId: string, retireAtAge = 200): WorldState {
+  const sport = findSport(sportId);
+  let state = createWorld({ name: 'Athlete', backgroundId: 'athlete', seed });
+
+  for (let week = 0; week < 6000 && !state.deceased; week += 1) {
+    const { career, attributes, stats } = state.character;
+    const retired = ageInYears(state.character) >= retireAtAge;
+    let next = state.character;
+
+    if (career.type === 'sports' && !retired) {
+      next = { ...next, focusId: upkeepFocus(state, 'train') };
+    } else if (retired) {
+      next = {
+        ...next,
+        focusId: upkeepFocus(state, 'work'),
+        career:
+          career.type === 'job'
+            ? career
+            : { type: 'job', jobId: 'office_clerk', tenureDays: 0, level: 0 },
+      };
+    } else if (meetsSportRequirements(attributes, sport)) {
+      next = {
+        ...next,
+        focusId: upkeepFocus(state, 'train'),
+        career: { type: 'sports', sportId, skill: 0, reputation: 0, daysSinceMatch: 0, wins: 0, losses: 0 },
+      };
+    } else if (stats.money < 4_000) {
+      next = {
+        ...next,
+        focusId: upkeepFocus(state, 'work'),
+        career:
+          career.type === 'job'
+            ? career
+            : { type: 'job', jobId: 'office_clerk', tenureDays: 0, level: 0 },
+      };
+    } else {
+      const shortOfCharisma = (sport.requirements.charisma ?? 0) > attributes.charisma;
+      next = {
+        ...next,
+        focusId: upkeepFocus(state, shortOfCharisma ? 'socialize' : 'exercise'),
+        career: { type: 'none' },
+      };
+    }
+
+    state = resolveAll(advanceWeek({ ...state, character: next }));
+  }
+
+  return state;
+}
+
+/**
+ * Sport balance, pinned as shape rather than exact totals - the same way the
+ * business and the lifespan are. The numbers behind these came from simulating
+ * whole lives; see docs/ARCHITECTURE.md §11.
+ */
+describe('the agreed shape of a sporting career', () => {
+  it('pays better than an ordinary job for someone who knows when to stop', () => {
+    for (const seed of [1, 4242]) {
+      const athlete = liveAsAthlete(seed, 'basketball', 40);
+      const employee = liveCarefully(seed);
+
+      expect(athlete.peakMoney, `seed ${seed}`).toBeGreaterThan(employee.peakMoney);
+    }
+  });
+
+  it('makes retiring worth more than competing into old age', () => {
+    // This is what the age decline is FOR. If competing forever won, the
+    // decline would be decoration rather than a decision.
+    const retired = liveAsAthlete(1, 'running', 40);
+    const stubborn = liveAsAthlete(1, 'running');
+
+    expect(retired.peakMoney).toBeGreaterThan(stubborn.peakMoney);
+  });
+
+  it('leaves an athlete with a winning record while they are in their prime', () => {
+    let state = createWorld({ name: 'Prime', backgroundId: 'athlete', seed: 5 });
+    state = {
+      ...state,
+      character: {
+        ...state.character,
+        attributes: { intelligence: 12, physical: 70, charisma: 30 },
+        focusId: 'train',
+        career: { type: 'sports', sportId: 'running', skill: 80, reputation: 0, daysSinceMatch: 0, wins: 0, losses: 0 },
+      },
+    };
+
+    for (let week = 0; week < 400 && !state.deceased; week += 1) {
+      state = resolveAll(
+        advanceWeek({
+          ...state,
+          character: { ...state.character, focusId: upkeepFocus(state, 'train') },
+        }),
+      );
+    }
+
+    const career = state.character.career as Extract<typeof state.character.career, { type: 'sports' }>;
+    expect(career.wins).toBeGreaterThan(career.losses);
+  });
+
+  it('keeps a lifetime inside the agreed lifespan whichever sport is taken', () => {
+    for (const sportId of ['running', 'basketball', 'football']) {
+      const end = liveAsAthlete(7, sportId, 40);
+      const age = ageInYears(end.character);
+
+      expect(end.deceased, sportId).toBe(true);
+      expect(age, `${sportId} died at ${age}`).toBeGreaterThanOrEqual(80);
+      expect(age, `${sportId} died at ${age}`).toBeLessThanOrEqual(100);
     }
   });
 });

@@ -46,11 +46,15 @@ Tujuan: tambahkan lapisan visual di atas loop yang sudah terbukti jalan di Fase 
 - [x] Balancing diperiksa lewat simulasi seumur hidup, hasilnya dipatok test
 - [x] **Checkpoint:** user bisa memilih buka usaha alih-alih kerja biasa, dan melihat kasnya berubah tiap hari
 
-## Fase 4 — Jalur karier: Olahraga
-- [ ] Data `sports.ts` (beberapa cabang olahraga)
-- [ ] `careers/sports.ts` — latihan menaikkan skill, pertandingan diselesaikan lewat perbandingan statistik + acak
-- [ ] Lokasi latihan (gym/lapangan) jadi fungsional
-- [ ] **Checkpoint:** user bisa memilih jalur atlet, berlatih, dan bertanding
+## Fase 4 — Jalur karier: Olahraga — SELESAI
+- [x] Data `sports.ts` (tiga cabang: lari, basket, sepak bola)
+- [x] `careers/sports.ts` — latihan menaikkan skill, pertandingan diselesaikan lewat perbandingan statistik + acak
+- [x] Lokasi latihan: gedung **Stadion**, di distrik kedua peta
+- [x] Peta diperluas jadi **dua distrik** dengan tombol geser kiri/kanan (permintaan user)
+- [x] Event acak khusus atlet (3 entri, salah satunya butuh keputusan)
+- [x] Penurunan kemampuan karena usia, tanpa pensiun paksa
+- [x] Balancing diperiksa lewat simulasi seumur hidup, hasilnya dipatok test
+- [x] **Checkpoint:** user bisa memilih jalur atlet, berlatih, dan bertanding
 
 ## Fase 5 — Konten & polish
 - [ ] Perbanyak event kehidupan, pekerjaan, jenis bisnis, cabang olahraga (semua tinggal nambah data, sesuai pola Fase 1–4)

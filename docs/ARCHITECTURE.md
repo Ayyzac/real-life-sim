@@ -344,6 +344,71 @@ tanpa alasan.
 $94.000 seumur hidup, melawan pemasukan jutaan. Bisnis memberi uang *tujuan*,
 belum memberinya *batas*. Penyerap berikutnya ada di Fase 5.
 
+### 2026-09-22 — Fase 4 (jalur karier olahraga + peta dua distrik)
+
+Aturan mainnya ada di `docs/GDD.md` §4.3. Di sini keputusan teknisnya, angka
+hasil simulasi, dan dua bug yang ditemukan sambil jalan.
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| **Peta jadi dua distrik** | Satu grid 50x14. Kamera menampilkan 25 kolom (satu layar) dan menggeser antar distrik lewat tombol panah di peta. Distrik: Downtown, Eastside. | **Permintaan user, 22 Sep 2026.** Ini mencabut keputusan Fase 2 "tanpa kamera bergerak, peta lebih besar tidak dikerjakan" — yang memang sudah menulis "menambah kamera nanti murah". Satu grid, bukan dua peta: pencarian jalan tidak perlu tahu apa-apa soal distrik, dan karakter tinggal berjalan menyeberang. |
+| Geser kamera **dihitung sendiri**, bukan pakai `this.tweens` | `slideCamera()` menaikkan waktu berlalu dan meng-interpolasi `scrollX` sendiri. | Tween pada kamera menggesernya beberapa piksel lalu berhenti — jenis kegagalan diam yang sama dengan konstanta event Phaser yang `undefined` di Fase 2. Sepuluh baris sendiri selalu jalan. |
+| Tombol distrik **di dalam scene Phaser**, dites sendiri | Posisinya dihitung dari kamera tiap frame; kliknya dicocokkan manual di `onPointerDown`. | Phaser `setInteractive` memakai posisi pointer yang sama yang dulu meleset 500 piksel. Satu jalur input yang sudah terbukti, untuk semuanya. |
+| Pertandingan **di luar `applyDailyRules`** | `playDueMatch()` dipanggil dari `simulateOneDay` dengan RNG, setelah aturan harian. | Menjaga pemisahan yang dibuat di Fase 1: aturan harian = pasti dan bisa dites tepat, lemparan dadu = terpisah. Menaruh pertandingan di `applyDailyRules` akan merusak itu. |
+| Hitungan pertandingan hanya maju di **hari latihan** | `daysSinceMatch` naik hanya saat fokus melatih. | Istirahat menunda pertandingan, bukan menghanguskannya. Lebih memaafkan, dan membuat latihan terasa berarti. |
+| Sepak bola dinilai dari **Physical**, bukan Charisma | Charisma tetap jadi syarat masuk. | Versi pertama menilai sepak bola dari Charisma, padahal latihan tidak pernah menaikkan Charisma — jadi pemain **tidak akan pernah bisa jadi bagus**. Perangkap yang cuma kelihatan lewat simulasi. |
+| Sponsor hanya mendatangi atlet **yang masih di puncak** | `eligibility` event `sponsorship_offer` dibatasi umur puncak + 4 tahun. | Tanpa itu, atlet umur 70 masih dapat tawaran sponsor, dan uangnya membiayai karier yang seharusnya sudah berakhir — diam-diam membuat "tidak pernah pensiun" jadi pilihan terbaik. |
+| `SCHEMA_VERSION` **tetap 2** | Menambah varian ketiga ke union karier tidak merusak save lama. | Sama alasannya dengan Fase 3. |
+
+**Bug lama yang akhirnya ketahuan: dua game Phaser hidup sekaligus.**
+
+`GameCanvas` membuat game, lalu React StrictMode meng-unmount dan me-mount lagi.
+Scene memuat tilesheet, jadi game pertama **masih boot** saat unmount datang, dan
+`destroy()` sebelum boot cuma menyalakan penanda untuk step loop yang belum
+mulai — jadi penanda itu tidak pernah dibaca. Hasilnya dua kanvas bertumpuk di
+DOM: **satu menggambar peta, satu lagi diam-diam menerima klik.** Di Fase 2 dan 3
+ini tidak terlihat karena kedua scene menghitung hal yang sama. Di Fase 4 langsung
+terlihat: tombol distrik menggeser kamera yang tidak ada di layar. Sekarang game
+dibuat sekali dan pembongkarannya ditunda satu tick — remount StrictMode
+membatalkannya, unmount sungguhan meneruskannya.
+
+**Catatan pengukuran:** FPS tidak bisa diukur ulang di sesi ini karena jendela
+browser tidak menggambar (`requestAnimationFrame` berhenti total saat halaman
+dianggap tersembunyi). Angka Fase 2 — 165 fps, frame terburuk 7,3 ms — diambil
+saat **dua** game Phaser berjalan sekaligus, jadi itu batas bawah yang aman.
+Keramaian dinaikkan ke 40 orang + 14 mobil untuk mengisi peta dua kali lipat.
+**Ukur ulang saat ada kesempatan**, jangan anggap sudah terbukti.
+
+**Hasil simulasi seumur hidup** (3 seed, dirata-rata):
+
+| Cara main | Uang di akhir | Rekor |
+|---|--:|---|
+| Kerja kantoran (clerk) | $285.000 | — |
+| Lari, sampai mati | $377.000 | 301-170 |
+| **Lari, pensiun umur 40** | **$523.000** | — |
+| Basket, sampai mati | $526.000 | 182-162 |
+| **Basket, pensiun umur 40** | **$581.000** | — |
+| **Sepak bola, sampai mati** | **$741.000** | 118-126 |
+| Sepak bola, pensiun umur 40 | $570.000 | — |
+
+Yang dibaca dari tabel itu:
+- Ketiga cabang mengalahkan kerja kantoran, tapi semuanya **di bawah** jalur
+  bisnis ($1,9-2,2 juta) dan programmer ($1,37 juta). Itu wajar: karier atlet
+  punya jendela ~15 tahun, bukan seumur hidup.
+- Untuk lari dan basket, **pensiun lebih menguntungkan** daripada bertanding
+  sampai tua — itulah gunanya penurunan usia, dan dipatok test.
+- Sepak bola **masih** lebih untung diteruskan, karena hadiahnya sangat besar
+  sehingga menang 30% pun tetap menutupi biaya hidup. Dibiarkan: itu watak
+  "satu-satunya yang bikin orang kaya". Kalau nanti terasa salah, angkanya ada
+  di `src/data/sports.ts`.
+- Rekor kalah-menang jadi negatif kalau pemain bertanding sampai tua. Pemain
+  yang berhenti di puncak menang ~70%.
+
+Perjalanan menuju angka itu butuh tiga kali koreksi: hadiah kalah awalnya lebih
+besar daripada biaya hidup (jadi tidak pernah ada alasan berhenti), lantai
+penurunan usia terlalu murah hati (atlet umur 60 masih menang separuh), dan lari
+serta basket tidak layak dipilih dibanding kerja kantoran.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.

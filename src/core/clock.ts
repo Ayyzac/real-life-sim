@@ -1,10 +1,11 @@
 import { BALANCE } from '../data/balance';
 import { findFocus } from '../data/focuses';
 import { tradeOneDay } from './careers/business';
+import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
 import { workOneDay } from './careers/job';
 import { ageInYears } from './character';
 import { applyEffect, findChoice, findEvent, needsDecision, rollEvent } from './events';
-import { restoreRng } from './rng';
+import { restoreRng, type Rng } from './rng';
 import type { Attributes, EventLogEntry, Stats, WorldState } from './types';
 
 /**
@@ -142,6 +143,15 @@ export function applyDailyRules(state: WorldState): WorldState {
     stats.money += traded.profit;
   }
 
+  // Training is the only thing that brings the next fixture closer, so a week
+  // spent resting delays the match rather than forfeiting it.
+  if (career.type === 'sports' && focus.trainsSport) {
+    career = trainOneDay(career);
+    if (career.type === 'sports') {
+      career = { ...career, daysSinceMatch: career.daysSinceMatch + 1 };
+    }
+  }
+
   // ponytail: money is allowed to go negative instead of blocking the activity.
   // Simplest honest model for now; a real affordability rule belongs in
   // Phase 5 balancing.
@@ -176,11 +186,43 @@ export function applyDailyRules(state: WorldState): WorldState {
   });
 }
 
+/**
+ * Settles a fixture if one has come round.
+ *
+ * Kept out of applyDailyRules on purpose: that function holds the rules that
+ * are certain every day, and a match is a dice roll. Mixing them would make
+ * the daily rules impossible to test exactly - the same reason random events
+ * live out here too.
+ */
+function playDueMatch(state: WorldState, rng: Rng): WorldState {
+  const character = state.character;
+  if (!matchIsDue(character.career)) return state;
+
+  const result = playMatch(character.career, character.attributes, ageInYears(character), rng);
+  const entry: EventLogEntry = {
+    day: state.clockDay,
+    tone: result.won ? 'good' : 'bad',
+    text: result.text,
+  };
+
+  return {
+    ...state,
+    eventLog: withLogEntry(state.eventLog, entry),
+    character: {
+      ...character,
+      career: result.career,
+      stats: clampStats({ ...character.stats, money: character.stats.money + result.prize }),
+    },
+  };
+}
+
 /** A full day: the certain rules above, then at most one random event. */
 function simulateOneDay(state: WorldState): WorldState {
   const rng = restoreRng(state.rng);
   let next = applyDailyRules(state);
   if (next.deceased) return { ...next, rng: rng.snapshot() };
+
+  next = playDueMatch(next, rng);
 
   const event = rollEvent(next.character, rng);
   if (event) {

@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 
 import type { GameStore } from '../core/store';
-import { TILE_SIZE, TOWN_COLUMNS, TOWN_ROWS, TOWN_ZOOM } from '../data/town';
+import { TILE_SIZE, TOWN_ROWS, TOWN_ZOOM, VIEW_COLUMNS } from '../data/town';
 import { TownScene } from './scenes/TownScene';
 
-/** The map at 2x fills the canvas exactly, so no camera scrolling is needed. */
-export const GAME_WIDTH = TOWN_COLUMNS * TILE_SIZE * TOWN_ZOOM;
+/** One district at 2x fills the canvas exactly; the camera slides between them. */
+export const GAME_WIDTH = VIEW_COLUMNS * TILE_SIZE * TOWN_ZOOM;
 export const GAME_HEIGHT = TOWN_ROWS * TILE_SIZE * TOWN_ZOOM;
 
 /**

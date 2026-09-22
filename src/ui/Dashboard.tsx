@@ -3,6 +3,7 @@ import type { Character } from '../core/types';
 import { findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
 import { findBusiness } from '../data/businesses';
+import { findSport } from '../data/sports';
 import { profitPerDay } from '../core/careers/business';
 import { DAYS_PER_WEEK } from '../core/clock';
 import { BALANCE } from '../data/balance';
@@ -43,6 +44,11 @@ function careerLine(character: Character): string {
   if (career.type === 'business') {
     const business = findBusiness(career.businessId);
     return `${business.name}${career.level > 0 ? ` (level ${career.level})` : ''}`;
+  }
+
+  if (career.type === 'sports') {
+    const sport = findSport(career.sportId);
+    return `${sport.name} ${career.wins}-${career.losses}`;
   }
 
   return 'Unemployed';

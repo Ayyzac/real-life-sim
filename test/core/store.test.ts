@@ -303,6 +303,75 @@ describe('GameStore', () => {
     expect(shop.getState()?.character.stats.money).toBe(afterOpening);
   });
 
+  // ---------- sport (GDD §4.3) ----------
+
+  it('taking up a sport starts an athlete from nothing', () => {
+    const club = rich(0, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
+
+    club.dispatch({ type: 'joinSport', sportId: 'running' });
+
+    expect(club.getState()?.character.career).toEqual({
+      type: 'sports',
+      sportId: 'running',
+      skill: 0,
+      reputation: 0,
+      daysSinceMatch: 0,
+      wins: 0,
+      losses: 0,
+    });
+  });
+
+  it('refuses a sport the character is not fit enough for', () => {
+    const club = rich(0, { attributes: { intelligence: 12, physical: 10, charisma: 10 } });
+    const before = club.getState();
+
+    club.dispatch({ type: 'joinSport', sportId: 'football' });
+
+    expect(club.getState()).toBe(before);
+  });
+
+  it('refuses to take up a sport while another career is held', () => {
+    const club = rich(50_000, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
+    club.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    const before = club.getState();
+
+    club.dispatch({ type: 'joinSport', sportId: 'running' });
+
+    expect(club.getState()).toBe(before);
+  });
+
+  it('refuses to take a job while the character is an athlete', () => {
+    const club = rich(0, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
+    club.dispatch({ type: 'joinSport', sportId: 'running' });
+    const before = club.getState();
+
+    club.dispatch({ type: 'takeJob', jobId: 'cashier' });
+
+    expect(club.getState()).toBe(before);
+  });
+
+  it('refuses to take up a sport while an event is waiting', () => {
+    const club = rich(0, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
+    const world = club.getState()!;
+    const stuck = new GameStore(
+      memorySaves({ ...world, pendingEvent: { eventId: 'friend_invites', daysRemaining: 2 } }),
+    );
+
+    stuck.dispatch({ type: 'joinSport', sportId: 'running' });
+
+    expect(stuck.getState()?.character.career).toEqual({ type: 'none' });
+  });
+
+  it('retiring records the record and leaves the character unemployed', () => {
+    const club = rich(0, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
+    club.dispatch({ type: 'joinSport', sportId: 'running' });
+
+    club.dispatch({ type: 'leaveSport' });
+
+    expect(club.getState()?.character.career).toEqual({ type: 'none' });
+    expect(club.getState()?.milestones[0]?.text).toContain('Retired from Running');
+  });
+
   it('reset wipes both the world and the save file', () => {
     store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
 

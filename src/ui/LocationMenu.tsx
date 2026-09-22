@@ -6,11 +6,19 @@ import {
   upgradeCost,
 } from '../core/careers/business';
 import { meetsRequirements, salaryPerDay } from '../core/careers/job';
+import {
+  ageFactor,
+  matchStrength,
+  meetsRequirements as meetsSportRequirements,
+  winChance,
+} from '../core/careers/sports';
+import { ageInYears } from '../core/character';
 import { DAYS_PER_WEEK } from '../core/clock';
 import type { Character } from '../core/types';
 import { FOCUSES } from '../data/focuses';
 import { BUSINESSES, findBusiness } from '../data/businesses';
 import { JOBS, findJob } from '../data/jobs';
+import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
 import { money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
@@ -29,7 +37,8 @@ export function LocationMenu({ character }: { character: Character }): React.JSX
   const focuses = FOCUSES.filter(
     (focus) =>
       focus.locationId === location.id &&
-      (!focus.runsBusiness || character.career.type === 'business'),
+      (!focus.runsBusiness || character.career.type === 'business') &&
+      (!focus.trainsSport || character.career.type === 'sports'),
   );
 
   return (
@@ -52,6 +61,7 @@ export function LocationMenu({ character }: { character: Character }): React.JSX
 
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
+      {location.id === 'stadium' && <SportsSection character={character} />}
 
       <div className="choices">
         {focuses.map((focus) => {
@@ -118,13 +128,14 @@ function JobSection({ character }: { character: Character }): React.JSX.Element 
     );
   }
 
-  if (character.career.type === 'business') {
+  if (character.career.type !== 'none') {
     // The store refuses this anyway; saying so beats a button that silently
     // does nothing.
+    const where = character.career.type === 'business' ? 'Business' : 'Stadium';
     return (
       <p className="panel__hint">
-        You are running your own business. Close it at Business before taking a job &mdash; you
-        cannot do both at once.
+        You already have a career. End it at {where} before taking a job &mdash; you cannot do
+        both at once.
       </p>
     );
   }
@@ -172,11 +183,12 @@ function JobSection({ character }: { character: Character }): React.JSX.Element 
 function BusinessSection({ character }: { character: Character }): React.JSX.Element {
   const career = character.career;
 
-  if (career.type === 'job') {
+  if (career.type === 'job' || career.type === 'sports') {
+    const where = career.type === 'job' ? 'Work' : 'Stadium';
     return (
       <p className="panel__hint">
-        You already have a job. Quit it at Work before opening a business &mdash; you cannot do
-        both at once.
+        You already have a career. End it at {where} before opening a business &mdash; you cannot
+        do both at once.
       </p>
     );
   }
@@ -272,6 +284,116 @@ function BusinessSection({ character }: { character: Character }): React.JSX.Ele
               onClick={() => gameStore.dispatch({ type: 'openBusiness', businessId: business.id })}
             >
               {!qualified ? 'Locked' : affordable ? 'Open it' : 'Cannot afford'}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The stadium menu (GDD 4.3).
+ *
+ * Shows the two numbers that actually decide an athlete's life: their current
+ * form, and how far off the next fixture is. Age quietly eats the first one,
+ * which is the whole reason a sporting career has a window.
+ */
+function SportsSection({ character }: { character: Character }): React.JSX.Element {
+  const career = character.career;
+
+  if (career.type === 'job' || career.type === 'business') {
+    const where = career.type === 'job' ? 'Work' : 'Business';
+    return (
+      <p className="panel__hint">
+        You already have a career. End it at {where} before taking up a sport &mdash; you cannot do
+        both at once.
+      </p>
+    );
+  }
+
+  if (career.type === 'sports') {
+    const sport = findSport(career.sportId);
+    const age = ageInYears(character);
+    const strength = matchStrength(sport, career.skill, character.attributes, age);
+    const form = Math.round(winChance(strength, sport.opponentSkill) * 100);
+    const dueIn = Math.max(0, sport.matchIntervalDays - career.daysSinceMatch);
+    const past = ageFactor(age) < 1;
+
+    return (
+      <div className="job job--current">
+        <div>
+          <strong>{sport.name}</strong>
+          <span className="badge">
+            {career.wins}-{career.losses}
+          </span>
+          <p className="choice__text">
+            Skill {Math.round(career.skill)} &middot; reputation {Math.round(career.reputation)}{' '}
+            &middot; next fixture in {dueIn} training {dueIn === 1 ? 'day' : 'days'}
+          </p>
+          <p className="choice__effects">
+            <span className={form >= 50 ? 'eff eff--up' : 'eff eff--down'}>form {form}%</span>
+            <span className="eff eff--up">win {money(sport.winPrize)}</span>
+            <span className="eff eff--down">lose {money(sport.losePrize)}</span>
+          </p>
+          {past && (
+            <p className="job__req">
+              You are past your peak. Your form falls a little every year from here.
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          className="btn btn--quiet"
+          onClick={() => {
+            if (confirm(`Retire from ${sport.name}?`)) {
+              gameStore.dispatch({ type: 'leaveSport' });
+            }
+          }}
+        >
+          Retire
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="jobs">
+      <h3 className="panel__subtitle">Take up a sport</h3>
+      <p className="panel__hint">
+        Prize money only &mdash; nothing comes in between fixtures, and nothing at all while you
+        are not training.
+      </p>
+      {SPORTS.map((sport) => {
+        const qualified = meetsSportRequirements(character.attributes, sport);
+        const bars = Object.entries(sport.requirements) as [string, number][];
+
+        return (
+          <div key={sport.id} className={`job ${qualified ? '' : 'job--locked'}`}>
+            <div>
+              <strong>{sport.name}</strong>{' '}
+              <span className="job__pay">{money(sport.winPrize)} a win</span>
+              <p className="choice__text">{sport.blurb}</p>
+              <p className="choice__effects">
+                <span className="eff eff--up">win {money(sport.winPrize)}</span>
+                <span className="eff eff--down">lose {money(sport.losePrize)}</span>
+                <span className="eff eff--down">
+                  a fixture every {sport.matchIntervalDays} training days
+                </span>
+              </p>
+              {bars.length > 0 && (
+                <p className="job__req">
+                  Needs {bars.map(([attribute, min]) => `${attribute} ${min}`).join(', ')}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              className="btn"
+              disabled={!qualified}
+              onClick={() => gameStore.dispatch({ type: 'joinSport', sportId: sport.id })}
+            >
+              {qualified ? 'Take it up' : 'Locked'}
             </button>
           </div>
         );

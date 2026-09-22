@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type Phaser from 'phaser';
 
 import { createPhaserGame } from '../world/phaserGame';
 import { gameStore } from './useGame';
@@ -6,20 +7,42 @@ import { gameStore } from './useGame';
 /**
  * The single seam between React and Phaser.
  *
- * React owns the DOM node; Phaser owns everything painted inside it. The
- * cleanup below also makes this safe under React StrictMode, which mounts
- * effects twice in development.
+ * React owns the DOM node; Phaser owns everything painted inside it.
+ *
+ * The bookkeeping below exists because React StrictMode mounts, unmounts and
+ * mounts again in development, and a Phaser game does not survive that
+ * naively. The scene loads a spritesheet, so the first game is still booting
+ * when the unmount arrives, and `destroy()` before boot only sets a flag for a
+ * step loop that has not started - so the flag is never read. The result was
+ * two live Phaser games stacked in the same container: one drawing the map,
+ * the other quietly receiving the clicks, which is why a district arrow moved
+ * a camera nobody could see.
+ *
+ * So the game is created once and kept. The teardown is deferred by a tick:
+ * StrictMode's remount happens first and cancels it, while a real unmount lets
+ * it through.
  */
 export function GameCanvas(): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gameRef = useRef<Phaser.Game | null>(null);
+  const teardownRef = useRef<number | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const game = createPhaserGame(container, gameStore);
+    if (teardownRef.current !== null) {
+      clearTimeout(teardownRef.current);
+      teardownRef.current = null;
+    }
+    if (!gameRef.current) gameRef.current = createPhaserGame(container, gameStore);
+
     return () => {
-      game.destroy(true);
+      teardownRef.current = window.setTimeout(() => {
+        gameRef.current?.destroy(true);
+        gameRef.current = null;
+        teardownRef.current = null;
+      }, 0);
     };
   }, []);
 

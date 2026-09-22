@@ -89,6 +89,37 @@ export const BALANCE = {
     revenueBonusPerLevel: 0.3,
   },
 
+  /**
+   * Being an athlete (GDD §4.3, user decisions 22 Sep 2026).
+   *
+   * Prize money only: win big, lose almost nothing. That makes sport the
+   * risky career next to a steady job and a passive business, which is the
+   * whole reason for it to exist as a third option.
+   */
+  sports: {
+    /** Skill gained per day of training. Slow, like an attribute. */
+    skillPerTrainingDay: 0.06,
+    /** Skill ceiling, so training cannot run away forever. */
+    maxSkill: 100,
+    /** How much the sport's key attribute counts alongside raw skill. */
+    attributeWeight: 0.5,
+    /**
+     * Age is the athlete's real opponent. Nothing happens before this age;
+     * after it, match strength falls away and so do the prizes. Nobody is
+     * forced to retire (user decision) - the numbers simply stop working,
+     * and the player decides when to walk.
+     */
+    peakAgeYears: 32,
+    declinePerYearOver: 0.05,
+    /** Never quite zero: a veteran is worse, not absent. */
+    minAgeFactor: 0.15,
+    /** Reputation moves this much per result, and is clamped 0-100. */
+    reputationPerWin: 4,
+    reputationPerLoss: -2,
+    /** Full reputation doubles the purse. */
+    prizeBonusAtFullReputation: 1,
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

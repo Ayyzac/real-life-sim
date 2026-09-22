@@ -6,6 +6,7 @@ import {
   meetsRequirements as meetsBusinessRequirements,
   upgradeCost,
 } from './careers/business';
+import { findSport, meetsRequirements as meetsSportRequirements } from './careers/sports';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
@@ -36,6 +37,8 @@ export type GameIntent =
   | { type: 'openBusiness'; businessId: string }
   | { type: 'upgradeBusiness' }
   | { type: 'closeBusiness' }
+  | { type: 'joinSport'; sportId: string }
+  | { type: 'leaveSport' }
   | { type: 'reset' };
 
 interface StoreEvents {
@@ -120,8 +123,10 @@ export class GameStore {
         if (!meetsRequirements(state.character.attributes, job)) return state;
 
         // One career slot (ARCHITECTURE §5). Without this guard, taking a job
-        // would silently delete a business the player paid to open.
-        if (state.character.career.type === 'business') return state;
+        // would silently delete a business the player paid to open, or a
+        // sporting career they spent years building.
+        const held = state.character.career.type;
+        if (held === 'business' || held === 'sports') return state;
 
         const hired = { day: state.clockDay, tone: 'good' as const, text: `Hired as ${job.title}.` };
         return {
@@ -211,6 +216,59 @@ export class GameStore {
           ...state,
           eventLog: [closed, ...state.eventLog],
           milestones: [closed, ...state.milestones],
+          character: { ...state.character, career: { type: 'none' } },
+        };
+      }
+
+      case 'joinSport': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        // One career slot: the old one has to be given up first, deliberately
+        // as its own decision rather than a silent swap.
+        if (state.character.career.type !== 'none') return state;
+
+        const sport = findSport(intent.sportId);
+        if (!meetsSportRequirements(state.character.attributes, sport)) return state;
+
+        const joined = {
+          day: state.clockDay,
+          tone: 'good' as const,
+          text: `Took up ${sport.name}.`,
+        };
+        return {
+          ...state,
+          eventLog: [joined, ...state.eventLog],
+          milestones: [joined, ...state.milestones],
+          character: {
+            ...state.character,
+            career: {
+              type: 'sports',
+              sportId: sport.id,
+              skill: 0,
+              reputation: 0,
+              daysSinceMatch: 0,
+              wins: 0,
+              losses: 0,
+            },
+          },
+        };
+      }
+
+      case 'leaveSport': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        const career = state.character.career;
+        if (career.type !== 'sports') return state;
+
+        const sport = findSport(career.sportId);
+        const record = `${career.wins}-${career.losses}`;
+        const left = {
+          day: state.clockDay,
+          tone: 'neutral' as const,
+          text: `Retired from ${sport.name} with a record of ${record}.`,
+        };
+        return {
+          ...state,
+          eventLog: [left, ...state.eventLog],
+          milestones: [left, ...state.milestones],
           character: { ...state.character, career: { type: 'none' } },
         };
       }

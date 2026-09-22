@@ -1,4 +1,5 @@
 import { ageInYears } from '../core/character';
+import { BALANCE } from './balance';
 import type { Character, EventEffect, EventLogEntry } from '../core/types';
 
 /**
@@ -44,6 +45,7 @@ export interface LifeEvent {
 
 const hasJob = (c: Character): boolean => c.career.type === 'job';
 const hasBusiness = (c: Character): boolean => c.career.type === 'business';
+const hasSport = (c: Character): boolean => c.career.type === 'sports';
 
 export const EVENTS: readonly LifeEvent[] = [
   // ---------- everyday, no decision needed ----------
@@ -326,6 +328,56 @@ export const EVENTS: readonly LifeEvent[] = [
         detail: 'Keeps your week. Costs the money.',
         effect: { mood: -4, energy: 4 },
         outcome: 'You turned down an order that was too big to handle.',
+        tone: 'neutral',
+      },
+    ],
+  },
+
+  // ---------- athletes only (GDD §4.3) ----------
+  {
+    id: 'training_injury',
+    title: 'Something goes in training',
+    text: 'It is not serious. It is also not nothing, and it will not let you forget it.',
+    weight: 11,
+    eligibility: hasSport,
+    effect: { health: -9, energy: -14, mood: -6 },
+    tone: 'bad',
+  },
+  {
+    id: 'crowd_on_your_side',
+    title: 'The crowd knows your name',
+    text: 'You hear it going up as you come out, and it does something to your legs.',
+    weight: 9,
+    eligibility: hasSport,
+    effect: { mood: 14, energy: 5, charisma: 0.2 },
+    tone: 'good',
+  },
+  {
+    id: 'sponsorship_offer',
+    title: 'A sponsor comes calling',
+    text: 'Decent money to put their name on your kit, and their opinions in your mouth.',
+    weight: 9,
+    // Sponsors chase athletes who are still going somewhere. Without this a
+    // 70-year-old kept getting offers, which paid for a career that should
+    // have ended - and quietly made never retiring the better move.
+    eligibility: (c) => hasSport(c) && ageInYears(c) <= BALANCE.sports.peakAgeYears + 4,
+    milestone: true,
+    tone: 'neutral',
+    choices: [
+      {
+        id: 'sign',
+        label: 'Sign the deal',
+        detail: 'Money now. You will be doing their adverts.',
+        effect: { money: 4_000, mood: -8, charisma: 0.4 },
+        outcome: 'You signed a sponsorship deal.',
+        tone: 'good',
+      },
+      {
+        id: 'refuse',
+        label: 'Stay your own',
+        detail: 'No money. No leash.',
+        effect: { mood: 10 },
+        outcome: 'You turned a sponsor down and kept your name to yourself.',
         tone: 'neutral',
       },
     ],

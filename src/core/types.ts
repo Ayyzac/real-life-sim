@@ -23,20 +23,38 @@ export interface Attributes {
   charisma: number;
 }
 
-export type LocationId = 'home' | 'work' | 'gym' | 'hospital' | 'cafe' | 'business';
+export type LocationId =
+  | 'home'
+  | 'work'
+  | 'gym'
+  | 'hospital'
+  | 'cafe'
+  | 'business'
+  | 'stadium';
 
 /** Id of an entry in src/data/focuses.ts. */
 export type FocusId = string;
 
 /**
- * One career slot per character (docs/ARCHITECTURE.md §5). A business and a
- * job cannot be held at once - taking one gives up the other. Sports arrives
- * in Phase 4; the union already has room for it.
+ * One career slot per character (docs/ARCHITECTURE.md §5). A job, a business
+ * and a sport cannot be held at once - taking one gives up the others.
  */
 export type CareerState =
   | { type: 'none' }
   | { type: 'job'; jobId: string; tenureDays: number; level: number }
-  | { type: 'business'; businessId: string; daysOpen: number; level: number };
+  | { type: 'business'; businessId: string; daysOpen: number; level: number }
+  | {
+      type: 'sports';
+      sportId: string;
+      /** Raised by training. The main number a match is decided on. */
+      skill: number;
+      /** 0-100. Grows with wins, and scales prize money. */
+      reputation: number;
+      /** Days since the last match, so fixtures come round on a schedule. */
+      daysSinceMatch: number;
+      wins: number;
+      losses: number;
+    };
 
 export interface Character {
   id: string;

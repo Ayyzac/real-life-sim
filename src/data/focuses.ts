@@ -30,6 +30,11 @@ export interface FocusDefinition {
    * (src/core/careers/business.ts).
    */
   runsBusiness?: boolean;
+  /**
+   * Training. Raises the athlete's skill and is what brings the next fixture
+   * closer (src/core/careers/sports.ts).
+   */
+  trainsSport?: boolean;
 }
 
 export const FOCUSES: readonly FocusDefinition[] = [
@@ -55,6 +60,14 @@ export const FOCUSES: readonly FocusDefinition[] = [
     locationId: 'business',
     effects: { energy: -6, mood: -0.3, charisma: 0.025 },
     runsBusiness: true,
+  },
+  {
+    id: 'train',
+    label: 'Train',
+    description: 'Drill, repeat, recover. Raises your sporting skill and brings the next fixture closer.',
+    locationId: 'stadium',
+    effects: { energy: -10, mood: -0.4, health: 0.3, physical: 0.03 },
+    trainsSport: true,
   },
   {
     id: 'study',
