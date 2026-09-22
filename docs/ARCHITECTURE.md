@@ -160,6 +160,26 @@ Ditulis di sini supaya keputusan tidak hilang atau berubah-ubah antar sesi kerja
 | Gerbang mutu CI | `typecheck` → `test` → `check:core-purity` → `build`, berurutan sebelum deploy | Kode rusak tidak boleh sampai ke link publik. |
 | Animasi di `BootScene` | Boleh, hanya render | `CLAUDE.md` aturan 3 melarang *state simulasi* maju sendiri, bukan animasi. Tidak ada `setInterval` yang menyentuh state. |
 
+### 2026-09-22 — Fase 1 Demo A
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Satu klik = **satu minggu** | Tombol utama "Advance Week"; "Advance Day" tetap ada untuk momen penting. `Clock` internal tetap berbasis hari sesuai §2. | Keputusan user. Satu kehidupan ≈ 2.970 klik (~3 jam). Perhitungan yang mendasarinya: 1 klik = 1 hari berarti **20.805 klik** per kehidupan — tidak akan pernah diselesaikan siapa pun. |
+| Fokus **menetap** | Karakter punya satu `focusId` yang bertahan sampai pemain menggantinya, bukan dipilih ulang tiap tick. | Dengan ~3.000 klik, memaksa memilih ulang tiap minggu itu menyiksa. Efeknya per hari, jadi `advanceDay` dan `advanceWeek` sama-sama konsisten. |
+| Tanpa library state | React `useSyncExternalStore` membaca `GameStore`. Tidak ada Zustand/Redux/Jotai. | Bawaan React sudah persis untuk kasus ini. Satu dependency lebih sedikit. |
+| RNG implementasi sendiri | `src/core/rng.ts`, mulberry32, ±15 baris. Bukan `seedrandom`. | §6 memang membolehkan. State-nya satu uint32 sehingga ikut tersimpan di save — muat ulang melanjutkan urutan acak yang sama persis. |
+| `GameStore` + `GameIntent` sebagai batas antar-lapisan | UI tidak pernah memanggil engine langsung; ia mengirim intent dan mendengar lewat `subscribe` (dibangun di atas `bus.ts`). | Menegakkan `CLAUDE.md` aturan 5 secara konkret. Fase 2 (Phaser) memakai pintu yang sama. |
+| `WorldState` **immutable** | Setiap fungsi di `clock.ts` mengembalikan objek baru, tidak pernah memutasi. | Wajib agar `useSyncExternalStore` bisa mendeteksi perubahan lewat identitas, sekaligus menjaga state tetap serializable. |
+| Auto-save per **aksi pemain**, bukan per hari simulasi | §7 menulis "setiap `advanceDay()`"; satu klik minggu = 7 hari tapi tetap 1 penulisan. | Sama maksudnya, 7× lebih sedikit penulisan ke localStorage. |
+| UI menampilkan angka **per minggu** | Data tetap ditulis per hari di `balance.ts`/`focuses.ts`; UI mengalikan 7. | Pemain beraksi per minggu. Menampilkan "-5/hari" padahal tombolnya mingguan itu menyesatkan. |
+| Skala atribut 10× lebih lambat dari stat | Stat (energi/mood) bergerak dalam hitungan minggu; atribut (Intelligence dsb.) dalam hitungan tahun. | Tanpa ini, tangga karier habis dipanjat dalam **9 minggu** — terbukti lewat simulasi 2.600 minggu. Sekarang jadi Software Developer butuh ~4 tahun. |
+| Utang diperbolehkan | Uang boleh minus; aktivitas berbayar tidak diblokir. Ditandai `ponytail:` di `clock.ts`. | Penyederhanaan sadar untuk Demo A. Aturan keterjangkauan yang benar masuk balancing Fase 5. |
+
+**Temuan balancing dari simulasi seumur hidup (jangan dilupakan):**
+- Angka awal membuat kesehatan macet di ~0 seumur hidup (spiral kelelahan). Sudah diperbaiki lewat `balance.ts` saja, tanpa menyentuh mesin — bukti pola "konten = data" bekerja.
+- **Celah yang belum ditutup:** uang menumpuk sampai ~$900rb seumur hidup karena belum ada yang bisa dibeli. Penyerap uang baru datang di Fase 3 (bisnis) dan Fase 5. Jangan tambal dengan menaikkan biaya hidup — itu cuma menghukum awal permainan.
+- Promosi butuh atribut yang terus naik, bukan sekadar lama bekerja. Pemain yang berhenti belajar tidak akan naik level. Ini disengaja (GDD §4.1), tapi perlu dijelaskan ke pemain suatu saat.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.

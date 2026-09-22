@@ -12,15 +12,19 @@ Tujuan: buktikan dulu jalur "kode → live di internet, gratis" beres, sebelum m
 
 ## Fase 1 — Loop hidup inti (tanpa dunia visual dulu)
 Tujuan: buktikan simulation core-nya hidup dan seru, lewat UI sederhana dulu (mirip BitLife berbasis menu) — sebelum repot dengan dunia 2D.
-- [ ] `Character`, `WorldState`, `Clock` di simulation core (lihat `docs/ARCHITECTURE.md` §2, §4)
-- [ ] Pembuatan karakter baru (form sederhana React)
-- [ ] Dashboard status (uang, kesehatan, energi, mood, umur)
-- [ ] Tombol "Lanjut Hari" / "Lanjut Minggu" yang benar-benar menjalankan `Clock.advanceDay()`
-- [ ] Satu jalur karier dulu: kerja biasa (`careers/job.ts`) — gaji masuk, energi terkuras
+
+**Dipecah dua demo** atas permintaan user (22 Sep 2026), supaya bisa dicoba lebih awal:
+- **Demo A (selesai):** karakter, Clock, dashboard, fokus mingguan, kerja + gaji, save
+- **Demo B (berikutnya):** `EventEngine`, kematian, Life Summary
+- [x] `Character`, `WorldState`, `Clock` di simulation core (lihat `docs/ARCHITECTURE.md` §2, §4)
+- [x] Pembuatan karakter baru (form sederhana React)
+- [x] Dashboard status (uang, kesehatan, energi, mood, umur)
+- [x] Tombol "Lanjut Hari" / "Lanjut Minggu" yang benar-benar menjalankan `Clock.advanceDay()`
+- [x] Satu jalur karier dulu: kerja biasa (`careers/job.ts`) — gaji masuk, energi terkuras
 - [ ] `EventEngine` dengan minimal 5–10 event kehidupan acak (sakit ringan, ajakan teman, bonus kerja, dst.) sebagai bukti pola data-driven-nya jalan
 - [ ] Kondisi kematian (usia tua / kesehatan 0) + layar Life Summary + tombol mulai karakter baru
-- [ ] `SaveProvider` (localStorage) — refresh browser tidak menghilangkan progres
-- [ ] Test Vitest untuk `Clock`, `EventEngine`, dan sistem kerja
+- [x] `SaveProvider` (localStorage) — refresh browser tidak menghilangkan progres
+- [~] Test Vitest untuk `Clock`, `EventEngine`, dan sistem kerja — `Clock` & sistem kerja selesai (67 test); `EventEngine` menyusul di Demo B
 - [ ] **Checkpoint:** user bisa main satu "kehidupan" penuh dari lahir sampai mati, lewat UI menu saja, dan progresnya tersimpan
 
 ## Fase 2 — Dunia yang dijelajahi (Phaser + aset Kenney)

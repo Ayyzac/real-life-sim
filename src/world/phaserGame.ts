@@ -17,6 +17,10 @@ export function createPhaserGame(parent: HTMLElement): Phaser.Game {
     height: GAME_HEIGHT,
     backgroundColor: '#12161f',
     pixelArt: true,
+    // No sound until Phase 5. Leaving audio on makes Phaser open an
+    // AudioContext that it then talks to after destroy(), which throws
+    // "Cannot suspend a closed AudioContext" on every StrictMode remount.
+    audio: { noAudio: true },
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
