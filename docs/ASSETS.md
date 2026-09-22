@@ -41,6 +41,40 @@ Beberapa repo lain sempat ditemukan saat riset (`roma-glushko/raise-of-economy`,
 Sumber utama: **Kenney.nl** — perpustakaan aset CC0 (bebas dipakai komersial, tanpa atribusi wajib) dengan puluhan ribu aset, termasuk seri "Tiny" bergaya minimalis/pixel yang cocok dengan gaya visual yang kita pilih (top-down retro ala Stardew Valley). Kenney juga punya paket "RPG Urban Kit" (480+ sprite) dan seri City Kit — beberapa dalam bentuk 3D/isometrik, jadi **saat memilih paket, pastikan cek dulu apakah versinya top-down 2D**, bukan isometrik/3D, supaya konsisten dengan gaya yang dipilih.
 - **Cara pakai:** buka kenney.nl/assets, filter kategori "2D", cari paket bertema kota/karakter/interior yang gayanya konsisten satu sama lain (idealnya dari seri yang sama, misalnya semua dari seri "Tiny", supaya tidak nabrak gaya).
 
+### Sudah diunduh & dipakai: Kenney "RPG Urban Pack" (Fase 2)
+
+- **Sumber:** https://kenney.nl/assets/rpg-urban-pack — diunduh 22 Sep 2026 atas izin user
+- **Lisensi:** **CC0 1.0** (`public/assets/town/LICENSE.txt`, salinan asli dari paket).
+  Bebas dipakai untuk proyek pribadi, edukasi, **dan komersial**. Atribusi ke
+  Kenney dianjurkan tapi **tidak wajib**.
+- **Isi paket:** 486 tile berukuran **16x16**, satu tilesheet 27x18 tile.
+- **Yang disimpan di repo:** `public/assets/town/tilemap.png` (versi **berjarak
+  1px** antar tile) + `LICENSE.txt`. 486 berkas PNG satuan dan berkas preview
+  **tidak** disimpan — isinya sama persis dengan tilesheet, jadi cuma menggandakan
+  berat repo.
+- **Kenapa versi berjarak, bukan `tilemap_packed.png`:** jarak 1px mencegah
+  "texture bleeding" (garis tipis dari tile tetangga ikut tergambar saat di-zoom).
+  Phaser menerimanya lewat opsi `spacing: 1`.
+- **Cara menghitung indeks tile:** `indeks = baris * 27 + kolom`, kiri-atas = 0.
+
+Isi yang relevan untuk kota kita (indeks sudah diverifikasi dengan melihat
+tilesheet-nya, bukan ditebak):
+
+| Keperluan | Indeks tile |
+|---|---|
+| Rumput | 5, 28 |
+| Trotoar | 36 |
+| Aspal | 440, 467 |
+| Marka jalan | 433 (garis datar), 462 (garis tegak), 407 (perempatan) |
+| Zebra cross | 355, 357 |
+| Gedung bata merah | 17, 18, 71, 72, 98, 99 (dinding) · 44, 45 (baris jendela) |
+| Gedung oranye | 125, 126, 179, 180 (dinding) · 152, 153 (baris jendela) |
+| Gedung abu-abu | 14, 41 |
+| Pintu | 255, 257, 310, 336, 443 |
+| Pohon | 238, 291, 292 (hijau) · 345, 346 (oranye) |
+| Mobil | 251, 252, 253, 254 |
+| Sprite orang | 18 karakter, masing-masing 4 pose, di **4 kolom paling kanan** (kolom 23-26). Rumus: `dasar = baris * 27 + 23`, lalu `dasar+0` hadap bawah, `+1` hadap bawah (pose kedua), `+2` hadap atas, `+3` tampak samping. |
+
 Sumber cadangan (kalau ada celah yang tidak dicover Kenney):
 - **OpenGameArt.org** — filter berdasarkan lisensi CC0/CC-BY sebelum pakai
 - Kreator itch.io yang rilis paket CC0 lengkap: **Pixel Frog**, **Ansimuz**, **0x72** — biasa dipakai untuk tileset & karakter pixel-art bergaya serupa
