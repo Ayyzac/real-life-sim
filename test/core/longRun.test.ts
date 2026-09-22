@@ -1,38 +1,60 @@
 import { describe, expect, it } from 'vitest';
 
 import { ageInYears, createWorld } from '../../src/core/character';
-import { advanceWeek } from '../../src/core/clock';
 import { BALANCE } from '../../src/data/balance';
 import { FOCUSES } from '../../src/data/focuses';
 import type { WorldState } from '../../src/core/types';
+import { playUntilDeath, playWeeks, resolveAll } from '../helpers/play';
+import { advanceWeek } from '../../src/core/clock';
 
 /**
- * A full life is roughly 3,000 clicks of Advance Week. These tests play that
- * out to catch anything that only breaks after thousands of ticks: numbers
- * drifting out of range, NaN creeping in, or the log growing without bound.
+ * A full life is thousands of clicks. These tests play one out to catch what
+ * only breaks after a very long time: numbers drifting out of range, NaN
+ * creeping in, logs growing without bound, or a character who never dies.
  */
 
-const LIFETIME_WEEKS = 3000;
-
-function playLife(mutate: (state: WorldState, week: number) => WorldState): WorldState {
-  let state = createWorld({ name: 'Marathon', backgroundId: 'athlete', seed: 4242 });
-  for (let week = 0; week < LIFETIME_WEEKS; week += 1) {
-    state = advanceWeek(mutate(state, week));
-  }
-  return state;
+function fresh(name = 'Marathon', backgroundId = 'athlete', seed = 4242): WorldState {
+  return createWorld({ name, backgroundId, seed });
 }
 
-describe('a full lifetime of ticks', () => {
-  it('keeps every stat inside its range and free of NaN', () => {
-    // Alternate work and rest, the loop a real player falls into.
-    const end = playLife((state, week) => ({
+/** What an attentive player does: fix whatever is worst, otherwise work. */
+function carefulWeek(state: WorldState): WorldState {
+  const { health, energy, mood } = state.character.stats;
+  const focusId =
+    health < 40 ? 'treatment' : energy < 45 ? 'rest' : mood < 35 ? 'socialize' : 'work';
+
+  return resolveAll(
+    advanceWeek({
       ...state,
       character: {
         ...state.character,
-        focusId: week % 3 === 2 ? 'rest' : 'work',
-        career: { type: 'job', jobId: 'cashier', tenureDays: state.clockDay, level: 0 },
+        focusId,
+        career:
+          state.character.career.type === 'job'
+            ? state.character.career
+            : { type: 'job', jobId: 'office_clerk', tenureDays: 0, level: 0 },
       },
-    }));
+    }),
+  );
+}
+
+function liveCarefully(seed: number): WorldState {
+  let state = createWorld({ name: 'Careful', backgroundId: 'scholarship', seed });
+  for (let week = 0; week < 6000 && !state.deceased; week += 1) state = carefulWeek(state);
+  return state;
+}
+
+describe('a whole lifetime', () => {
+  it('always ends: nobody lives forever', () => {
+    const end = playUntilDeath(fresh());
+
+    expect(end.deceased).toBe(true);
+    expect(end.deathCause).toBeTruthy();
+    expect(end.deathDay).toBe(end.clockDay);
+  });
+
+  it('keeps every stat inside its range and free of NaN', () => {
+    const end = playUntilDeath(fresh());
 
     for (const [name, value] of Object.entries(end.character.stats)) {
       expect(Number.isFinite(value), `${name} is not finite`).toBe(true);
@@ -47,44 +69,67 @@ describe('a full lifetime of ticks', () => {
     }
   });
 
-  it('ages the character into their seventies', () => {
-    const end = playLife((state) => state);
-    // 3000 weeks = 21000 days = 57 years on top of the starting age.
-    expect(ageInYears(end.character)).toBe(BALANCE.startAgeYears + 57);
-  });
-
-  it('never lets the event log grow without bound', () => {
-    const end = playLife((state, week) => ({
-      ...state,
-      character: {
-        ...state.character,
-        focusId: 'work',
-        // Constantly near a promotion, so log entries keep being written.
-        career: { type: 'job', jobId: 'cashier', tenureDays: 179 + week, level: 0 },
-      },
-    }));
+  it('never lets the logs grow without bound', () => {
+    const end = playUntilDeath(fresh());
 
     expect(end.eventLog.length).toBeLessThanOrEqual(BALANCE.eventLogLimit);
+    expect(end.milestones.length).toBeLessThanOrEqual(BALANCE.milestoneLimit);
   });
 
-  it('every focus survives a lifetime without breaking the simulation', () => {
+  it('leaves a save small enough for localStorage', () => {
+    const end = playUntilDeath(fresh());
+    // localStorage gives about 5 MB. Anything near that is a design problem.
+    expect(JSON.stringify(end).length).toBeLessThan(100_000);
+  });
+
+  it('every focus survives a long run without breaking the simulation', () => {
     for (const focus of FOCUSES) {
       let state = createWorld({ name: focus.label, backgroundId: 'scholarship', seed: 11 });
       state = { ...state, character: { ...state.character, focusId: focus.id } };
 
-      for (let week = 0; week < 500; week += 1) state = advanceWeek(state);
+      state = playWeeks(state, 500);
 
       expect(Number.isFinite(state.character.stats.money), `${focus.id} money`).toBe(true);
       expect(state.character.stats.health, `${focus.id} health`).toBeGreaterThanOrEqual(0);
       expect(state.character.stats.health, `${focus.id} health`).toBeLessThanOrEqual(100);
     }
   });
+});
 
-  it('the save stays small enough for localStorage after a full life', () => {
-    const end = playLife((state) => state);
-    const bytes = JSON.stringify(end).length;
+/**
+ * The user asked (22 Sep 2026) for a careful player to die somewhere in their
+ * late eighties or early nineties, and a careless one much sooner. That is a
+ * balance promise, so it is pinned here: anyone who retunes the mortality
+ * curve and breaks the promise gets a red test instead of a silent change.
+ */
+describe('the agreed shape of a lifespan', () => {
+  it('an attentive player reaches their late eighties or nineties', () => {
+    for (const seed of [1, 7, 4242]) {
+      const end = liveCarefully(seed);
+      const age = ageInYears(end.character);
 
-    // localStorage gives about 5 MB. Anything near that is a design problem.
-    expect(bytes).toBeLessThan(100_000);
+      expect(end.deceased, `seed ${seed} never died`).toBe(true);
+      expect(age, `seed ${seed} died at ${age}`).toBeGreaterThanOrEqual(80);
+      expect(age, `seed ${seed} died at ${age}`).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('a player who only ever works dies far younger than a careful one', () => {
+    let reckless = createWorld({ name: 'Reckless', backgroundId: 'scholarship', seed: 1 });
+    reckless = {
+      ...reckless,
+      character: {
+        ...reckless.character,
+        focusId: 'work',
+        career: { type: 'job', jobId: 'office_clerk', tenureDays: 0, level: 0 },
+      },
+    };
+    reckless = playUntilDeath(reckless);
+
+    const recklessAge = ageInYears(reckless.character);
+    const carefulAge = ageInYears(liveCarefully(1).character);
+
+    expect(reckless.deceased).toBe(true);
+    expect(recklessAge).toBeLessThan(carefulAge - 15);
   });
 });

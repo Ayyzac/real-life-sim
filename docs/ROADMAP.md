@@ -15,17 +15,17 @@ Tujuan: buktikan simulation core-nya hidup dan seru, lewat UI sederhana dulu (mi
 
 **Dipecah dua demo** atas permintaan user (22 Sep 2026), supaya bisa dicoba lebih awal:
 - **Demo A (selesai):** karakter, Clock, dashboard, fokus mingguan, kerja + gaji, save
-- **Demo B (berikutnya):** `EventEngine`, kematian, Life Summary
+- **Demo B (selesai):** `EventEngine`, kematian, Life Summary
 - [x] `Character`, `WorldState`, `Clock` di simulation core (lihat `docs/ARCHITECTURE.md` §2, §4)
 - [x] Pembuatan karakter baru (form sederhana React)
 - [x] Dashboard status (uang, kesehatan, energi, mood, umur)
 - [x] Tombol "Lanjut Hari" / "Lanjut Minggu" yang benar-benar menjalankan `Clock.advanceDay()`
 - [x] Satu jalur karier dulu: kerja biasa (`careers/job.ts`) — gaji masuk, energi terkuras
-- [ ] `EventEngine` dengan minimal 5–10 event kehidupan acak (sakit ringan, ajakan teman, bonus kerja, dst.) sebagai bukti pola data-driven-nya jalan
-- [ ] Kondisi kematian (usia tua / kesehatan 0) + layar Life Summary + tombol mulai karakter baru
+- [x] `EventEngine` dengan minimal 5–10 event kehidupan acak (sakit ringan, ajakan teman, bonus kerja, dst.) sebagai bukti pola data-driven-nya jalan
+- [x] Kondisi kematian (usia tua / kesehatan 0) + layar Life Summary + tombol mulai karakter baru
 - [x] `SaveProvider` (localStorage) — refresh browser tidak menghilangkan progres
-- [~] Test Vitest untuk `Clock`, `EventEngine`, dan sistem kerja — `Clock` & sistem kerja selesai (67 test); `EventEngine` menyusul di Demo B
-- [ ] **Checkpoint:** user bisa main satu "kehidupan" penuh dari lahir sampai mati, lewat UI menu saja, dan progresnya tersimpan
+- [x] Test Vitest untuk `Clock`, `EventEngine`, dan sistem kerja — 115 test
+- [x] **Checkpoint:** user bisa main satu "kehidupan" penuh dari lahir sampai mati, lewat UI menu saja, dan progresnya tersimpan
 
 ## Fase 2 — Dunia yang dijelajahi (Phaser + aset Kenney)
 Tujuan: tambahkan lapisan visual di atas loop yang sudah terbukti jalan di Fase 1.

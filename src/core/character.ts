@@ -2,9 +2,9 @@ import { BACKGROUNDS, findBackground } from '../data/backgrounds';
 import { BALANCE } from '../data/balance';
 import { DEFAULT_FOCUS_ID } from '../data/focuses';
 import { createRng } from './rng';
-import type { Character, WorldState } from './types';
+import type { Character, EventLogEntry, WorldState } from './types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface NewGameOptions {
   name: string;
@@ -46,18 +46,21 @@ export function createWorld({ name, backgroundId, seed }: NewGameOptions): World
     location: 'home',
   };
 
+  const birth: EventLogEntry = {
+    day: 0,
+    tone: 'neutral',
+    text: `${character.name} turns ${BALANCE.startAgeYears}. ${background.label}.`,
+  };
+
   return {
     schemaVersion: SCHEMA_VERSION,
     clockDay: 0,
     character,
     rng: rng.snapshot(),
-    eventLog: [
-      {
-        day: 0,
-        tone: 'neutral',
-        text: `${character.name} turns ${BALANCE.startAgeYears}. ${background.label}.`,
-      },
-    ],
+    eventLog: [birth],
+    milestones: [birth],
+    peakMoney: character.stats.money,
+    pendingEvent: null,
     deceased: false,
   };
 }

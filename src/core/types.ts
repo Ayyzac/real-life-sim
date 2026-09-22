@@ -52,6 +52,30 @@ export interface Character {
   location: LocationId;
 }
 
+/**
+ * A one-off change from a life event, as opposed to the per-day rates in
+ * src/data/focuses.ts. Structured values, never free text (ARCHITECTURE §3).
+ */
+export interface EventEffect {
+  money?: number;
+  health?: number;
+  energy?: number;
+  mood?: number;
+  intelligence?: number;
+  physical?: number;
+  charisma?: number;
+}
+
+/**
+ * An event that stopped the week because it needs an answer. Lives in the
+ * saved state so closing the browser mid-decision loses nothing.
+ */
+export interface PendingEvent {
+  eventId: string;
+  /** Days of the current advance still owed once the choice is made. */
+  daysRemaining: number;
+}
+
 export interface EventLogEntry {
   /** Day the entry was recorded, matching WorldState.clockDay. */
   day: number;
@@ -65,8 +89,21 @@ export interface WorldState {
   clockDay: number;
   character: Character;
   rng: RngState;
-  /** Newest first. Trimmed to keep saves small; the Life Summary reads it. */
+  /** Newest first. Trimmed to keep saves small; drives the Recent panel. */
   eventLog: EventLogEntry[];
-  /** Set once the character dies. Phase 1 Demo B fills this in. */
+  /**
+   * The handful of moments worth remembering at the end: jobs taken,
+   * promotions, serious illness. Trimmed separately and far more slowly than
+   * eventLog, because the Life Summary has to reach back decades.
+   */
+  milestones: EventLogEntry[];
+  /** Highest money ever held. The Life Summary reports it. */
+  peakMoney: number;
+  /** Non-null while an event is waiting for the player to choose. */
+  pendingEvent: PendingEvent | null;
   deceased: boolean;
+  /** Plain-language reason, set at the moment of death. */
+  deathCause?: string;
+  /** The day the character died, for the Life Summary. */
+  deathDay?: number;
 }

@@ -2,7 +2,7 @@ import { findFocus } from '../data/focuses';
 import { EventBus } from './bus';
 import { meetsRequirements } from './careers/job';
 import { findJob } from '../data/jobs';
-import { advanceDay, advanceWeek } from './clock';
+import { advanceDay, advanceWeek, resolveEvent } from './clock';
 import { createWorld, type NewGameOptions } from './character';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
@@ -24,6 +24,7 @@ export type GameIntent =
   | { type: 'advanceDay' }
   | { type: 'advanceWeek' }
   | { type: 'setFocus'; focusId: FocusId }
+  | { type: 'chooseEventOption'; choiceId: string }
   | { type: 'takeJob'; jobId: string }
   | { type: 'quitJob' }
   | { type: 'reset' };
@@ -75,8 +76,13 @@ export class GameStore {
       case 'advanceWeek':
         return state ? advanceWeek(state) : state;
 
+      case 'chooseEventOption':
+        return state ? resolveEvent(state, intent.choiceId) : state;
+
       case 'setFocus': {
-        if (!state || state.deceased) return state;
+        // A waiting event blocks everything else: the player has to answer it
+        // before the week can carry on.
+        if (!state || state.deceased || state.pendingEvent) return state;
         const focus = findFocus(intent.focusId);
         if (state.character.focusId === focus.id) return state;
         return {
@@ -86,18 +92,17 @@ export class GameStore {
       }
 
       case 'takeJob': {
-        if (!state || state.deceased) return state;
+        if (!state || state.deceased || state.pendingEvent) return state;
         const job = findJob(intent.jobId);
         // Guard here too: the UI hides jobs you cannot get, but the store is
         // the thing that has to be right.
         if (!meetsRequirements(state.character.attributes, job)) return state;
 
+        const hired = { day: state.clockDay, tone: 'good' as const, text: `Hired as ${job.title}.` };
         return {
           ...state,
-          eventLog: [
-            { day: state.clockDay, tone: 'good', text: `Hired as ${job.title}.` },
-            ...state.eventLog,
-          ],
+          eventLog: [hired, ...state.eventLog],
+          milestones: [hired, ...state.milestones],
           character: {
             ...state.character,
             career: { type: 'job', jobId: job.id, tenureDays: 0, level: 0 },
@@ -106,7 +111,8 @@ export class GameStore {
       }
 
       case 'quitJob': {
-        if (!state || state.character.career.type !== 'job') return state;
+        if (!state || state.deceased || state.pendingEvent) return state;
+        if (state.character.career.type !== 'job') return state;
         const job = findJob(state.character.career.jobId);
         return {
           ...state,

@@ -180,6 +180,37 @@ Ditulis di sini supaya keputusan tidak hilang atau berubah-ubah antar sesi kerja
 - **Celah yang belum ditutup:** uang menumpuk sampai ~$900rb seumur hidup karena belum ada yang bisa dibeli. Penyerap uang baru datang di Fase 3 (bisnis) dan Fase 5. Jangan tambal dengan menaikkan biaya hidup — itu cuma menghukum awal permainan.
 - Promosi butuh atribut yang terus naik, bukan sekadar lama bekerja. Pemain yang berhenti belajar tidak akan naik level. Ini disengaja (GDD §4.1), tapi perlu dijelaskan ke pemain suatu saat.
 
+### 2026-09-22 — Fase 1 Demo B
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| **Minggu bisa terhenti** | Event yang butuh keputusan menghentikan minggu di hari itu. Sisa hari disimpan di `WorldState.pendingEvent.daysRemaining` dan dimainkan otomatis setelah pemain menjawab. | Keputusan user. Konsekuensi penting: kondisi "minggu setengah jalan" **wajib ikut tersimpan di save** — kalau tidak, tutup browser saat dialog terbuka akan menghanguskan sisa minggu. Ada test khusus untuk ini. |
+| Satu undian per hari, bukan per event | `EventEngine` melempar dadu sekali per hari (`BALANCE.eventChancePerDay`), lalu memilih satu event secara berbobot. Ini **menyimpang** dari sketsa §3 yang memberi tiap event `probabilityPerDay` sendiri. | §3 menyebut dirinya "contoh bentuk, bukan final". Dengan ~3.600 minggu per kehidupan, membiarkan selusin event mengundi sendiri-sendiri akan menenggelamkan pemain. Sekarang kecepatan event diatur satu angka. |
+| **Kematian selalu didahului tanda** | Tidak ada kematian mendadak. Kematian hanya terjadi saat kesehatan menyentuh 0. | Keputusan user. Dijaga tiga aturan yang saling mengunci — lihat tabel di bawah. |
+| Umur harapan target 85-95 | `healthDecayPerDayPerYearOver: 0.04`. Pemain cermat mati di 86-88. | Keputusan user. **Dipatok sebagai test** di `test/core/longRun.test.ts` — siapa pun yang menggeser kurva tanpa sadar akan dapat test merah, bukan perubahan diam-diam. |
+| `applyDailyRules` dipisah dari undian event | Aturan harian yang pasti (fokus, gaji, biaya, penuaan) terpisah dari lemparan dadu. | Awalnya menyatu, dan akibatnya aturan harian tidak bisa dites tepat — event acak mengubah angkanya. Sekarang keduanya bisa dites sendiri-sendiri. |
+| `schemaVersion` naik ke **2** | Bentuk save berubah (`milestones`, `peakMoney`, `pendingEvent`, `deathCause`). Save lama dibuang, tidak dimigrasi. | Belum ada pemain selain user, jadi menulis logika migrasi sekarang adalah kode yang tidak dipakai siapa pun. Tempatnya sudah disiapkan di `LocalStorageSaveProvider.load()`. |
+
+**Tiga aturan yang bersama-sama menjamin "kematian selalu didahului tanda":**
+
+| Aturan | Angka | Kenapa ada |
+|---|---|---|
+| Lantai kelelahan | `exhaustionHealthFloor: 25` | Kelelahan **melemahkan, tidak membunuh**. Tanpa ini, pemain yang tidak pernah istirahat mati dalam 8 bulan — terlalu cepat untuk disebut "penurunan yang terlihat". |
+| Lantai event | `eventHealthFloor: 1` | Satu event tidak boleh membunuh orang sehat. Ia boleh membawa ke ambang, penurunan harian yang menyelesaikan. |
+| Pengecualian kritis | `criticalHealth: 15` | Di bawah garis ini event **boleh** menyelesaikan. **Tanpa ini karakter di bawah umur 45 benar-benar tidak bisa mati** — kelelahan berhenti di lantainya, penuaan belum mulai. Ditemukan lewat test, bukan lewat bermain. |
+
+**Tangga kesulitan yang dihasilkan (hasil simulasi, bukan tebakan):**
+
+| Gaya main | Umur mati |
+|---|--:|
+| Tidak pernah istirahat | 19-28 |
+| Istirahat, tidak pernah berobat | ~50 |
+| Istirahat + berobat | 86-88 |
+
+Uang baru benar-benar penting di usia tua — itulah alasan menabung, dan sebagian jawaban atas celah "uang menumpuk tanpa guna".
+
+**Invarian yang tidak dijaga tipe data:** `WorldState.clockDay` dan `character.ageInDays` **harus selalu sama**. Keduanya naik bersama di `applyDailyRules`, tapi tidak ada yang memaksanya. Saat melenceng, Life Summary mencetak tanggal ngawur tanpa error. Sudah dipatok test di `clock.test.ts`.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - **Linter/formatter** (ESLint, Prettier): sengaja belum dipasang, tidak diatur dokumen manapun.

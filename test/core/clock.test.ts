@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { ageInYears, createWorld } from '../../src/core/character';
-import { advanceDay, advanceDays, advanceWeek, ageingHealthLossPerDay } from '../../src/core/clock';
+import {
+  advanceDays,
+  advanceWeek,
+  ageingHealthLossPerDay,
+  applyDailyRules,
+} from '../../src/core/clock';
+import { playWeeks, resolveAll } from '../helpers/play';
 import { BALANCE } from '../../src/data/balance';
 import { findFocus } from '../../src/data/focuses';
 import { findJob } from '../../src/data/jobs';
@@ -20,10 +26,10 @@ function world(overrides: Partial<WorldState['character']> = {}): WorldState {
   return { ...base, character: { ...base.character, ...overrides } };
 }
 
-describe('advanceDay', () => {
+describe('applyDailyRules (the certain half of a day)', () => {
   it('moves the calendar and the character exactly one day', () => {
     const before = world();
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after.clockDay).toBe(before.clockDay + 1);
     expect(after.character.ageInDays).toBe(before.character.ageInDays + 1);
@@ -33,7 +39,7 @@ describe('advanceDay', () => {
     const before = world();
     const beforeMoney = before.character.stats.money;
 
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after).not.toBe(before);
     expect(before.character.stats.money).toBe(beforeMoney);
@@ -41,7 +47,7 @@ describe('advanceDay', () => {
 
   it('charges living costs every day, working or not', () => {
     const before = world({ focusId: 'rest' });
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after.character.stats.money).toBe(
       before.character.stats.money - BALANCE.livingCostPerDay,
@@ -53,7 +59,7 @@ describe('advanceDay', () => {
       focusId: 'work',
       career: { type: 'job', jobId: 'cashier', tenureDays: 0, level: 0 },
     });
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after.character.stats.money).toBe(
       before.character.stats.money + CASHIER_DAILY - BALANCE.livingCostPerDay,
@@ -63,7 +69,7 @@ describe('advanceDay', () => {
 
   it('pays nothing for working while unemployed, but still charges living costs', () => {
     const before = world({ focusId: 'work', career: { type: 'none' } });
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after.character.stats.money).toBe(
       before.character.stats.money - BALANCE.livingCostPerDay,
@@ -73,14 +79,14 @@ describe('advanceDay', () => {
   it('restores energy when resting and drains it when working', () => {
     const tired = world({ focusId: 'rest' });
     tired.character.stats.energy = 40;
-    expect(advanceDay(tired).character.stats.energy).toBe(40 + REST_ENERGY);
+    expect(applyDailyRules(tired).character.stats.energy).toBe(40 + REST_ENERGY);
 
     const working = world({
       focusId: 'work',
       career: { type: 'job', jobId: 'cashier', tenureDays: 0, level: 0 },
     });
     working.character.stats.energy = 40;
-    expect(advanceDay(working).character.stats.energy).toBe(40 + WORK_ENERGY);
+    expect(applyDailyRules(working).character.stats.energy).toBe(40 + WORK_ENERGY);
   });
 
   it('never lets a stat leave the 0-100 range', () => {
@@ -88,7 +94,7 @@ describe('advanceDay', () => {
     state.character.stats.energy = 99;
     state.character.stats.health = 100;
 
-    const after = advanceDay(state);
+    const after = applyDailyRules(state);
 
     expect(after.character.stats.energy).toBeLessThanOrEqual(BALANCE.statMax);
     expect(after.character.stats.health).toBeLessThanOrEqual(BALANCE.statMax);
@@ -100,14 +106,14 @@ describe('advanceDay', () => {
     exhausted.character.stats.energy = 5;
     exhausted.character.stats.health = 50;
 
-    const after = advanceDay(exhausted);
+    const after = applyDailyRules(exhausted);
 
     expect(after.character.stats.health).toBeCloseTo(50 - BALANCE.lowEnergyHealthPenaltyPerDay, 5);
   });
 
   it('charges the extra cost of a paid activity on top of living costs', () => {
     const before = world({ focusId: 'socialize' });
-    const after = advanceDay(before);
+    const after = applyDailyRules(before);
 
     expect(after.character.stats.money).toBe(
       before.character.stats.money - BALANCE.livingCostPerDay - SOCIALIZE_COST,
@@ -116,15 +122,26 @@ describe('advanceDay', () => {
 
   it('does nothing once the character is dead', () => {
     const dead = { ...world(), deceased: true };
-    expect(advanceDay(dead)).toBe(dead);
+    expect(advanceDays(dead, 1)).toBe(dead);
+  });
+
+  it('refuses to move while an event is waiting for an answer', () => {
+    const waiting = {
+      ...world(),
+      pendingEvent: { eventId: 'friend_invites', daysRemaining: 3 },
+    };
+    expect(advanceDays(waiting, 7)).toBe(waiting);
   });
 });
 
 describe('advanceWeek', () => {
-  it('is exactly seven days', () => {
+  it('is exactly seven days, including days played out after an event', () => {
     const before = world();
 
-    expect(advanceWeek(before).clockDay).toBe(before.clockDay + 7);
+    // An event can pause the week part-way; once answered, the rest still runs.
+    const after = resolveAll(advanceWeek(before));
+
+    expect(after.clockDay).toBe(before.clockDay + 7);
     expect(advanceWeek(before)).toEqual(advanceDays(before, 7));
   });
 
@@ -134,7 +151,7 @@ describe('advanceWeek', () => {
       career: { type: 'job', jobId: 'cashier', tenureDays: 0, level: 0 },
     });
 
-    const after = advanceWeek(before);
+    const after = resolveAll(advanceWeek(before));
     const earned = after.character.stats.money - before.character.stats.money;
 
     expect(earned).toBe(7 * (CASHIER_DAILY - BALANCE.livingCostPerDay));
@@ -144,13 +161,45 @@ describe('advanceWeek', () => {
   });
 });
 
+/**
+ * clockDay and character.ageInDays are separate fields that must move as one.
+ * Nothing in the type system enforces it, and when they drift the Life Summary
+ * silently prints nonsense dates - so it is pinned here.
+ */
+describe('the world clock and the character age stay in lockstep', () => {
+  it('after a single day', () => {
+    const after = applyDailyRules(world());
+    expect(after.clockDay).toBe(after.character.ageInDays);
+  });
+
+  it('after a long run with events answered along the way', () => {
+    const after = playWeeks(world({ focusId: 'rest' }), 300);
+    expect(after.clockDay).toBe(after.character.ageInDays);
+  });
+
+  it('after a week that was interrupted and resumed', () => {
+    let state = world({ focusId: 'rest' });
+    for (let week = 0; week < 500; week += 1) {
+      const next = advanceWeek(state);
+      if (next.pendingEvent) {
+        const resumed = resolveAll(next);
+        expect(resumed.clockDay).toBe(resumed.character.ageInDays);
+        return;
+      }
+      state = next;
+    }
+    throw new Error('no event interrupted a week within 500 weeks');
+  });
+});
+
 describe('ageInYears', () => {
   it('starts at the configured age', () => {
     expect(ageInYears(world().character)).toBe(BALANCE.startAgeYears);
   });
 
   it('gains a year every 365 days', () => {
-    const aged = advanceDays(world(), 365);
+    // 53 weeks is 371 days, comfortably past the first birthday.
+    const aged = playWeeks(world({ focusId: 'rest' }), 53);
     expect(ageInYears(aged.character)).toBe(BALANCE.startAgeYears + 1);
   });
 });

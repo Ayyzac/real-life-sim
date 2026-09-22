@@ -7,9 +7,16 @@ no backend and no paid services.
 
 ## Status
 
-Phase 0 of [docs/ROADMAP.md](docs/ROADMAP.md): foundation and deploy pipeline.
-There is no gameplay yet - the page only proves that the build ships to a public
-URL automatically.
+Phase 1 of [docs/ROADMAP.md](docs/ROADMAP.md) is complete: a playable life,
+from creating a character to the closing summary.
+
+You pick a background, take a job, choose what to spend your weeks on, and
+press Advance Week. Money, health, energy and mood move. Life events turn up -
+some of them stop the week to ask you something. Neglect yourself and your
+health declines, visibly, until it runs out. Then you get a Life Summary and
+start again from nothing.
+
+The walkable town map arrives in Phase 2. Until then the world is a menu.
 
 ## Run it locally
 

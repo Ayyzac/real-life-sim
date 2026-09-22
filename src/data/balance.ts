@@ -23,16 +23,50 @@ export const BALANCE = {
   /** Running on empty costs health. */
   lowEnergyThreshold: 20,
   lowEnergyHealthPenaltyPerDay: 0.4,
+  /**
+   * Exhaustion wears a body down but does not kill it on its own: the penalty
+   * stops here. Without this floor, a character who only ever worked died
+   * inside eight months - far too fast to count as the "visible decline"
+   * death the user asked for. Below this line only ageing and illness bite.
+   */
+  exhaustionHealthFloor: 25,
 
   /** Boredom: mood sags a little unless something lifts it. */
   moodDriftPerDay: -0.15,
 
   /** Ageing: no effect while young, compounding after this age. */
   healthDecayStartAgeYears: 45,
-  healthDecayPerDayPerYearOver: 0.03,
+  healthDecayPerDayPerYearOver: 0.04,
 
-  /** The Life Summary reads this log; trimmed so saves stay small. */
+  /** The Recent panel reads this log; trimmed so saves stay small. */
   eventLogLimit: 80,
+  /** Milestones must survive decades, so they are trimmed far more slowly. */
+  milestoneLimit: 60,
+
+  /**
+   * Chance that SOMETHING happens on a given day. One roll per day picks at
+   * most one event, rather than each event rolling separately - that keeps the
+   * pace controllable from this one number.
+   *
+   * 0.045/day is roughly one event every three weeks.
+   */
+  eventChancePerDay: 0.045,
+
+  /**
+   * An event may bring a healthy character to the brink but never kill them
+   * outright: death is always preceded by visible decline (user decision,
+   * 22 Sep 2026). So event damage normally stops here.
+   */
+  eventHealthFloor: 1,
+  /**
+   * ...except for someone already this ill, who an event CAN finish off.
+   *
+   * Without this exception nothing could kill a character under 45 at all:
+   * exhaustion stops at its own floor and ageing has not started, so they
+   * were literally immortal. Dying here still counts as a visible decline -
+   * the player has been staring at a red health warning for a long time.
+   */
+  criticalHealth: 15,
 
   /** Promotion gates: index = level being reached. */
   promotion: {

@@ -422,6 +422,92 @@ body {
   color: var(--warn);
 }
 
+.event {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.event__title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.event__text {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.event__resume {
+  margin: 12px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- life summary ---------- */
+
+.summary__label {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.summary__name {
+  margin: 4px 0 2px;
+  font-size: 1.6rem;
+}
+
+.summary__cause {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.summary__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.summary__facts dt {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.summary__facts dd {
+  margin: 2px 0 0;
+  font-size: 0.98rem;
+}
+
+.summary__milestones {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.summary__epitaph {
+  margin: 20px 0 4px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.summary__reset-note {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
 /* ---------- log & world ---------- */
 
 .log__list {
