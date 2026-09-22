@@ -1,0 +1,60 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0e14;
+  --panel: #12161f;
+  --text: #e8edf7;
+  --muted: #7f8ca6;
+  --accent: #6ee7b7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.app__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  letter-spacing: 0.04em;
+}
+
+.app__subtitle,
+.app__footer {
+  margin: 8px auto 0;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.game-canvas {
+  width: min(100%, 800px);
+  aspect-ratio: 16 / 9;
+  border: 1px solid #222a38;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.game-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
