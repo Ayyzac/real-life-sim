@@ -34,6 +34,8 @@ interface Walker {
   look?: number;
   /** A name, once the player has got to know them. Follows them about. */
   label?: Phaser.GameObjects.Text;
+  /** Put up when it rains, for some of them. */
+  umbrella?: Phaser.GameObjects.Image;
 }
 
 /** A stranger under the pointer. */
@@ -51,6 +53,29 @@ export interface Crowd {
   strangerAt(x: number, y: number): Stranger | null;
   /** Puts a name over someone the player has just met. */
   name(index: number, text: string, resolution: number): void;
+  /** Rain empties the pavements, and some of those left put umbrellas up. */
+  setRain(raining: boolean): void;
+}
+
+/** Umbrella colours, picked per person. */
+const UMBRELLA_TINTS = [0xe05d5d, 0x4f8fe0, 0xf2c14e, 0x6cc070, 0x9b6ad6, 0x2b2b35];
+
+/**
+ * An umbrella, drawn rather than downloaded: a canopy and a handle, white so
+ * a tint can colour it. Made once per game.
+ */
+export function umbrellaTexture(scene: Phaser.Scene): string {
+  const key = 'umbrella';
+  if (scene.textures.exists(key)) return key;
+  const g = scene.make.graphics({ x: 0, y: 0 }, false);
+  g.fillStyle(0xffffff, 1);
+  g.slice(7, 6, 6, Math.PI, 0, false);
+  g.fillPath();
+  g.fillStyle(0xcfcfcf, 1);
+  g.fillRect(6.5, 6, 1, 5);
+  g.generateTexture(key, 14, 12);
+  g.destroy();
+  return key;
 }
 
 export function createCrowd(
@@ -76,12 +101,19 @@ export function createCrowd(
       .image(rng() * width, row * TILE_SIZE + TILE_SIZE / 2, lookTexture(scene, texture, look), lookFrame(view, POSE.stand))
       .setDepth(depth);
 
+    const umbrella = scene.add
+      .image(person.x, person.y - 7, umbrellaTexture(scene))
+      .setTint(pick(UMBRELLA_TINTS))
+      .setDepth(depth + 0.1)
+      .setVisible(false);
+
     walkers.push({
       object: person,
       speed: between(PERSON_SPEED.min, PERSON_SPEED.max) * (goingRight ? 1 : -1),
       view,
       phase: rng() * STEP_MS * 2,
       look,
+      umbrella,
     });
   }
 
@@ -118,12 +150,14 @@ export function createCrowd(
           walker.object.setFrame(lookFrame(walker.view, stepPose(elapsed + walker.phase)));
         }
         walker.label?.setPosition(walker.object.x, walker.object.y - 9);
+        if (walker.umbrella?.visible) walker.umbrella.setPosition(walker.object.x, walker.object.y - 7);
       }
     },
     destroy(): void {
       for (const walker of walkers) {
         walker.object.destroy();
         walker.label?.destroy();
+        walker.umbrella?.destroy();
       }
       walkers.length = 0;
     },
@@ -131,6 +165,7 @@ export function createCrowd(
       const index = walkers.findIndex(
         (walker) =>
           walker.look !== undefined &&
+          walker.object.visible &&
           !walker.label &&
           Math.abs(walker.object.x - x) <= TILE_SIZE / 2 &&
           Math.abs(walker.object.y - y) <= TILE_SIZE / 2,
@@ -153,6 +188,17 @@ export function createCrowd(
         .setOrigin(0.5, 1)
         .setDepth(depth + 0.5)
         .setResolution(resolution);
+    },
+    setRain(raining: boolean): void {
+      // Every other person goes indoors; two in five of the rest have an
+      // umbrella. Fixed by position in the crowd, so it never flickers. People
+      // the player knows by name stay out, so they are not lost from view.
+      walkers.forEach((walker, i) => {
+        if (walker.look === undefined) return;
+        const indoors = raining && i % 2 === 1 && !walker.label;
+        walker.object.setVisible(!indoors);
+        walker.umbrella?.setVisible(raining && !indoors && i % 5 < 2);
+      });
     },
   };
 }

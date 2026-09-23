@@ -26,7 +26,8 @@ import {
   locationAt,
   type TownBuilding,
 } from '../../data/town';
-import { createCrowd, stepPose, type Crowd, type Stranger } from '../crowd';
+import { createCrowd, stepPose, umbrellaTexture, type Crowd, type Stranger } from '../crowd';
+import { isRaining } from '../../core/weather';
 import { lookTexture } from '../lookTexture';
 import { POSE, VIEW, lookFrame } from '../looks';
 import { findPath, type Point } from '../pathfinding';
@@ -52,7 +53,7 @@ const TEXTURE = 'town';
 const WALK_SPEED = 6;
 
 // Labels and the hover outline sit above the night sky, so they stay readable.
-const DEPTH = { ground: 0, building: 1, prop: 2, crowd: 5, player: 6, sky: 8, labels: 8.5, highlight: 9, lock: 10, hud: 20 };
+const DEPTH = { ground: 0, building: 1, prop: 2, crowd: 5, player: 6, rain: 7, sky: 8, labels: 8.5, highlight: 9, lock: 10, hud: 20 };
 
 /** How quickly the sky catches up with the clock, per second. */
 const SKY_EASE = 1.5;
@@ -114,6 +115,11 @@ export class TownScene extends Phaser.Scene {
   /** The day-night wash over the whole town (GDD §11.1). Render only. */
   private sky?: Phaser.GameObjects.Rectangle;
   private skyNow = { r: 0, g: 0, b: 0, a: 0 };
+  /** Streaks of rain over the whole town, and the gloom that comes with it. Render only. */
+  private rain?: Phaser.GameObjects.TileSprite;
+  private gloom?: Phaser.GameObjects.Rectangle;
+  private raining = false;
+  private playerUmbrella?: Phaser.GameObjects.Image;
   /** Day and minute last seen, to tell a jump in time from a walk. */
   private lastTime = -1;
   private crowd?: Crowd;
@@ -210,6 +216,15 @@ export class TownScene extends Phaser.Scene {
       this.lastTime = timeKey(world);
     }
 
+    this.buildRain();
+    this.playerUmbrella = this.add
+      .image(0, 0, umbrellaTexture(this))
+      .setTint(0x3d6fb6)
+      .setDepth(DEPTH.player + 0.1)
+      .setVisible(false);
+    this.raining = false;
+    this.refreshRain(world);
+
     this.buildLockOverlay();
     this.refreshLock(world);
 
@@ -242,6 +257,50 @@ export class TownScene extends Phaser.Scene {
     this.slideCamera(delta);
     this.placeHud();
     this.paintSky(delta);
+    this.fallRain(delta);
+  }
+
+  // --- rain (GDD §12) ---------------------------------------------------------
+
+  /** A tile of streaks, drawn rather than downloaded, scrolled to fall. */
+  private buildRain(): void {
+    if (!this.textures.exists('rain')) {
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.lineStyle(1, 0xbcd4f0, 0.55);
+      const rng = createRng(0x4a1d).next;
+      for (let i = 0; i < 26; i += 1) {
+        const x = rng() * 64;
+        const y = rng() * 64;
+        g.lineBetween(x, y, x - 2, y + 6);
+      }
+      g.generateTexture('rain', 64, 64);
+      g.destroy();
+    }
+    const width = TOWN_COLUMNS * TILE_SIZE;
+    const height = TOWN_ROWS * TILE_SIZE;
+    this.gloom = this.add.rectangle(0, 0, width, height, 0x1d2a3d, 0.22).setOrigin(0).setDepth(DEPTH.rain).setVisible(false);
+    this.rain = this.add.tileSprite(0, 0, width, height, 'rain').setOrigin(0).setDepth(DEPTH.rain).setVisible(false);
+  }
+
+  private refreshRain(world: WorldState | null): void {
+    const raining = world !== null && isRaining(world);
+    if (raining === this.raining) return;
+    this.raining = raining;
+    this.rain?.setVisible(raining);
+    this.gloom?.setVisible(raining);
+    this.crowd?.setRain(raining);
+  }
+
+  private fallRain(delta: number): void {
+    if (this.raining && this.rain) {
+      this.rain.tilePositionY -= delta * 0.12;
+      this.rain.tilePositionX += delta * 0.04;
+    }
+    const player = this.player;
+    const world = this.store.getState();
+    const covered = this.raining && player !== undefined && world?.character.inventory.includes('umbrella') === true;
+    this.playerUmbrella?.setVisible(covered);
+    if (covered && player) this.playerUmbrella?.setPosition(player.x, player.y - 7);
   }
 
   /** Eases the wash towards the colour of the current hour. */
@@ -612,6 +671,7 @@ export class TownScene extends Phaser.Scene {
     const world = this.store.getState();
     this.refreshLock(world);
     this.refreshLook(world);
+    this.refreshRain(world);
     if (!world) return;
     this.nameGreeted(world);
 

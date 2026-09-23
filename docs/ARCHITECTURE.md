@@ -712,6 +712,19 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Belanja tidak makan menit | Jam berjalan sendiri selagi pemain memilih. | Ponytail: waktu belanja sudah "gratis" dari jam yang berjalan. |
 | Migrasi v5 → 6 | `inventory: []`; id barang yang tidak dikenal dibuang di `withKnownIds`. | Pola yang sama dengan barang permanen. |
 
+#### Fase 7D — hujan (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Cuaca = hash (id karakter, hari) | `rainOn()` di `src/core/weather.ts`: ±25% hari, 2–6 jam mulai antara 06:00–19:00. Tidak disimpan. | Tidak menggeser RNG; hari yang sama selalu hujan dengan cara yang sama, jadi prakiraan di HP nanti selalu benar. |
+| Kehujanan = saat berpindah tempat | `caughtInRain()` dipanggil di intent `enterLocation`: kebersihan −8, mood −2 tiap perjalanan tanpa payung; log sekali sehari (`doneToday` `wet`). | Perjalanan adalah satu-satunya saat karakter "di luar" yang dikenal core. |
+| Hujan di peta digambar sendiri | Tekstur garis hujan dan payung dibuat dengan `Graphics.generateTexture`, tanpa unduhan. `TileSprite` digeser tiap frame + lapisan gelap tipis. | Nol aset baru. |
+| Keramaian saat hujan | `crowd.setRain()`: setiap orang kedua masuk rumah, 2 dari 5 sisanya berpayung — ditentukan posisi di kerumunan, jadi tidak berkedip. Orang yang sudah dikenal tetap terlihat; yang tersembunyi tidak bisa disapa. | "Jalan jadi agak sepi, ada NPC pakai payung" (permintaan user). |
+
+**Bug 7B yang ketahuan di sini:** `flush()` saat `pagehide` menulis state apa pun di memori. Tab game kedua yang dibiarkan terbuka di belakang ikut menulis salinan **lamanya** saat ditutup atau dimuat ulang — dan menimpa progres di tab yang sedang dimainkan. Ketahuan karena save di pane uji mundur sendiri. Sekarang `flush()` hanya menulis menit jam yang belum tersimpan; tab yang tidak bermain tidak punya apa-apa untuk ditulis. Dipatok test.
+
+**FPS dengan hujan belum diukur**: pane sesi ini `document.hidden`, jadi `requestAnimationFrame` berhenti. Hujan menambah 1 `TileSprite` + 1 persegi + ≤40 gambar payung kecil — tapi **angka belum ada**; ukur di jendela yang benar-benar menggambar.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

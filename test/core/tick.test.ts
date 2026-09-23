@@ -62,8 +62,18 @@ describe('the clock running on its own (GDD §12)', () => {
     store.dispatch({ type: 'tick', minutes: 1 });
     expect(save).toHaveBeenCalledTimes(1);
 
+    // Closing the page writes what the clock ran since - but only that.
+    store.flush();
+    expect(save).toHaveBeenCalledTimes(1);
+    store.dispatch({ type: 'tick', minutes: 5 });
     store.flush();
     expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('never lets a tab left open in the background overwrite the save with an old copy', () => {
+    const { store, save } = storeWith(world({ focusId: 'rest' }, { minuteOfDay: 10 * 60 }));
+    store.flush();
+    expect(save).not.toHaveBeenCalled();
   });
 
   it('remembers that a world came from the clock, so the screen can ignore it', () => {

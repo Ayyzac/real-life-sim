@@ -10,6 +10,7 @@ import { findSport, meetsRequirements as meetsSportRequirements } from './career
 import { findPossession, replacedBy, withPurchase } from './belongings';
 import { isGymMember } from './gym';
 import { buyItem, consumeItem } from './bag';
+import { caughtInRain } from './weather';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -100,14 +101,24 @@ export class GameStore {
     // so it is written once per game hour, plus whenever the page goes away.
     if (!next) this.saves.clear();
     else if (intent.type !== 'tick' || !before || hourOf(before) !== hourOf(next)) this.saves.save(next);
+    this.unsaved = next !== null && intent.type === 'tick' && before !== null && hourOf(before) === hourOf(next);
 
     this.bus.emit('changed', next);
   };
 
-  /** Writes the current world now - for when the page is closing. */
+  /**
+   * Writes the minutes the clock ran since the last save - for when the page
+   * is closing. Only if there are any: a second tab left open in the
+   * background has nothing unsaved, and must not overwrite the save the
+   * player is actually using with its own stale copy.
+   */
   flush = (): void => {
-    if (this.state) this.saves.save(this.state);
+    if (!this.state || !this.unsaved) return;
+    this.saves.save(this.state);
+    this.unsaved = false;
   };
+
+  private unsaved = false;
 
   /**
    * Which intent produced this world, if it came from here. Lets a screen
@@ -335,11 +346,12 @@ export class GameStore {
         // else may happen, or the player could walk away from a stopped week.
         if (!state || state.deceased || state.pendingEvent) return state;
         if (state.character.location === intent.locationId) return state;
-        // Moving is not choosing: the focus stays exactly where it was.
-        return {
+        // Moving is not choosing: the focus stays exactly where it was. The
+        // walk is outdoors, so the weather has its say (GDD §12).
+        return caughtInRain({
           ...state,
           character: { ...state.character, location: intent.locationId },
-        };
+        });
       }
 
       case 'takeJob': {

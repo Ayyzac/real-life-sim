@@ -281,6 +281,20 @@ export const BALANCE = {
    */
   bag: { slots: 12, dealChance: 0.25, dealSizes: [10, 20, 30, 40] },
 
+  /**
+   * Rain (GDD §12): about one day in four, for two to six hours starting
+   * somewhere between 06:00 and 19:00. Walking in it without an umbrella
+   * costs a little on each trip.
+   */
+  weather: {
+    rainChance: 0.25,
+    earliestHour: 6,
+    startSpreadHours: 14,
+    minHours: 2,
+    maxHours: 6,
+    wet: { hygiene: -8, mood: -2 },
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],
