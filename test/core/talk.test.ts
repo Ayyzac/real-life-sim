@@ -9,12 +9,14 @@ import {
   askOut,
   canAskOut,
   fillLine,
+  greetChance,
   greetStranger,
   invite,
   inviteBlocker,
-  openerFor,
-  talk,
   talkBlocker,
+  talkTurn,
+  topicFits,
+  topicsFor,
   traitKnown,
   traitOf,
   verdictFor,
@@ -22,7 +24,8 @@ import {
 } from '../../src/core/talk';
 import type { Person, RelationKind, WorldState } from '../../src/core/types';
 import { BALANCE } from '../../src/data/balance';
-import { LINES, OPENERS, REACTIONS, TRAITS, type ReplyStyle } from '../../src/data/dialogue';
+import { TOPICS, type Topic } from '../../src/data/conversations';
+import { CALL_REACTIONS, LINES, REACTIONS, TRAITS, type ReplyStyle } from '../../src/data/dialogue';
 
 const R = BALANCE.relationships;
 const STYLES: ReplyStyle[] = ['joke', 'sincere', 'curious'];
@@ -56,7 +59,17 @@ function personWho(verdict: 'good' | 'bad', style: ReplyStyle, kind: RelationKin
   throw new Error('no such person');
 }
 
-describe('conversations (GDD §11.6)', () => {
+/** The reply of this style on the first line of the everyday topic. */
+function replyIndex(style: ReplyStyle): number {
+  return TOPICS.find((t) => t.id === 'day')!.nodes.start!.replies.findIndex((r) => r.style === style);
+}
+
+/** One answer on the opening line of "How the day went". */
+function say(state: WorldState, id: string, style: ReplyStyle, remote = false): WorldState {
+  return talkTurn(state, id, 'day', 'start', replyIndex(style), remote);
+}
+
+describe('conversations (GDD §11.6, §12)', () => {
   it('gives everyone a nature that never changes', () => {
     const p = person();
     expect(traitOf(p)).toBe(traitOf(p));
@@ -68,33 +81,47 @@ describe('conversations (GDD §11.6)', () => {
     const state = world([friend], { minuteOfDay: 8 * 60 });
     expect(whoIsHere(state, 'home')).toHaveLength(0);
     expect(talkBlocker(state, friend)).toContain('not here');
-    expect(talk(state, friend.id, 'joke')).toBe(state);
+    expect(say(state, friend.id, 'joke')).toBe(state);
   });
 
   it('moves closeness by how well the answer suits them', () => {
     const likesJokes = personWho('good', 'joke');
     const hatesJokes = personWho('bad', 'joke');
 
-    const up = talk(world([likesJokes]), likesJokes.id, 'joke');
-    const down = talk(world([hatesJokes]), hatesJokes.id, 'joke');
+    const up = say(world([likesJokes]), likesJokes.id, 'joke');
+    const down = say(world([hatesJokes]), hatesJokes.id, 'joke');
 
     expect(closenessOf(up, likesJokes.id)).toBeGreaterThan(50);
     expect(closenessOf(down, hatesJokes.id)).toBe(50 + R.talk.bad);
   });
 
-  it('takes half an hour, once a day per person', () => {
+  it('takes a few minutes a turn, and each turn today counts for less', () => {
+    const p = personWho('good', 'sincere');
+    const first = say(world([p]), p.id, 'sincere');
+    expect(first.minuteOfDay).toBe(20 * 60 + R.talk.minutes);
+
+    const gainFirst = closenessOf(first, p.id) - 50;
+    const second = talkTurn(first, p.id, 'day', 'nice', 1);
+    const gainSecond = closenessOf(second, p.id) - closenessOf(first, p.id);
+    expect(gainSecond).toBeGreaterThan(0);
+    expect(gainSecond).toBeLessThan(gainFirst);
+  });
+
+  it('will not start the same topic twice in a day, and runs out of talk eventually', () => {
     const p = person();
-    const once = talk(world([p]), p.id, 'sincere');
-    expect(once.minuteOfDay).toBe(20 * 60 + R.talk.minutes);
-    expect(talkBlocker(once, once.people[0]!)).toBe('Already talked today');
-    expect(talk(once, p.id, 'sincere')).toBe(once);
+    const once = say(world([p]), p.id, 'sincere');
+    expect(say(once, p.id, 'sincere')).toBe(once);
+    expect(topicsFor(once, p).some((t) => t.id === 'day')).toBe(false);
+
+    const talkedOut = { ...once, doneToday: Array.from({ length: R.talk.maxTurnsPerDay }, () => `talk:${p.id}`) };
+    expect(talkBlocker(talkedOut, p)).toBe('Talked enough for today');
   });
 
   it('works out who they are after answers that land', () => {
     let p = personWho('good', 'curious');
     let state = world([p]);
     for (let day = 0; day < R.talk.revealAfter; day += 1) {
-      state = talk({ ...state, doneToday: [] }, p.id, 'curious');
+      state = say({ ...state, doneToday: [] }, p.id, 'curious');
     }
     p = state.people[0]!;
     expect(traitKnown(p)).toBe(true);
@@ -102,40 +129,89 @@ describe('conversations (GDD §11.6)', () => {
 
   it('lands softer when unwashed', () => {
     const p = personWho('good', 'joke');
-    const clean = talk(world([p]), p.id, 'joke');
+    const clean = say(world([p]), p.id, 'joke');
     const base = world([p]);
-    const grubby = talk({ ...base, character: { ...base.character, needs: { ...base.character.needs, hygiene: 5 } } }, p.id, 'joke');
+    const grubby = say({ ...base, character: { ...base.character, needs: { ...base.character.needs, hygiene: 5 } } }, p.id, 'joke');
     expect(closenessOf(grubby, p.id)).toBeLessThan(closenessOf(clean, p.id));
   });
 
-  it('opens with the same line all day, and never leaves a placeholder unfilled', () => {
+  it('offers only topics that suit the person, the same all day, and young children only their own', () => {
     for (const kind of ['family', 'friend', 'colleague', 'dating', 'partner', 'child'] as const) {
-      for (const minute of [8 * 60, 14 * 60, 20 * 60]) {
-        const p = person(kind, 75, `${kind}-${minute}`);
-        const state = world([p], { minuteOfDay: minute });
-        const opener = openerFor(state, p);
-        expect(openerFor(state, p)).toBe(opener);
-        for (const text of [opener.text, ...opener.replies.map((r) => r.text)]) {
-          expect(fillLine(text, p, state)).not.toMatch(/[{}]/);
+      const p = person(kind, 75, `${kind}-x`);
+      const state = world([p]);
+      const offered = topicsFor(state, p);
+      expect(offered.length, kind).toBeGreaterThan(0);
+      expect(offered.length).toBeLessThanOrEqual(R.talk.topicsOffered);
+      expect(topicsFor(state, p)).toEqual(offered);
+      for (const topic of offered) expect(topicFits(topic, p)).toBe(true);
+    }
+    const kid = { ...person('child', 80, 'kid'), ageDays: 6 * 365 };
+    expect(topicsFor(world([kid]), kid).every((t) => t.young)).toBe(true);
+  });
+});
+
+describe('the conversation trees (GDD §12)', () => {
+  const reachable = (topic: Topic): Set<string> => {
+    const seen = new Set<string>();
+    const walk = (id: string): void => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      for (const reply of topic.nodes[id]!.replies) if (reply.next) walk(reply.next);
+    };
+    walk(topic.start);
+    return seen;
+  };
+
+  it('leads every answer somewhere real, and every line can be reached', () => {
+    for (const topic of TOPICS) {
+      expect(topic.nodes[topic.start], topic.id).toBeDefined();
+      for (const [id, node] of Object.entries(topic.nodes)) {
+        expect(new Set(node.replies.map((r) => r.style)).size, `${topic.id}.${id}`).toBe(3);
+        for (const reply of node.replies) {
+          if (reply.next) expect(topic.nodes[reply.next], `${topic.id}.${id} -> ${reply.next}`).toBeDefined();
+        }
+      }
+      expect([...reachable(topic)].sort(), topic.id).toEqual(Object.keys(topic.nodes).sort());
+    }
+  });
+
+  it('always ends: no conversation goes round in circles', () => {
+    for (const topic of TOPICS) {
+      const depth = (id: string, trail: string[]): number => {
+        expect(trail, `${topic.id} loops at ${id}`).not.toContain(id);
+        const nexts = topic.nodes[id]!.replies.map((r) => r.next).filter((n): n is string => Boolean(n));
+        return 1 + Math.max(0, ...nexts.map((n) => depth(n, [...trail, id])));
+      };
+      expect(depth(topic.start, [])).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it('never leaves a placeholder unfilled', () => {
+    const p = { ...person('colleague', 80, 'filler'), job: 'baker' };
+    const state = world([p]);
+    for (const topic of TOPICS) {
+      for (const node of Object.values(topic.nodes)) {
+        for (const text of [node.npc, ...node.replies.map((r) => r.text)]) {
+          expect(fillLine(text, p, state), topic.id).not.toMatch(/[{}]/);
         }
       }
     }
   });
 
-  it('gives young children their own lines', () => {
-    const kid = { ...person('child', 80, 'kid'), ageDays: 6 * 365 };
-    expect(openerFor(world([kid]), kid).young).toBe(true);
-  });
-
-  it('has three different answers for every opener, and a reaction for every outcome', () => {
-    for (const opener of OPENERS) {
-      expect(new Set(opener.replies.map((r) => r.style)).size, opener.id).toBe(3);
-    }
+  it('has a reaction for every outcome, in person and on the phone', () => {
     for (const style of STYLES) {
       for (const verdict of ['good', 'neutral', 'bad'] as const) {
         expect(REACTIONS[style][verdict].length).toBeGreaterThan(0);
+        expect(CALL_REACTIONS[style][verdict].length).toBeGreaterThan(0);
       }
     }
+    expect(LINES.talkedOut).toBeTruthy();
+  });
+
+  it('lets a good first impression help a stranger say yes', () => {
+    const state = world([]);
+    expect(greetChance(state, 2)).toBeGreaterThan(greetChance(state, 0));
+    expect(greetChance(state, 99)).toBe(greetChance(state, 2));
   });
 });
 

@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/balance';
-import { LINES, OPENERS, TRAITS, type Opener, type ReplyStyle, type Trait, type Verdict } from '../data/dialogue';
+import { findTopic, TOPICS, type Topic } from '../data/conversations';
+import { LINES, TRAITS, type ReplyStyle, type Trait, type Verdict } from '../data/dialogue';
 import { LOCATIONS } from '../data/locations';
 import { closedReason, freeUntil, passTime } from './day';
 import { hashText } from './hash';
@@ -11,12 +12,12 @@ import type { LocationId, Person, WorldState } from './types';
 
 /**
  * Talking to people, dating, going out, and saying hello to strangers
- * (GDD §11.6). Pure functions over WorldState.
+ * (GDD §11.6, §12). Pure functions over WorldState.
  *
- * What people say is written in advance (src/data/dialogue.ts) and picked by
- * hash, never generated and never drawn from the saved RNG. Only a stranger's
- * answer to a hello is a real dice roll: it is the player's own action, the
- * same as any event, so it may spend the RNG.
+ * What people say is written in advance as trees (src/data/conversations.ts)
+ * and offered by hash, never generated and never drawn from the saved RNG.
+ * Only a stranger's answer to a hello is a real dice roll: it is the
+ * player's own action, the same as any event, so it may spend the RNG.
  */
 
 const R = BALANCE.relationships;
@@ -54,21 +55,41 @@ function timeOfDay(minute: number): 'morning' | 'afternoon' | 'evening' {
   return 'evening';
 }
 
-/** What they say first today. The same all day, so the dialog is stable. */
-export function openerFor(state: WorldState, person: Person): Opener {
-  const young = person.kind === 'child' && ageYearsOf(person) < 13;
-  const tod = timeOfDay(state.minuteOfDay);
-  const fits = OPENERS.filter(
-    (o) =>
-      (o.young ?? false) === young &&
-      (!o.kinds || o.kinds.includes(person.kind)) &&
-      (o.minCloseness === undefined || person.closeness >= o.minCloseness) &&
-      (o.maxCloseness === undefined || person.closeness <= o.maxCloseness) &&
-      (!o.when || o.when === tod) &&
-      (!o.job || person.job !== null),
+function isYoung(person: Person): boolean {
+  return person.kind === 'child' && ageYearsOf(person) < 13;
+}
+
+/** Whether this person would talk about this. */
+export function topicFits(topic: Topic, person: Person): boolean {
+  return (
+    !topic.stranger &&
+    (topic.young ?? false) === isYoung(person) &&
+    (!topic.kinds || topic.kinds.includes(person.kind)) &&
+    (topic.minCloseness === undefined || person.closeness >= topic.minCloseness) &&
+    (!topic.job || person.job !== null)
   );
-  const pool = fits.length > 0 ? fits : OPENERS.filter((o) => !o.young && !o.kinds);
-  return pool[hashText(`${person.id}:${state.clockDay}`) % pool.length]!;
+}
+
+/**
+ * What they are up for talking about today: up to four of the topics that
+ * suit them, the same all day, minus any already talked through today.
+ */
+export function topicsFor(state: WorldState, person: Person): Topic[] {
+  const order = (topic: Topic): number => hashText(`${person.id}:${state.clockDay}:${topic.id}`);
+  return TOPICS.filter((topic) => topicFits(topic, person))
+    .sort((a, b) => order(a) - order(b))
+    .slice(0, T.topicsOffered)
+    .filter((topic) => !state.doneToday.includes(`topic:${person.id}:${topic.id}`));
+}
+
+/** Turns spoken with this person today, on any topic. */
+export function turnsToday(state: WorldState, personId: string): number {
+  return state.doneToday.filter((entry) => entry === `talk:${personId}`).length;
+}
+
+/** How much the next turn with them counts: less each time today. */
+export function turnWeight(turn: number): number {
+  return T.turnWeights[turn] ?? T.lateWeight;
 }
 
 /** Fills the placeholders in a line of dialogue. */
@@ -109,23 +130,46 @@ export function talkBlocker(state: WorldState, person: Person, remote = false): 
   if (!remote && !whoIsHere(state, state.character.location).some((p) => p.id === person.id)) {
     return `${firstName(person)} is not here`;
   }
-  if (state.doneToday.includes(`talk:${person.id}`)) return 'Already talked today';
+  if (turnsToday(state, person.id) >= T.maxTurnsPerDay) return 'Talked enough for today';
   if (!fitsInDay(state, talkMinutes(remote))) return 'Not enough time';
   return null;
 }
 
-export function talk(state: WorldState, personId: string, style: ReplyStyle, remote = false): WorldState {
+/**
+ * One turn of a conversation: the player answers the line at `nodeId` of
+ * `topicId` with reply `replyIndex`. Which line comes next is the screen's
+ * business - the tree says - so this only settles how the answer landed.
+ */
+export function talkTurn(
+  state: WorldState,
+  personId: string,
+  topicId: string,
+  nodeId: string,
+  replyIndex: number,
+  remote = false,
+): WorldState {
   const person = state.people.find((p) => p.id === personId);
   if (!person || talkBlocker(state, person, remote) !== null) return state;
+  const topic = findTopic(topicId);
+  const reply = topic?.nodes[nodeId]?.replies[replyIndex];
+  if (!topic || !reply || !topicFits(topic, person)) return state;
+  const opening = nodeId === topic.start;
+  if (opening && state.doneToday.includes(`topic:${person.id}:${topic.id}`)) return state;
 
-  const verdict = verdictFor(person, style);
+  const weight = turnWeight(turnsToday(state, person.id));
+  const verdict = verdictFor(person, reply.style);
   const raw = T[verdict] * (remote ? R.call.share : 1);
-  const change = raw > 0 ? raw * warmth(state) : raw;
+  // A good answer is worth less each turn; a rude one always stings.
+  const change = raw > 0 ? raw * warmth(state) * weight : raw;
   const played = passTime(state, talkMinutes(remote));
 
   return {
     ...played,
-    doneToday: [...played.doneToday, `talk:${person.id}`],
+    doneToday: [
+      ...played.doneToday,
+      `talk:${person.id}`,
+      ...(opening ? [`topic:${person.id}:${topic.id}`] : []),
+    ],
     people: withPerson(played, person.id, (p) => ({
       ...p,
       closeness: clamp(p.closeness + change),
@@ -135,7 +179,7 @@ export function talk(state: WorldState, personId: string, style: ReplyStyle, rem
       ...played.character,
       stats: {
         ...played.character.stats,
-        mood: clamp(played.character.stats.mood + (verdict === 'bad' ? 0 : T.mood)),
+        mood: clamp(played.character.stats.mood + (verdict === 'bad' ? 0 : T.mood * weight)),
       },
     },
   };
@@ -281,22 +325,34 @@ export function greetBlocker(state: WorldState): string | null {
   return null;
 }
 
-/** The chance a hello turns into someone you know. */
-export function greetChance(state: WorldState): number {
+/**
+ * The chance a hello turns into someone you know. Answers in the little chat
+ * that suit them help (GDD §12); the cap still holds.
+ */
+export function greetChance(state: WorldState, goodReplies = 0): number {
   const g = R.greet;
-  const chance = Math.min(g.maxChance, g.baseChance + state.character.attributes.charisma * g.charismaPerPoint);
+  const good = Math.min(2, Math.max(0, Math.floor(goodReplies)));
+  const chance = Math.min(
+    g.maxChance,
+    g.baseChance + state.character.attributes.charisma * g.charismaPerPoint + good * g.perGoodReply,
+  );
   return state.character.needs.hygiene < BALANCE.day.lowNeed ? chance / 2 : chance;
+}
+
+/** A stranger's nature, from their face, for the little chat before they decide. */
+export function strangerTrait(look: number): Trait {
+  return traitOf({ id: `stranger:${look}` });
 }
 
 /**
  * Says hello to someone walking past (GDD §11.6). If it goes well they join
  * the people you know, wearing the face you saw.
  */
-export function greetStranger(state: WorldState, look: number): WorldState {
+export function greetStranger(state: WorldState, look: number, goodReplies = 0): WorldState {
   if (greetBlocker(state) !== null) return state;
 
   const rng = restoreRng(state.rng);
-  const hit = rng.chance(greetChance(state));
+  const hit = rng.chance(greetChance(state, goodReplies));
   const played = { ...passTime(state, R.greet.minutes), doneToday: [...state.doneToday, 'greet'] };
   const log = (text: string, tone: 'good' | 'neutral'): WorldState['eventLog'] =>
     withLogEntry(played.eventLog, { day: state.clockDay, tone, text });

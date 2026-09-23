@@ -1695,3 +1695,9 @@ body {
   letter-spacing: 0.1em;
   color: var(--accent);
 }
+
+.talk__prompt {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}

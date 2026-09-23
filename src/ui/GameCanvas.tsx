@@ -4,10 +4,9 @@ import type Phaser from 'phaser';
 import { actionBlocker } from '../core/day';
 import { greetBlocker } from '../core/talk';
 import { findAction } from '../data/actions';
-import { BALANCE } from '../data/balance';
 import { createPhaserGame } from '../world/phaserGame';
 import { runTimed } from './progress';
-import { openTalk } from './talk';
+import { openStranger, openTalk } from './talk';
 import { gameStore } from './useGame';
 
 /**
@@ -28,7 +27,8 @@ const hooks = {
   greet(look: number): void {
     const world = gameStore.getState();
     if (!world || greetBlocker(world) !== null) return;
-    runTimed('Saying hello', BALANCE.relationships.greet.minutes, { type: 'greetStranger', look });
+    // A couple of lines first (GDD §12); the hello itself happens at the end.
+    openStranger(look);
   },
 };
 

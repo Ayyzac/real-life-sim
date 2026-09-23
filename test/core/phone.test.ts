@@ -8,7 +8,7 @@ import { createRng } from '../../src/core/rng';
 import type { SaveProvider } from '../../src/core/save/SaveProvider';
 import { whoIsHere } from '../../src/core/schedule';
 import { GameStore } from '../../src/core/store';
-import { talk, talkBlocker } from '../../src/core/talk';
+import { talkBlocker, talkTurn } from '../../src/core/talk';
 import type { Character, Person, WorldState } from '../../src/core/types';
 import { BALANCE } from '../../src/data/balance';
 import { findItem } from '../../src/data/items';
@@ -98,7 +98,7 @@ describe('calling and inviting people (GDD §12)', () => {
     expect(talkBlocker(away, away.people[0]!)).toMatch(/not here/);
     expect(talkBlocker(away, away.people[0]!, true)).toBeNull();
 
-    const called = talk(away, 'pal', 'sincere', true);
+    const called = talkTurn(away, 'pal', 'day', 'start', 1, true);
     expect(called.minuteOfDay).toBe(away.minuteOfDay + BALANCE.relationships.call.minutes);
     expect(called.people[0]!.closeness).not.toBe(away.people[0]!.closeness);
   });

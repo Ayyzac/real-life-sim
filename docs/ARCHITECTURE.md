@@ -775,6 +775,19 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Tanpa kecanduan | Hanya untung-rugi uang. | Keputusan user. |
 | Schema → 10 | `blackjack`, `lastBet`. | |
 
+#### Fase 7I — obrolan pohon dialog (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Topik = pohon data | `src/data/conversations.ts`: 10 topik (hari ini, kerja, akhir pekan, makanan, gosip, kabar keluarga, cita-cita, "kita berdua", anak kecil, orang asing), 3–5 baris NPC per topik, cabang bertemu lagi. `OPENERS` lama dihapus. | Keputusan user: pohon per topik. Cabang yang bertemu menjaga jumlah teks tetap wajar. |
+| Tiap giliran dinilai sendiri | `talkTurn()` menggantikan `talk()`: 10 menit per giliran (telepon 8), sifat menilai gaya jawaban seperti sebelumnya. Bobot turun per giliran hari itu (1 / 0,6 / 0,4 / 0,3 / 0,15), maksimal 12 giliran per orang per hari; topik yang sudah dibuka hari itu tidak ditawarkan lagi. | Mengganti larangan "sekali sehari": mengobrol panjang berguna tapi tidak bisa digiling. Obrolan penuh 4 giliran yang pas ≈ 7 poin kedekatan, sedikit di atas satu tukar kalimat yang lama. |
+| Posisi di pohon = state UI | `src/ui/talk.ts` menyimpan topik/baris saat ini; core hanya menilai jawaban. | Sama seperti dialog lama: tidak ada yang disimpan di save. |
+| Tidak ada yang mengandaikan bisa melihat | Baris NPC netral untuk telepon; reaksi punya kolam telepon sendiri (`CALL_REACTIONS`). | Kalimat "squeezes your arm" lewat telepon ketahuan di 7E. |
+| Tawaran di tengah obrolan | Jawaban bisa membuka "Suggest: Dinner / A film / Come over" atau menyorot "Ask out". | "Ajak makan/kencan di tengah obrolan" (rencana). Memakai `invite`/`askOut` yang sudah ada. |
+| Sapa orang asing = obrolan pendek | Klik orang di jalan membuka dua baris; tiap jawaban yang cocok dengan sifat mereka (+10% per jawaban, maks 2) menambah peluang, lalu dadu seperti biasa. | Peluang tetap dibatasi; RNG tetap hanya untuk hasil akhir. **Belum dicoba lewat klik di peta** (pane tidak bisa mengklik orang yang berjalan dengan andal) — dites di core. |
+
+Test pohon memeriksa: tiap `next` menuju baris yang ada, tiap baris bisa dicapai, tidak ada putaran, semua placeholder terisi.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

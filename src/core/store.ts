@@ -26,8 +26,7 @@ import { createWorld, type NewGameOptions } from './character';
 import { BALANCE } from '../data/balance';
 import { characterLook, decodeLook, encodeLook } from './look';
 import { dollars } from './money';
-import { askOut, greetStranger, invite, talk, type Outing } from './talk';
-import type { ReplyStyle } from '../data/dialogue';
+import { askOut, greetStranger, invite, talkTurn, type Outing } from './talk';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
 import type { Character, FocusId, LocationId, WorldState } from './types';
@@ -52,7 +51,7 @@ export type GameIntent =
   | { type: 'startBlock' }
   | { type: 'skipWork' }
   | { type: 'buyClothes'; top: number }
-  | { type: 'talk'; personId: string; style: ReplyStyle; remote?: boolean }
+  | { type: 'talk'; personId: string; topicId: string; nodeId: string; reply: number; remote?: boolean }
   | { type: 'taxi'; locationId: LocationId }
   | { type: 'orderFood'; itemId: string }
   | { type: 'buyAsset'; assetId: string; dollars: number }
@@ -70,7 +69,7 @@ export type GameIntent =
   | { type: 'standBlackjack' }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
-  | { type: 'greetStranger'; look: number }
+  | { type: 'greetStranger'; look: number; goodReplies?: number }
   | { type: 'setFocus'; focusId: FocusId }
   | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
@@ -320,7 +319,9 @@ export class GameStore {
         return state ? skipWork(state) : state;
 
       case 'talk':
-        return state ? talk(state, intent.personId, intent.style, intent.remote ?? false) : state;
+        return state
+          ? talkTurn(state, intent.personId, intent.topicId, intent.nodeId, intent.reply, intent.remote ?? false)
+          : state;
 
       case 'taxi':
         return state ? takeTaxi(state, intent.locationId) : state;
@@ -388,7 +389,7 @@ export class GameStore {
         return state ? invite(state, intent.personId, intent.outing) : state;
 
       case 'greetStranger':
-        return state ? greetStranger(state, intent.look) : state;
+        return state ? greetStranger(state, intent.look, intent.goodReplies ?? 0) : state;
 
       case 'buyClothes': {
         // A new top from the Mall (GDD §11.5): the time, price and mood of an

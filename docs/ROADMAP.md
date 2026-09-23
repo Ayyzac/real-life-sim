@@ -157,7 +157,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 - [x] **F** — Bank, saham, crypto — 436 test
 - [x] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game) — 445 test
 - [x] **H** — Casino + slot online — 452 test
-- [ ] **I** — Obrolan pohon dialog per topik
+- [x] **I** — Obrolan pohon dialog per topik — 456 test
 - [ ] **J** — Media sosial
 
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)

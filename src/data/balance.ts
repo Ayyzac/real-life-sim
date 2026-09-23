@@ -197,11 +197,29 @@ export const BALANCE = {
     partnerMoodPerDay: 0.6,
 
     /**
-     * Talking to someone (GDD §11.6). A reply that suits them moves closeness
-     * a lot, one that does not a little, and one that grates takes some back.
-     * Charisma scales the good side; being unwashed halves it.
+     * Talking to someone (GDD §11.6, §12). Each turn of a conversation takes
+     * `minutes`. A reply that suits them moves closeness a lot, one that does
+     * not a little, and one that grates takes some back. Charisma scales the
+     * good side; being unwashed halves it.
+     *
+     * Each turn with the same person in a day counts for less than the last
+     * (`turnWeights`, then `lateWeight`), so a long chat is worth having but
+     * not worth grinding. A full four-turn chat that lands is worth about
+     * seven points - a little over the single exchange it replaced.
      */
-    talk: { minutes: 30, good: 5, neutral: 2, bad: -2, mood: 1, revealAfter: 2 },
+    talk: {
+      minutes: 10,
+      good: 3,
+      neutral: 1,
+      bad: -2,
+      mood: 1,
+      revealAfter: 2,
+      turnWeights: [1, 0.6, 0.4, 0.3],
+      lateWeight: 0.15,
+      maxTurnsPerDay: 12,
+      /** Topics someone is up for on a given day. */
+      topicsOffered: 4,
+    },
     /** Dating: close enough to ask, and close enough (with their nature) to say yes. */
     askOutCloseness: 60,
     acceptCloseness: 70,
@@ -215,9 +233,18 @@ export const BALANCE = {
      */
     invite: { minutes: 120, cost: 30, closeness: 8, mood: 4, minCloseness: 25 },
     /** A phone call counts for less than being there, and is quicker (GDD §12). */
-    call: { minutes: 15, share: 0.6 },
+    call: { minutes: 8, share: 0.6 },
     /** Saying hello to strangers in the street. */
-    greet: { minutes: 10, perDay: 3, baseChance: 0.25, charismaPerPoint: 0.005, maxChance: 0.75, closeness: 20 },
+    greet: {
+      minutes: 10,
+      perDay: 3,
+      baseChance: 0.25,
+      charismaPerPoint: 0.005,
+      maxChance: 0.75,
+      closeness: 20,
+      /** Each answer that suits them in the little chat first (GDD §12). */
+      perGoodReply: 0.1,
+    },
     /** Losing someone hurts in proportion to how close you were. */
     griefMoodPerCloseness: 0.45,
   },
