@@ -122,12 +122,13 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Keseimbangan disetel ulang lewat simulasi seumur hidup: umur mati tetap 86–88, uang pegawai kembali ±$490rb
 - [x] **Checkpoint:** minggu terasa punya ritme kerja dan libur — 348 test
 
-### D — Ruangan dalam gedung
-- [ ] Aset interior CC0 (izin user dulu)
-- [ ] Ruangan untuk 8 gedung; rumah 3 versi; usaha 6 tata letak
-- [ ] Furnitur yang bisa diklik untuk aksi
-- [ ] Orang yang dikenal hadir menurut jadwal, dengan nama
-- [ ] **Checkpoint:** masuk kafe dan melihat siapa di dalam
+### D — Ruangan dalam gedung — SELESAI
+- [x] Aset interior CC0 — Kenney Roguelike Indoors, 110 KB, diunduh atas izin user
+- [x] Ruangan untuk 7 gedung yang ada (Mall menyusul di E); rumah 3 versi; usaha 6 tata letak + unit kosong
+- [x] Furnitur yang bisa diklik untuk aksi, disorot dengan keterangan (durasi, harga, atau alasan tidak bisa)
+- [x] Staf berlabel peran (barista, perawat, dokter, pelatih, resepsionis, pelatih tim, asisten)
+- [x] Orang yang dikenal hadir menurut jadwal, dengan nama — juga tampil di tab Here dan di keterangan gedung di peta
+- [x] **Checkpoint:** masuk kafe dan melihat siapa di dalam — 362 test
 
 ### E — Mall
 - [ ] Gedung Mall di Eastside

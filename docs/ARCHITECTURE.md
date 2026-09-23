@@ -618,6 +618,23 @@ istirahat. Tangga kesulitan di entri Fase 1 Demo B ("Tidak pernah istirahat:
 tanpa akhir pekan (belajar, latihan). Test "kerja saja mati 15+ tahun lebih
 cepat" tetap lolos.
 
+#### Fase 6D — ruangan dalam gedung (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Satu grid untuk semua ruangan | 14×8 petak: 2 baris dinding, 6 baris lantai, pintu keluar di (7,7). Zoom 3,5× memenuhi kanvas 800×448. | Satu `InteriorScene` membaca data; ruangan baru = entri data. |
+| Masuk = tiba di pintu | `TownScene.onArrived` memulai `InteriorScene` kecuali tempatnya tutup (pesan singkat di atas kepala). Klik tab dari dalam ruangan langsung pindah ruangan. | Pintu dan tab tetap dua pintu ke satu state. |
+| Aksi lewat `WorldHooks.perform` | `createPhaserGame(parent, store, hooks)`; `GameCanvas` mengisi `perform` dengan `runTimed`. | Klik furnitur harus sama persis dengan tombol di panel, termasuk bar waktunya. Dunia tetap tidak mengimpor lapisan UI. |
+| `canvasPoint()` di `src/world/pointer.ts` | Dipakai kedua scene. | Jebakan posisi kanvas Phaser 2 berlaku untuk scene mana pun. |
+| TownScene membersihkan state di `create()` | `path`, `playerLook`, dst. direset. | Phaser memakai objek scene yang sama setiap kali dimulai ulang; tanpa ini sprite pemain muncul dengan tekstur yang salah setelah keluar ruangan. |
+| Label & sorot di atas langit malam | Kedalaman di atas lapisan malam. | Nama gedung harus tetap terbaca di malam hari. |
+| Jadwal orang = hash | `whereIs()` di `src/core/schedule.ts`; hormati jam buka. | Lihat keputusan Fase 6 di atas: tampilan tidak boleh menggeser RNG simulasi. |
+
+**Test tata letak menangkap empat kesalahan sebelum dilihat mata:** satu titik
+pengunjung di rumah besar tertutup kursi, dan tiga di ruang usaha tertutup
+konter, rak, dan meja. Test-nya memeriksa setiap titik pengunjung dan setiap
+furnitur beraksi bisa dicapai dari pintu.
+
 **Catatan pengukuran:** animasi jam memakai `requestAnimationFrame`. Di pane
 browser sesi ini yang sering tidak menggambar, jam di layar melompat langsung
 ke waktu akhir; state-nya tetap benar (diuji lewat DOM). FPS tetap belum

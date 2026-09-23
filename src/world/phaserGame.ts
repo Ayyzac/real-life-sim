@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 import type { GameStore } from '../core/store';
 import { TILE_SIZE, TOWN_ROWS, TOWN_ZOOM, VIEW_COLUMNS } from '../data/town';
+import { InteriorScene, type WorldHooks } from './scenes/InteriorScene';
 import { TownScene } from './scenes/TownScene';
 
 /** One district at 2x fills the canvas exactly; the camera slides between them. */
@@ -16,7 +17,7 @@ export const GAME_HEIGHT = TOWN_ROWS * TILE_SIZE * TOWN_ZOOM;
  * to the simulation through one explicit seam (CLAUDE.md rule 5) and never
  * reaches into the React side of the app.
  */
-export function createPhaserGame(parent: HTMLElement, store: GameStore): Phaser.Game {
+export function createPhaserGame(parent: HTMLElement, store: GameStore, hooks: WorldHooks): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
@@ -33,6 +34,6 @@ export function createPhaserGame(parent: HTMLElement, store: GameStore): Phaser.
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [new TownScene(store)],
+    scene: [new TownScene(store), new InteriorScene(store, hooks)],
   });
 }

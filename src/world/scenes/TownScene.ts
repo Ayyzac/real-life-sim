@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
+import { closedReason } from '../../core/day';
 import { characterLook } from '../../core/look';
+import { whoIsHere } from '../../core/schedule';
 import { createRng } from '../../core/rng';
 import type { GameStore } from '../../core/store';
 import type { LocationId, WorldState } from '../../core/types';
@@ -28,6 +30,7 @@ import { createCrowd, stepPose, type Crowd } from '../crowd';
 import { lookTexture } from '../lookTexture';
 import { POSE, VIEW, lookFrame } from '../looks';
 import { findPath, type Point } from '../pathfinding';
+import { canvasPoint, textResolution } from '../pointer';
 import { skyAt } from '../sky';
 
 /**
@@ -47,7 +50,8 @@ const TEXTURE = 'town';
 /** Tiles per second. Fast enough not to be a wait, slow enough to read. */
 const WALK_SPEED = 6;
 
-const DEPTH = { ground: 0, building: 1, highlight: 1.5, prop: 2, crowd: 5, player: 6, sky: 8, lock: 10, hud: 20 };
+// Labels and the hover outline sit above the night sky, so they stay readable.
+const DEPTH = { ground: 0, building: 1, prop: 2, crowd: 5, player: 6, sky: 8, labels: 8.5, highlight: 9, lock: 10, hud: 20 };
 
 /** How quickly the sky catches up with the clock, per second. */
 const SKY_EASE = 1.5;
@@ -56,7 +60,7 @@ const SKY_EASE = 1.5;
  * Phaser draws text at 1x and the camera then magnifies it, which left every
  * label blocky. Rendering it at the magnified size keeps it sharp.
  */
-const TEXT_RESOLUTION = TOWN_ZOOM * (globalThis.devicePixelRatio || 1);
+const TEXT_RESOLUTION = textResolution(TOWN_ZOOM);
 
 /** One district exactly fills the canvas, so the view is 800x448 pixels. */
 const VIEW_WIDTH = VIEW_COLUMNS * TILE_SIZE * TOWN_ZOOM;
@@ -100,6 +104,8 @@ export class TownScene extends Phaser.Scene {
   private walkElapsed = 0;
   private highlight?: Phaser.GameObjects.Rectangle;
   private hovered?: TownBuilding;
+  /** What the hovered building is and who is in it, or why it is shut. */
+  private tip?: Phaser.GameObjects.Text;
   /** The day-night wash over the whole town (GDD §11.1). Render only. */
   private sky?: Phaser.GameObjects.Rectangle;
   private skyNow = { r: 0, g: 0, b: 0, a: 0 };
@@ -133,9 +139,24 @@ export class TownScene extends Phaser.Scene {
       frameHeight: TILE_SIZE,
       spacing: SHEET_SPACING,
     });
+    // The furniture for rooms inside (InteriorScene), loaded here once with
+    // the town so walking through a door never waits on a download.
+    this.load.spritesheet('indoor', `${import.meta.env.BASE_URL}assets/indoor/tilemap.png`, {
+      frameWidth: TILE_SIZE,
+      frameHeight: TILE_SIZE,
+      spacing: SHEET_SPACING,
+    });
   }
 
   create(): void {
+    // The scene is started again every time the character comes out of a
+    // building, and Phaser keeps the same object: clear what the last visit left.
+    this.path = [];
+    this.playerLook = -1;
+    this.playerView = VIEW.down;
+    this.walkElapsed = 0;
+    this.hovered = undefined;
+
     this.drawGround();
     this.drawBuildings();
     this.drawProps();
@@ -157,6 +178,18 @@ export class TownScene extends Phaser.Scene {
       .setStrokeStyle(1, 0xffd479, 0.95)
       .setFillStyle(0xffd479, 0.12)
       .setDepth(DEPTH.highlight)
+      .setVisible(false);
+    this.tip = this.add
+      .text(0, 0, '', {
+        fontFamily: 'monospace',
+        fontSize: '7px',
+        color: '#ece9e1',
+        backgroundColor: '#151a26ee',
+        padding: { x: 3, y: 2 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(DEPTH.hud)
+      .setResolution(TEXT_RESOLUTION)
       .setVisible(false);
 
     this.sky = this.add
@@ -347,7 +380,7 @@ export class TownScene extends Phaser.Scene {
           padding: { x: 2, y: 1 },
         })
         .setOrigin(0.5)
-        .setDepth(DEPTH.building)
+        .setDepth(DEPTH.labels)
         .setResolution(TEXT_RESOLUTION);
     }
   }
@@ -400,17 +433,17 @@ export class TownScene extends Phaser.Scene {
   private onPointerDown = (pointer: Phaser.Input.Pointer): void => {
     if (this.isLocked(this.store.getState())) return;
 
-    const canvasPoint = this.toCanvasPoint(pointer);
-    if (!canvasPoint) return;
+    const point = canvasPoint(this.game, pointer);
+    if (!point) return;
 
     // The district arrows sit on top of the map, so they get the click first.
-    const arrow = this.arrowAt(canvasPoint);
+    const arrow = this.arrowAt(point);
     if (arrow) {
       this.lookAt(this.viewDistrict + (arrow === 'left' ? -1 : 1));
       return;
     }
 
-    const clicked = this.tileAt(canvasPoint);
+    const clicked = this.tileAt(point);
     // Anywhere on a building means "go in": walk to its door.
     const building = buildingAt(clicked.x, clicked.y);
     const target = building ? doorOf(building.locationId) : clicked;
@@ -418,13 +451,16 @@ export class TownScene extends Phaser.Scene {
     // A click on a tree or the road simply does nothing. Better than walking
     // somewhere the player did not ask for.
     const route = findPath(this.walkable, this.tile, target);
-    if (route) this.path = route;
+    if (!route) return;
+    this.path = route;
+    // Already on the doorstep: go straight in.
+    if (route.length === 0) this.onArrived();
   };
 
   /** Lights up the building under the pointer, so it is plain what a click does. */
   private onPointerMove = (pointer: Phaser.Input.Pointer): void => {
-    const canvasPoint = this.toCanvasPoint(pointer);
-    const tile = canvasPoint ? this.tileAt(canvasPoint) : null;
+    const point = canvasPoint(this.game, pointer);
+    const tile = point ? this.tileAt(point) : null;
     const building =
       tile && !this.isLocked(this.store.getState()) ? buildingAt(tile.x, tile.y) : undefined;
     if (building === this.hovered) return;
@@ -433,43 +469,34 @@ export class TownScene extends Phaser.Scene {
     this.game.canvas.style.cursor = building ? 'pointer' : '';
     if (!building) {
       this.highlight?.setVisible(false);
+      this.tip?.setVisible(false);
       return;
     }
     this.highlight
       ?.setPosition(building.x * TILE_SIZE, building.y * TILE_SIZE)
       .setSize(building.width * TILE_SIZE, building.height * TILE_SIZE)
       .setVisible(true);
+    this.tip
+      ?.setText(this.describe(building))
+      .setPosition(centre(building.x + (building.width - 1) / 2), building.y * TILE_SIZE + (building.y === 0 ? 30 : -2))
+      .setOrigin(0.5, building.y === 0 ? 0 : 1)
+      .setVisible(true);
   };
+
+  /** "Cafe \u00b7 2 you know inside", or "Cafe \u00b7 Closed \u00b7 opens 07:00". */
+  private describe(building: TownBuilding): string {
+    const world = this.store.getState();
+    const name = label(building.locationId);
+    if (!world) return name;
+    const closed = closedReason(building.locationId, world.minuteOfDay);
+    if (closed) return `${name} \u00b7 ${closed}`;
+    const inside = whoIsHere(world, building.locationId).length;
+    return inside > 0 ? `${name} \u00b7 ${inside} you know inside` : name;
+  }
 
   private tileAt(canvasPoint: { x: number; y: number }): Point {
     const point = this.cameras.main.getWorldPoint(canvasPoint.x, canvasPoint.y);
     return { x: Math.floor(point.x / TILE_SIZE), y: Math.floor(point.y / TILE_SIZE) };
-  }
-
-  /**
-   * Where the click landed on the canvas, measured fresh from the DOM.
-   *
-   * Phaser caches the canvas position and only re-reads it on a window resize.
-   * This canvas sits under a React panel whose height changes whenever an event
-   * dialog opens or the job list grows, so the cached position goes stale and
-   * clicks land somewhere else entirely - it was reading clicks as far as 500
-   * pixels off, including above the top of the map.
-   */
-  private toCanvasPoint(pointer: Phaser.Input.Pointer): { x: number; y: number } | null {
-    const event = pointer.event as MouseEvent & { changedTouches?: TouchList };
-    const touch = event.changedTouches?.[0];
-    const clientX = touch ? touch.clientX : event.clientX;
-    const clientY = touch ? touch.clientY : event.clientY;
-    if (typeof clientX !== 'number' || typeof clientY !== 'number') return null;
-
-    const canvas = this.game.canvas;
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return null;
-
-    return {
-      x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top) * (canvas.height / rect.height),
-    };
   }
 
   private stepAlongPath(delta: number): void {
@@ -514,6 +541,34 @@ export class TownScene extends Phaser.Scene {
 
     this.lastLocation = locationId;
     this.store.dispatch({ type: 'enterLocation', locationId });
+
+    // Through the door and inside (GDD §11.4) - unless it is shut.
+    const world = this.store.getState();
+    if (!world || this.isLocked(world)) return;
+    const closed = closedReason(locationId, world.minuteOfDay);
+    if (closed) {
+      this.flash(`${label(locationId)} \u00b7 ${closed}`);
+      return;
+    }
+    this.scene.start('Interior', { locationId });
+  }
+
+  /** A short message over the character's head, then gone. Render only. */
+  private flash(text: string): void {
+    const player = this.player;
+    if (!player) return;
+    const note = this.add
+      .text(player.x, player.y - 10, text, {
+        fontFamily: 'monospace',
+        fontSize: '7px',
+        color: '#ffb454',
+        backgroundColor: '#151a26ee',
+        padding: { x: 3, y: 2 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(DEPTH.hud)
+      .setResolution(TEXT_RESOLUTION);
+    this.time.delayedCall(2200, () => note.destroy());
   }
 
   // --- reacting to the rest of the game -----------------------------------

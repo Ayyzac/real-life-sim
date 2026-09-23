@@ -24,6 +24,9 @@ import { JOBS, findJob } from '../data/jobs';
 import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
 import { closedReason } from '../core/day';
+import { lookOf } from '../core/look';
+import { whoIsHere } from '../core/schedule';
+import { Portrait } from './Portrait';
 import { ActionList } from './ActionList';
 import { money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
@@ -72,6 +75,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
         </p>
       )}
 
+      <HereNow world={world} />
       <ActionList world={world} />
 
       {location.id === 'home' && <HomeSection character={character} />}
@@ -542,5 +546,27 @@ function HomeSection({ character }: { character: Character }): React.JSX.Element
         })}
       </div>
     </>
+  );
+}
+
+/** The people the player knows who are here right now (GDD §11.4). */
+function HereNow({ world }: { world: WorldState }): React.JSX.Element | null {
+  const here = whoIsHere(world, world.character.location);
+  if (here.length === 0) return null;
+
+  return (
+    <div className="here-now">
+      <h3 className="panel__subtitle">Here now</h3>
+      <ul className="survivors">
+        {here.map((person) => (
+          <li key={person.id} className="survivors__item">
+            <Portrait look={lookOf(person)} scale={2} />
+            <span>
+              {person.name} <span className="here-now__kind">{person.kind}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

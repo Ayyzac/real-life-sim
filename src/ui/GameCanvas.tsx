@@ -1,8 +1,25 @@
 import { useEffect, useRef } from 'react';
 import type Phaser from 'phaser';
 
+import { actionBlocker } from '../core/day';
+import { findAction } from '../data/actions';
 import { createPhaserGame } from '../world/phaserGame';
+import { runTimed } from './progress';
 import { gameStore } from './useGame';
+
+/**
+ * Clicking furniture inside a room does the same as the button in the side
+ * panel, timed bar and all - so the world is handed this rather than calling
+ * the store itself.
+ */
+const hooks = {
+  perform(actionId: string): void {
+    const world = gameStore.getState();
+    const action = findAction(actionId);
+    if (!world || actionBlocker(world, action) !== null) return;
+    runTimed(action.label, action.minutes, { type: 'doAction', actionId });
+  },
+};
 
 /**
  * The single seam between React and Phaser.
@@ -35,7 +52,7 @@ export function GameCanvas(): React.JSX.Element {
       clearTimeout(teardownRef.current);
       teardownRef.current = null;
     }
-    if (!gameRef.current) gameRef.current = createPhaserGame(container, gameStore);
+    if (!gameRef.current) gameRef.current = createPhaserGame(container, gameStore, hooks);
 
     return () => {
       teardownRef.current = window.setTimeout(() => {

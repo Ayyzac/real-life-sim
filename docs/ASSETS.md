@@ -103,6 +103,37 @@ ratusan KB yang tidak pernah dibunyikan.
 berjam-jam menyiksa, dan lisensi musik gratis lebih rumit daripada SFX
 (lihat catatan Jamendo di bawah).
 
+### Sudah diunduh & dipakai: Kenney "Roguelike Indoors" (Fase 6D)
+
+- **Sumber:** https://kenney.nl/assets/roguelike-indoors — diunduh 23 Sep 2026 atas izin user
+  (`kenney_roguelike-indoors.zip`, 110 KB)
+- **Lisensi:** **CC0 1.0** (`public/assets/indoor/LICENSE.txt`, salinan asli dari paket)
+- **Yang disimpan di repo:** `public/assets/indoor/tilemap.png` (versi transparan, 22 KB) +
+  `LICENSE.txt`. Versi magenta, pratinjau, dan sampel tidak disimpan.
+- **Format sama persis dengan paket kota:** 27×18 tile 16×16, jarak 1px, `indeks = baris * 27 + kolom`.
+- **Isinya furnitur saja** — tidak ada lantai atau dinding. Lantai dan dinding ruangan diambil
+  dari tilesheet kota (lantai krem 109, abu 36; dinding bata 72 + jendela 45, oranye 180 + 153,
+  beton 41 + 68 diberi tint), ditambah karpet polos dari paket ini (oranye 51, hijau 159).
+
+Indeks yang dipakai `src/data/interiors.ts`, **dicek visual** satu per satu:
+
+| Barang | Indeks |
+|---|---|
+| Meja panjang (3 petak, satu baris) | 0, 1, 2 — baris di bawahnya adalah **meja lain**, bukan separuh bawahnya |
+| Meja oval (2 petak) | 3, 4 |
+| Meja bundar kecil | 7 |
+| Meja kecil / meja kerja | 58 · 112 |
+| Kursi menghadap bawah / atas / kanan / kiri | 54 / 55 / 56 / 57 · kursi putih 216 |
+| Kasur satu orang (oranye / hijau) | 171 / 198 |
+| Konter dapur (3 petak) · wastafel · kompor · kulkas | 324-326 · 332 · 392 · 416 |
+| Rak botol · konter kertas | 329, 330 · 331 |
+| Piano (2×2) | 239, 240 / 266, 267 |
+| Rak buku (3 petak) | 478, 479, 480 |
+| Tanaman | 16, 17 |
+| Cermin · dispenser | 400 · 129 |
+| Karpet bermotif (3 petak) oranye / hijau | 421-423 / 448-450 |
+| Bangku panjang (4 petak) polos / berbantal | 166-169 / 193-196 |
+
 ## 4. Audio (SFX & musik, gratis)
 
 - **Kenney.nl** juga punya paket sound effect gratis CC0

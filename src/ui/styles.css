@@ -1146,3 +1146,8 @@ body {
   font-size: 0.8rem;
 }
 
+.here-now__kind {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
