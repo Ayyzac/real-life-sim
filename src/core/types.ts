@@ -108,6 +108,11 @@ export interface Character {
   gymPaidUntil: number | null;
   /** Ids of entries in src/data/items.ts, one per slot (GDD §12). */
   inventory: string[];
+  /**
+   * Food ordered by phone and on its way: the item, and the minute of the
+   * life it arrives (clockDay * 1440 + minuteOfDay).
+   */
+  deliveries: { itemId: string; at: number }[];
 }
 
 /**

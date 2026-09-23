@@ -119,7 +119,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   if (!character) return null;
 
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
-  // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag. Every field is filled if missing, so the same path
+  // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag; 6 -> 7 deliveries. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
@@ -172,6 +172,7 @@ function withPhase7Fields(character: Character): Character {
     gymPaidUntil,
     focusId: lapsed ? DEFAULT_FOCUS_ID : character.focusId,
     inventory: Array.isArray(character.inventory) ? character.inventory : [],
+    deliveries: Array.isArray(character.deliveries) ? character.deliveries : [],
   };
 }
 
@@ -231,6 +232,7 @@ export function withKnownIds(state: WorldState): WorldState {
       location: known(LOCATIONS, character.location) ? character.location : 'home',
       owned: character.owned.filter((id) => known(POSSESSIONS, id)),
       inventory: character.inventory.filter((id) => known(ITEMS, id)),
+      deliveries: character.deliveries.filter((order) => known(ITEMS, order.itemId)),
     },
   };
 }

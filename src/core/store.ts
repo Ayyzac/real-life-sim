@@ -11,6 +11,7 @@ import { findPossession, replacedBy, withPurchase } from './belongings';
 import { isGymMember } from './gym';
 import { buyItem, consumeItem } from './bag';
 import { caughtInRain } from './weather';
+import { deliverDue, orderFood, takeTaxi } from './phone';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -47,7 +48,9 @@ export type GameIntent =
   | { type: 'startBlock' }
   | { type: 'skipWork' }
   | { type: 'buyClothes'; top: number }
-  | { type: 'talk'; personId: string; style: ReplyStyle }
+  | { type: 'talk'; personId: string; style: ReplyStyle; remote?: boolean }
+  | { type: 'taxi'; locationId: LocationId }
+  | { type: 'orderFood'; itemId: string }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
   | { type: 'greetStranger'; look: number }
@@ -90,7 +93,10 @@ export class GameStore {
 
   dispatch = (intent: GameIntent): void => {
     const before = this.state;
-    const next = this.reduce(intent);
+    const reduced = this.reduce(intent);
+    // Food ordered by phone arrives whenever the clock passes its time,
+    // whatever moved the clock.
+    const next = reduced ? deliverDue(reduced) : reduced;
     if (next === before) return;
 
     this.state = next;
@@ -295,7 +301,13 @@ export class GameStore {
         return state ? skipWork(state) : state;
 
       case 'talk':
-        return state ? talk(state, intent.personId, intent.style) : state;
+        return state ? talk(state, intent.personId, intent.style, intent.remote ?? false) : state;
+
+      case 'taxi':
+        return state ? takeTaxi(state, intent.locationId) : state;
+
+      case 'orderFood':
+        return state ? orderFood(state, intent.itemId) : state;
 
       case 'askOut':
         return state ? askOut(state, intent.personId) : state;

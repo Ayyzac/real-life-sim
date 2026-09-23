@@ -725,6 +725,18 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 
 **FPS dengan hujan belum diukur**: pane sesi ini `document.hidden`, jadi `requestAnimationFrame` berhenti. Hujan menambah 1 `TileSprite` + 1 persegi + ≤40 gambar payung kecil — tapi **angka belum ada**; ukur di jendela yang benar-benar menggambar.
 
+#### Fase 7E — HP (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Satu cangkang untuk HP dan laptop | `src/ui/device/DeviceShell.tsx` + daftar app `APPS` di `apps.tsx` (`on: 'phone' \| 'laptop' \| 'both'`). State buka/tutup di `device.ts`, tidak disimpan. Membuka = menahan jam. Esc menutup. | App baru = satu entri data. Laptop (7G) tinggal memakai cangkang yang sama. |
+| Telepon = obrolan yang sama, `remote` | `talk(..., remote)` melewati cek "ada di sini", 15 menit, kedekatan ×0,6. Tidak bisa mengajak pacaran/melamar lewat telepon. | Satu jalur obrolan. Kalimatnya masih kalimat tatap muka — dirombak di 7I. |
+| Undang ke rumah = outing ketiga | `OUTINGS.home` (gratis, 2 jam), menandai `host:<id>`; `whoIsHere()` menaruh tamu di rumah sampai tengah malam dan tidak di tempat lain. | Menutup keputusan 7A: rumah hanya berisi orang yang diundang. Biaya per outing pindah ke data `OUTINGS`. |
+| Ajakan pindah dari tab People ke HP | Tab People tinggal info + lamaran. | "Call ajak kemana orang" ada di HP (permintaan user); dua pintu untuk hal yang sama tidak perlu. |
+| Taksi | Tarif = $4 + $0,25 × jarak pintu (grid), 5 menit, tanpa kehujanan. Jam dan lokasi berubah bersamaan, jadi peta memindahkan karakter langsung. | Jalan kaki di game ini cepat; nilai taksi = kering + seberang kota. |
+| Pesan antar | `character.deliveries: {itemId, at}[]`, `at` = menit sejak hidup mulai. `deliverDue()` dijalankan store setelah **setiap** perubahan, jadi tiba lewat detak, aksi, atau tidur. Harga ×1,5 + $3; slot tas dipesan saat order. | Satu tempat, apa pun yang memajukan jam. Schema → 7. |
+| Berita = turunan hash | `headlinesFor()` (`src/core/news.ts`) + template di `src/data/news.ts`: cuaca, diskon terbaik, kabar kenalan, dua berita kota. | Membaca berita tidak mengubah apa pun. |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

@@ -209,8 +209,13 @@ export const BALANCE = {
     breakupBelow: 25,
     breakupAfterDays: 60,
     breakupMood: -6,
-    /** An outing by phone: dinner at the Cafe or a film at the Mall, paid for two. */
+    /**
+     * An outing by phone: dinner at the Cafe or a film at the Mall, paid for
+     * two - or an evening at home, which costs nothing but the time.
+     */
     invite: { minutes: 120, cost: 30, closeness: 8, mood: 4, minCloseness: 25 },
+    /** A phone call counts for less than being there, and is quicker (GDD §12). */
+    call: { minutes: 15, share: 0.6 },
     /** Saying hello to strangers in the street. */
     greet: { minutes: 10, perDay: 3, baseChance: 0.25, charismaPerPoint: 0.005, maxChance: 0.75, closeness: 20 },
     /** Losing someone hurts in proportion to how close you were. */
@@ -286,6 +291,15 @@ export const BALANCE = {
    * somewhere between 06:00 and 19:00. Walking in it without an umbrella
    * costs a little on each trip.
    */
+  /**
+   * The phone's errands (GDD §12). A taxi is about walking time saved and
+   * staying dry; delivery is the Supermarket without the trip, at a price.
+   */
+  phone: {
+    taxi: { base: 4, perTile: 0.25, minutes: 5 },
+    delivery: { markup: 1.5, fee: 3, minutes: 30 },
+  },
+
   weather: {
     rainChance: 0.25,
     earliestHour: 6,

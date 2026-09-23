@@ -98,25 +98,30 @@ function withPerson(state: WorldState, id: string, change: (person: Person) => P
 
 // --- talking -------------------------------------------------------------
 
-/** Why they cannot be talked to right now, or null. */
-export function talkBlocker(state: WorldState, person: Person): string | null {
+/** How long a chat takes: in person, or on the phone (GDD §12). */
+export function talkMinutes(remote: boolean): number {
+  return remote ? R.call.minutes : T.minutes;
+}
+
+/** Why they cannot be talked to right now, or null. A call reaches anywhere. */
+export function talkBlocker(state: WorldState, person: Person, remote = false): string | null {
   if (busy(state)) return 'Not now';
-  if (!whoIsHere(state, state.character.location).some((p) => p.id === person.id)) {
+  if (!remote && !whoIsHere(state, state.character.location).some((p) => p.id === person.id)) {
     return `${firstName(person)} is not here`;
   }
   if (state.doneToday.includes(`talk:${person.id}`)) return 'Already talked today';
-  if (!fitsInDay(state, T.minutes)) return 'Not enough time';
+  if (!fitsInDay(state, talkMinutes(remote))) return 'Not enough time';
   return null;
 }
 
-export function talk(state: WorldState, personId: string, style: ReplyStyle): WorldState {
+export function talk(state: WorldState, personId: string, style: ReplyStyle, remote = false): WorldState {
   const person = state.people.find((p) => p.id === personId);
-  if (!person || talkBlocker(state, person) !== null) return state;
+  if (!person || talkBlocker(state, person, remote) !== null) return state;
 
   const verdict = verdictFor(person, style);
-  const raw = T[verdict];
+  const raw = T[verdict] * (remote ? R.call.share : 1);
   const change = raw > 0 ? raw * warmth(state) : raw;
-  const played = passTime(state, T.minutes);
+  const played = passTime(state, talkMinutes(remote));
 
   return {
     ...played,
@@ -195,11 +200,13 @@ export function askOut(state: WorldState, personId: string): WorldState {
 
 // --- going out -----------------------------------------------------------
 
-export type Outing = 'dinner' | 'film';
+export type Outing = 'dinner' | 'film' | 'home';
 
-export const OUTINGS: Record<Outing, { label: string; place: LocationId; verb: string }> = {
-  dinner: { label: 'Dinner at the Cafe', place: 'cafe', verb: 'Had dinner with' },
-  film: { label: 'A film at the Mall', place: 'mall', verb: 'Saw a film with' },
+export const OUTINGS: Record<Outing, { label: string; place: LocationId; verb: string; cost: number }> = {
+  dinner: { label: 'Dinner at the Cafe', place: 'cafe', verb: 'Had dinner with', cost: R.invite.cost },
+  film: { label: 'A film at the Mall', place: 'mall', verb: 'Saw a film with', cost: R.invite.cost },
+  // Home is the one place nobody is ever found uninvited (GDD §12).
+  home: { label: 'An evening at yours', place: 'home', verb: 'Had an evening in with', cost: 0 },
 };
 
 /** Why this outing cannot happen now, or null. The phone works from anywhere. */
@@ -213,7 +220,7 @@ export function inviteBlocker(state: WorldState, person: Person, outing: Outing)
   const closes = LOCATIONS.find((l) => l.id === place)?.closes ?? BALANCE.day.latest;
   if (state.minuteOfDay + R.invite.minutes > closes) return 'Closes too soon';
   if (!fitsInDay(state, R.invite.minutes)) return 'Not enough time';
-  if (state.character.stats.money < R.invite.cost) return 'Cannot afford';
+  if (state.character.stats.money < OUTINGS[outing].cost) return 'Cannot afford';
   return null;
 }
 
@@ -247,6 +254,7 @@ export function invite(state: WorldState, personId: string, outing: Outing): Wor
   const stats = played.character.stats;
   return {
     ...played,
+    doneToday: outing === 'home' ? [...played.doneToday, `host:${person.id}`] : played.doneToday,
     eventLog: withLogEntry(played.eventLog, { day: state.clockDay, tone: 'good', text: `${trip.verb} ${person.name}.` }),
     people: withPerson(played, person.id, (p) => ({
       ...p,
@@ -255,7 +263,7 @@ export function invite(state: WorldState, personId: string, outing: Outing): Wor
     character: {
       ...played.character,
       location: trip.place,
-      stats: { ...stats, money: stats.money - R.invite.cost, mood: clamp(stats.mood + R.invite.mood) },
+      stats: { ...stats, money: stats.money - trip.cost, mood: clamp(stats.mood + R.invite.mood) },
     },
   };
 }

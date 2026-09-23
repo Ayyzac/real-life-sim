@@ -1,3 +1,4 @@
+import { BALANCE } from '../data/balance';
 import { LOCATIONS } from '../data/locations';
 import { isWeekend } from './day';
 import { hashText } from './hash';
@@ -54,7 +55,19 @@ export function whereIs(person: Person, clockDay: number, minuteOfDay: number): 
   return place && isOpen(place, minuteOfDay) ? place : null;
 }
 
+/**
+ * Invited home tonight (GDD §12): they stay for the rest of the evening, and
+ * are nowhere else meanwhile.
+ */
+export function hostedTonight(state: Pick<WorldState, 'doneToday' | 'minuteOfDay'>, person: Person): boolean {
+  return state.doneToday.includes(`host:${person.id}`) && state.minuteOfDay < BALANCE.day.midnight;
+}
+
 /** Everyone the player knows who is at this place right now. */
 export function whoIsHere(state: WorldState, locationId: LocationId): Person[] {
-  return state.people.filter((person) => whereIs(person, state.clockDay, state.minuteOfDay) === locationId);
+  return state.people.filter((person) =>
+    hostedTonight(state, person)
+      ? locationId === 'home'
+      : whereIs(person, state.clockDay, state.minuteOfDay) === locationId,
+  );
 }

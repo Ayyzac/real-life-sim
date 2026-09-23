@@ -304,4 +304,11 @@ describe('migrating an older save', () => {
     );
     expect(saves.load()?.character.inventory).toEqual(['bread']);
   });
+
+  it('gives an older save nothing on its way (v6 -> v7)', () => {
+    const world = createWorld({ name: 'Orderer', backgroundId: 'athlete', seed: 9 });
+    const { deliveries: _d, ...oldCharacter } = world.character;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...world, schemaVersion: 6, character: oldCharacter }));
+    expect(saves.load()?.character.deliveries).toEqual([]);
+  });
 });

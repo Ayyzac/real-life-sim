@@ -11,6 +11,7 @@ import { LifeSummary } from './LifeSummary';
 import { Settings } from './Settings';
 import { SidePanel } from './SidePanel';
 import { TalkDialog } from './TalkDialog';
+import { DeviceShell } from './device/DeviceShell';
 import { useTalk } from './talk';
 import { play, preload, soundFor } from './sound';
 import { gameStore, useGame } from './useGame';
@@ -114,6 +115,7 @@ export function App(): React.JSX.Element {
         <SidePanel world={world} locked={waiting} />
       </div>
 
+      {!waiting && <DeviceShell world={world} />}
       <Settings />
       <footer className="app__footer">A life, one day at a time.</footer>
     </main>

@@ -8,12 +8,12 @@ import { startingPeople } from './relationships';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
- * 6 since Phase 7C (the bag); 5 added the gym membership, 4 the time of
- * day and needs.
+ * 7 since Phase 7E (deliveries); 6 added the bag, 5 the gym membership,
+ * 4 the time of day and needs.
  * Older saves back to version 2 are MIGRATED rather than thrown away - see
  * LocalStorageSaveProvider.
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export interface NewGameOptions {
   name: string;
@@ -72,6 +72,7 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
     owned: [],
     gymPaidUntil: null,
     inventory: [],
+    deliveries: [],
   };
 
   const birth: EventLogEntry = {

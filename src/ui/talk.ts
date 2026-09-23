@@ -8,6 +8,8 @@ import type { Verdict } from '../data/dialogue';
  */
 export interface OpenTalk {
   personId: string;
+  /** On the phone rather than face to face (GDD §12). */
+  remote?: boolean;
   /** Set once a reply has been chosen, so the dialog can show how it went. */
   reaction?: { text: string; verdict: Verdict };
 }
@@ -20,8 +22,8 @@ function set(next: OpenTalk | null): void {
   for (const listener of listeners) listener();
 }
 
-export function openTalk(personId: string): void {
-  set({ personId });
+export function openTalk(personId: string, remote = false): void {
+  set({ personId, remote });
 }
 
 export function closeTalk(): void {
@@ -29,7 +31,7 @@ export function closeTalk(): void {
 }
 
 export function setReaction(personId: string, reaction: OpenTalk['reaction']): void {
-  set({ personId, reaction });
+  set({ personId, remote: current?.remote, reaction });
 }
 
 export function useTalk(): OpenTalk | null {

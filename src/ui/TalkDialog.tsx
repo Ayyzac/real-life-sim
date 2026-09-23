@@ -7,6 +7,7 @@ import {
   firstName,
   openerFor,
   talkBlocker,
+  talkMinutes,
   traitKnown,
   traitOf,
   verdictFor,
@@ -36,9 +37,11 @@ export function TalkDialog({ world, open }: { world: WorldState; open: OpenTalk 
   const name = firstName(person);
   const trait = traitOf(person);
   const known = traitKnown(person);
-  const blocker = talkBlocker(world, person);
+  const remote = open.remote === true;
+  const blocker = talkBlocker(world, person, remote);
   const opener = openerFor(world, person);
-  const canPropose = marriageCandidates(world.people).some((p) => p.id === person.id);
+  // Some things are only asked face to face.
+  const canPropose = !remote && marriageCandidates(world.people).some((p) => p.id === person.id);
   const affordWedding = world.character.stats.money >= RELATIONSHIP_BALANCE.weddingCost;
 
   const reply = (style: ReplyStyle): void => {
@@ -46,7 +49,12 @@ export function TalkDialog({ world, open }: { world: WorldState; open: OpenTalk 
     const pool = REACTIONS[style][verdict];
     const text = fillLine(pool[hashText(`${person.id}:${world.clockDay}:${style}`) % pool.length]!, person, world);
     setReaction(person.id, { text, verdict });
-    runTimed(`Talking with ${name}`, 30, { type: 'talk', personId: person.id, style });
+    runTimed(remote ? `On the phone with ${name}` : `Talking with ${name}`, talkMinutes(remote), {
+      type: 'talk',
+      personId: person.id,
+      style,
+      remote,
+    });
   };
 
   return (
@@ -56,6 +64,7 @@ export function TalkDialog({ world, open }: { world: WorldState; open: OpenTalk 
         <div className="talk__who">
           <h2 className="talk__name" id="talk-name">
             {person.name} <span className="badge">{person.kind === 'dating' ? 'seeing' : person.kind}</span>
+            {remote && <span className="badge">on the phone</span>}
           </h2>
           <p className="talk__trait">
             {known ? (
@@ -100,7 +109,7 @@ export function TalkDialog({ world, open }: { world: WorldState; open: OpenTalk 
       )}
 
       <div className="talk__actions">
-        {canAskOut(world, person) && (
+        {!remote && canAskOut(world, person) && (
           <button
             type="button"
             className="btn"
@@ -121,7 +130,7 @@ export function TalkDialog({ world, open }: { world: WorldState; open: OpenTalk 
           </button>
         )}
         <button type="button" className="btn btn--quiet" disabled={busy} onClick={closeTalk}>
-          Leave
+          {remote ? 'Hang up' : 'Leave'}
         </button>
       </div>
     </section>

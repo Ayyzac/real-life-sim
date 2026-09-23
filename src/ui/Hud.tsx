@@ -16,6 +16,7 @@ import { Portrait } from './Portrait';
 import { useShownMinute } from './progress';
 import { SPEEDS, setSpeed, togglePause, useClock } from './clock';
 import { blockPending, freeUntil } from '../core/day';
+import { openDevice } from './device/device';
 
 /**
  * Everything about the character at a glance, always on screen: who, when,
@@ -148,7 +149,18 @@ export function Hud({ world }: { world: WorldState }): React.JSX.Element {
           <ClockControls world={world} />
         </div>
 
-        <div className={`hud__money ${stats.money < 0 ? 'hud__money--debt' : ''}`}>{money(stats.money)}</div>
+        <div className="hud__right">
+          <div className={`hud__money ${stats.money < 0 ? 'hud__money--debt' : ''}`}>{money(stats.money)}</div>
+          <button
+            type="button"
+            className="btn btn--small"
+            disabled={world.pendingEvent !== null}
+            onClick={() => openDevice('phone')}
+            title="Calls, news, deals, weather, a taxi, food"
+          >
+            Phone
+          </button>
+        </div>
       </div>
 
       <DayBar world={world} shownMinute={shownMinute} />
