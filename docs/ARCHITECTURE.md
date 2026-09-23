@@ -37,6 +37,12 @@ Dokumen ini menjabarkan `CLAUDE.md` §"Aturan arsitektur inti" menjadi struktur 
 - Umur karakter dihitung dari `currentDay ÷ 365` (bulat ke bawah) + umur awal.
 - Method `advanceDay()` dan `advanceWeek()` (memanggil `advanceDay()` 7 kali) — **hanya dipanggil dari UI saat pemain menekan tombol**, tidak pernah otomatis.
 - Setiap `advanceDay()`: jalankan efek harian (gaji/biaya jika relevan hari itu, regenerasi energi, dll), lalu jalankan `EventEngine.roll()` untuk cek event acak.
+- **Sejak Fase 6:** `WorldState.minuteOfDay` menyimpan jam di dalam hari. Jam hanya
+  maju lewat aksi pemain (`doAction`, `startBlock`) di `src/core/day.ts`.
+  `advanceDay()` = **tidur**: aturan harian yang lama berjalan utuh, lalu jam kembali
+  ke 07:00. Waktu yang di-skip tidak menurunkan kebutuhan — itulah yang membuat
+  autopilot tetap "hidup wajar" dan semua test keseimbangan seumur hidup tetap sah.
+  Aturan mainnya di `GDD.md` §11.
 
 ## 3. Konten sebagai data
 
@@ -537,6 +543,32 @@ diambil saat **dua** game Phaser berjalan sekaligus, jadi itu batas bawah yang
 aman — tapi sejak itu keramaian dinaikkan ke 40 orang + 14 mobil dan peta jadi
 dua kali lebih besar. **Belum terbukti. Ukur di jendela yang benar-benar
 menggambar sebelum mempercayainya.**
+
+### 2026-09-23 — Fase 6 (keputusan, ditulis sebelum kode)
+
+User memainkan hasil Fase 5 dan meminta tujuh hal: nama & ngobrol dengan NPC,
+wajah di People, ruangan dalam gedung, mall, indikator lapar/haus, mobil yang
+terbalik, serta jam + durasi aksi + pagi→malam. Aturan mainnya ada di
+`GDD.md` §11; di sini sisi teknis dan alasannya. Diputuskan lewat enam putaran
+tanya-jawab. **FINAL — jangan tanya ulang.**
+
+| Keputusan | Isi | Alasan / konsekuensi |
+|---|---|---|
+| **Model waktu hybrid** | `WorldState.minuteOfDay`. Aksi pemain memajukan jam; `advanceDay` = tidur; `advanceWeek` tetap ada. | Mencabut "satu klik = satu minggu" sebagai *satu-satunya* cara main (Fase 1 Demo A). Hitungan ~3.000 klik per kehidupan tetap berlaku untuk pemain yang memilih skip. |
+| **`applyDailyRules` tidak diubah efek fokusnya** | Blok 09–17 hanya memajukan jam dan kebutuhan; statistik fokus tetap diterapkan saat tidur. | Semua test keseimbangan seumur hidup (umur mati, urutan karier) tetap sah tanpa disetel ulang. |
+| **Waktu yang di-skip tidak menurunkan kebutuhan** | Kebutuhan hanya bergerak di `passTime`. Setiap pagi kembali ke nilai bangun tetap. | Autopilot = hidup wajar tanpa aturan tambahan. Tanpa ini, 3.000 minggu autopilot harus mensimulasikan makan — kode besar untuk hal yang tidak dilihat siapa pun. |
+| **Penalti kebutuhan tidak menyentuh kesehatan** | Hanya mood & energi. | Kematian tetap hanya lewat aturan harian, jadi `passTime` tidak perlu `checkDeath`, dan "kematian selalu didahului tanda" (Fase 1) utuh. |
+| **Satu daftar `doneToday`** | `WorldState.doneToday: string[]`, dikosongkan saat tidur. Dipakai aksi `oncePerDay`, ngobrol per orang, hitungan sapaan. | Satu mekanisme generik, bukan satu field per aksi. Tanpa batas harian, check-up dokter berulang-ulang membuat karakter abadi. |
+| **Siapa di mana = hash, bukan RNG** | `whoIsHere()` menghitung dari (id orang, hari, jam). | RNG simulasi tersimpan di save; tampilan tidak boleh menggeser urutan event (alasan yang sama dengan RNG keramaian di Fase 2). |
+| **Wajah = palette swap** | 6 badan dasar × warna rambut/baju/kulit. `look` satu angka; `lookOf(person)` = `person.look ?? hash(id)`. | Tilesheet ternyata **6 orang × 3 frame**, bukan 18 orang. Palette swap memberi ratusan wajah tanpa unduhan, dan peta serta potret selalu sama. |
+| **Dialog = data tertulis** | `src/data/dialogue.ts`, dipilih lewat hash. | `CLAUDE.md` melarang LLM saat runtime. Ditulis Claude saat development — itu yang dibolehkan. |
+| **Ruangan = satu scene generik** | `InteriorScene` membaca `src/data/interiors.ts`. Masuk/keluar ruangan = state tampilan, tidak disimpan. | Konten = data (`CLAUDE.md` aturan 2): 8 gedung + 3 versi rumah + 6 usaha adalah entri data, bukan 17 scene. |
+| **Aset interior** | Kenney "Roguelike Indoors" (CC0, 16×16, seri yang sama). **Unduh hanya setelah izin user.** | Tilesheet kota tidak punya meja, kursi, kasur, atau konter — dicek visual. |
+| **Tanpa React ErrorBoundary** | Save dengan id data yang tidak dikenal diperbaiki di `migrate()`. | ErrorBoundary butuh class component, yang dilarang `CLAUDE.md`. Memperbaiki akarnya lebih baik daripada menangkap crash-nya. |
+| **`SCHEMA_VERSION` → 4, dengan migrasi** | Di Fase 6B: `minuteOfDay`, `needs`, `doneToday`. | Save yang sedang berjalan tetap lanjut, sama seperti migrasi 2→3. |
+| **Akhir pekan libur mengubah keseimbangan** | Gaji hari kerja ×7/5; hari libur = efek Istirahat. | Gaji mingguan sama, tapi energi di akhir pekan berbeda → umur harapan bisa bergeser. **Disetel ulang lewat simulasi**; kalau target umur 86–88 harus bergeser, tanya user dulu. |
+
+**Dikerjakan bertahap (A–F di `ROADMAP.md`)** supaya tiap bagian bisa dicoba.
 
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 

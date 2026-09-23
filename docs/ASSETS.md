@@ -72,8 +72,9 @@ tilesheet-nya, bukan ditebak):
 | Gedung abu-abu | 14, 41 |
 | Pintu | 255, 257, 310, 336, 443 |
 | Pohon | 238, 291, 292 (hijau) · 345, 346 (oranye) |
-| Mobil | 251, 252, 253, 254 |
-| Sprite orang | 18 karakter, masing-masing 4 pose, di **4 kolom paling kanan** (kolom 23-26). Rumus: `dasar = baris * 27 + 23`, lalu `dasar+0` hadap bawah, `+1` hadap bawah (pose kedua), `+2` hadap atas, `+3` tampak samping. |
+| Mobil | 2×2 tile, **moncong menghadap bawah** (lampu, kaca depan, roda, dan bayangan di sisi bawah): `[447, 448, 474, 475]` dan `[450, 451, 477, 478]` (keduanya cermin kiri-kanan). ~~251-254~~ ternyata tempat sampah/kotak pos — dicatat salah sejak Fase 2, dibetulkan 23 Sep 2026. |
+| Sprite orang | Di **4 kolom paling kanan** (kolom 23-26), 18 baris. Rumus: `dasar = baris * 27 + 23`, lalu `+0` **profil kiri**, `+1` **hadap depan (bawah)**, `+2` hadap belakang (atas), `+3` **profil kanan** (cermin persis `+0`). |
+| Siapa di baris mana | **6 orang × 3 frame**, bukan 18 orang: baris `3k` = diam, `3k+1` dan `3k+2` = dua langkah jalan (warnanya identik). Dicek piksel demi piksel, 23 Sep 2026. Catatan lama ("18 karakter", "+0 hadap bawah") salah dan membuat pemain serta semua potret tampil menyamping. |
 
 Sumber cadangan (kalau ada celah yang tidak dicover Kenney):
 - **OpenGameArt.org** — filter berdasarkan lisensi CC0/CC-BY sebelum pakai

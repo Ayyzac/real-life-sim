@@ -16,6 +16,10 @@ Simulasi hidup kota modern, sudut pandang top-down 2D pixel art, di mana pemain 
 
 Waktu **tidak pernah maju sendiri** tanpa pemain menekan tombol (lihat `CLAUDE.md`).
 
+**Sejak Fase 6 (keputusan user, 23 Sep 2026):** satu hari juga bisa dimainkan
+**per jam** — makan, minum, mandi, ngobrol, belanja, masing-masing makan waktu.
+"Lanjut Minggu" tetap ada sebagai autopilot. Rinciannya di §11.
+
 ## 3. Karakter
 
 ### 3.1 Statistik inti
@@ -25,6 +29,7 @@ Waktu **tidak pernah maju sendiri** tanpa pemain menekan tombol (lihat `CLAUDE.m
 - **Mood/kebahagiaan** (0–100)
 - **Umur** (dalam tahun, dari titik mulai — misal 18 tahun — sampai meninggal)
 - **Skill/atribut** sederhana untuk v1: sejumlah kecil angka (misal *Kecerdasan*, *Fisik*, *Karisma*) yang naik dari aktivitas tertentu (belajar, olahraga, sosialisasi) dan mempengaruhi peluang di jalur karier
+- **Kebutuhan** (Fase 6): *Lapar*, *Haus*, *Kebersihan* (0–100). Hanya bergerak saat hari dimainkan per jam. Lihat §11.2.
 
 ### 3.2 Pembuatan karakter (character creation)
 Sederhana untuk v1: nama, jenis kelamin/penampilan sprite, dan 1–2 pilihan latar belakang awal (mempengaruhi stat awal, bukan menulis cerita panjang). Tidak perlu wizard rumit.
@@ -36,12 +41,20 @@ punya anak. Alasannya sengaja: tiap cabang aturan yang diikat ke jenis kelamin
 menambah jalur yang harus diseimbangkan dan dites, dengan imbalan permainan
 yang kecil.
 
+**Koreksi 23 Sep 2026 (Fase 6):** 18 sprite itu ternyata **6 orang × 3 frame**
+(diam + dua langkah jalan), dicek piksel demi piksel. Pemain sekarang **merakit
+sendiri**: pilih satu dari 6 badan, lalu warna rambut, baju, dan kulit, dengan
+tombol Acak. Warna diganti lewat *palette swap*, jadi peta dan potret selalu
+sama. Tetap murni tampilan.
+
 ## 4. Jalur karier
 
 Di v1 semuanya **disederhanakan (abstraksi angka)** sesuai kesepakatan — kedalaman ditambah belakangan.
 
 ### 4.1 Kerja biasa (default, selalu tersedia)
 Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing dengan gaji, syarat skill minimum, dan jam kerja yang menguras energi. Naik jabatan lewat kombinasi lama bekerja + skill.
+
+**Sejak Fase 6:** Sabtu–Minggu libur, dan bolos dimungkinkan dengan akibat (catatan absen → teguran → dipecat). Lihat §11.3.
 
 ### 4.2 Bisnis (opsional, dipilih pemain)
 - Pemain bisa membuka satu jenis usaha sederhana dari daftar data (misal: warung, toko online, bengkel kecil).
@@ -83,6 +96,7 @@ Daftar pekerjaan generik data-driven (kasir, staf kantor, dst.), masing-masing d
 - Peta kota kecil dengan lokasi tetap: Rumah, Tempat Kerja (berubah sesuai pekerjaan aktif), Gym/Lapangan, Rumah Sakit, satu-dua lokasi sosial (kafe/taman).
 - Karakter dikendalikan jalan kaki (arah/WASD atau klik-jalan — putuskan saat implementasi, catat di `docs/ARCHITECTURE.md`).
 - Masuk ke sebuah lokasi memicu **layar menu/UI** (dashboard React) untuk aksi di lokasi itu — dunia eksplorasi dan UI dashboard saling melengkapi, bukan dua game terpisah.
+- **Sejak Fase 6:** tiap gedung punya **ruangan dalam** yang bisa dimasuki, jam buka, dan orang di dalamnya. Ada gedung baru, **Mall**. Lihat §11.4–§11.5.
 
 ## 6. Kematian & fresh start
 
@@ -112,6 +126,13 @@ perubahan itu. Rinciannya di §10.
 Yang **tetap** di luar scope: multiplayer, LLM saat main, aplikasi terpisah,
 monetisasi, save cloud, grafis 3D, meta-progression lintas kehidupan, banyak
 save slot, dan simulasi bisnis/olahraga yang dalam.
+
+**Perubahan scope, 23 Sep 2026 (Fase 6).** Atas permintaan eksplisit user, dua
+hal yang dulu sengaja dicoret kini masuk scope: **ruangan dalam gedung** (dicoret
+di keputusan Fase 2) dan **NPC yang bisa diajak bicara** (dicoret di §10.4).
+Percakapannya **ditulis sebelumnya sebagai data** oleh Claude saat development —
+**bukan** AI saat game dijalankan, jadi larangan LLM di `CLAUDE.md` tetap utuh.
+Rinciannya di §11.
 
 ## 8. Daftar layar UI (v1)
 
@@ -178,6 +199,107 @@ Tanpa aturan ini, 70 tahun kenalan akan menembus batas penyimpanan dan game
 gagal menyimpan diam-diam di tengah permainan.
 
 ### 10.4 Yang tetap tidak dibuat
-Pohon keluarga lintas generasi yang bisa ditelusuri, percakapan bebas, dan NPC
-yang bisa diajak bicara di peta. Hubungan tetap berupa angka dan event, bukan
-dialog.
+Pohon keluarga lintas generasi yang bisa ditelusuri, dan percakapan bebas
+(mengetik sendiri).
+
+~~NPC yang bisa diajak bicara di peta. Hubungan tetap berupa angka dan event,
+bukan dialog.~~ — **dicabut 23 Sep 2026** atas permintaan user. Ngobrol dengan
+pilihan jawaban tertulis kini ada; lihat §11.6.
+
+## 11. Hidup per jam (Fase 6)
+
+Semua keputusan di bagian ini diambil user lewat enam putaran tanya-jawab pada
+**23 Sep 2026**. Anggap FINAL — jangan tanya ulang. Angka persisnya ada di
+`src/data/balance.ts` dan boleh disetel; **aturannya** tidak.
+
+### 11.1 Satu hari
+- Bangun **07:00**. Pagi **07:00–09:00** bebas.
+- **Blok fokus 09:00–17:00** berjalan lewat satu tombol ("Go to work" / "Start
+  the day"), jam melompat ke 17:00 dengan animasi. **Istirahat tidak punya blok**:
+  pemain yang beristirahat bebas seharian.
+- Malam **17:00–24:00** bebas. Boleh **begadang sampai 02:00**, tapi tiap jam
+  lewat tengah malam mengurangi energi besok. Pukul 02:00 karakter tertidur sendiri.
+- Aksi tidak boleh melewati batas jendela waktunya (tidak bisa mulai makan 45
+  menit pukul 08:50 sebelum kerja).
+- **Tidur** = hari selesai. Aturan harian lama (gaji, biaya, penuaan, event)
+  berjalan persis seperti sebelumnya, lalu hari berikutnya mulai 07:00.
+- **Lanjut Minggu** = sisa hari ini + 6 hari **autopilot**. Autopilot tidak
+  pernah bolos dan tidak pernah kelaparan.
+- Animasi aksi **proporsional durasi, maksimal 3 detik** (15 menit ≈ 0,5 detik,
+  1 jam ≈ 1 detik, blok 8 jam ≈ 3 detik). Perubahan state tetap terjadi sekali per
+  klik; animasinya hanya tampilan (`CLAUDE.md` aturan 3).
+
+### 11.2 Kebutuhan: Lapar, Haus, Kebersihan
+- Skala 0–100. **Hanya turun saat jam benar-benar berjalan** (aksi atau blok
+  fokus). Hari yang di-skip tidak menurunkan apa pun — autopilot = hidup wajar.
+- Setiap pagi kembali ke nilai bangun yang tetap (lapar & haus sedang,
+  kebersihan sedang): sarapan dan mandi selalu ada gunanya.
+- Selama blok fokus, lapar dan haus turun **setengah laju** (makan siang di tempat).
+- Di bawah 20: **mood dan energi** terkikis per jam. **Tidak pernah kesehatan**
+  — tidak ada yang mati karena lupa makan, sehingga "kematian selalu didahului
+  tanda" (`ARCHITECTURE.md` §11 Fase 1) tetap utuh.
+- Tidur dalam keadaan lapar/haus di bawah 20 = besok mulai lebih lelah.
+- **Makan & minum di rumah gratis** (sudah termasuk biaya hidup $22/hari), cuma
+  makan waktu. Kafe dan mall bayar, tapi lebih cepat dan menaikkan mood.
+- Kebersihan rendah: mood turun · ngobrol kurang efektif · menyapa orang asing
+  lebih sering gagal · datang kerja dalam keadaan kotor = **½ catatan absen**
+  (pasti, bukan acak).
+
+### 11.3 Kerja: akhir pekan dan bolos
+- **Sabtu–Minggu hanya kerja kantoran yang libur.** Usaha, atlet, belajar, gym,
+  sosialisasi, dan berobat tetap berjalan — itu pilihan pemain sendiri.
+- Hari libur pegawai dihitung sebagai **Istirahat** (tanpa gaji). Gaji hari kerja
+  dinaikkan ×7/5 sehingga **gaji mingguan tetap sama**.
+- **Bolos boleh**: pukul 09:00 di hari kerja ada pilihan "Skip work". Siang jadi
+  bebas, tapi hari itu tidak digaji dan dapat **1 catatan absen**. Catatan pudar
+  sendiri seiring waktu. **3 catatan aktif = teguran** (peringatan di layar),
+  **5 = dipecat**. Selalu ada peringatan sebelum dipecat.
+
+### 11.4 Tempat dan ruangan
+- **Semua 8 gedung punya ruangan dalam**: Rumah, Kafe, Rumah Sakit, Gym, Mall,
+  Kantor, Usaha (tata letak berbeda per jenis usaha), Stadion.
+- Ruangan **Rumah** berubah sesuai rumah yang dimiliki: kamar sewa → Flat →
+  Rumah dengan taman.
+- **Jam buka**: Kafe 07–22, Gym 06–22, Mall 10–22, Rumah Sakit 24 jam, Rumah
+  selalu. Kantor, Usaha, Stadion diatur di data. Gedung tutup menampilkan
+  "Closed · opens 07:00".
+- Di dalam ruangan terlihat siapa yang ada (dengan nama) dan furnitur yang bisa
+  diklik untuk melakukan aksi.
+- Orang yang dikenal muncul di ruangan menurut jadwal yang pasti (bukan acak):
+  pasangan dan anak di rumah, rekan kerja di kantor, teman di kafe/gym/mall pada
+  malam hari, keluarga di mall/kafe akhir pekan.
+
+### 11.5 Mall
+Gedung baru di Eastside. Isinya:
+- **Food court & minuman** — bayar, cepat, naik mood.
+- **Toko barang** — membeli barang permanen (§9.1) pindah ke sini dari tab Rumah.
+- **Toko baju** — ganti warna pakaian karakter (murni tampilan + sedikit mood).
+- **Bioskop/arkade** — hiburan 2 jam, bayar, mood naik; bisa mengajak kenalan.
+
+### 11.6 Orang: ngobrol, sifat, pacaran, orang asing
+- **Ngobrol** = NPC membuka obrolan, pemain memilih 2–3 jawaban. Semua kalimat
+  **ditulis sebelumnya sebagai data** (bahasa Inggris, sesuai aturan teks in-game).
+- Tiap orang punya **sifat** (mis. jenaka, serius, sensitif). Jawaban yang cocok
+  dengan sifatnya menaikkan kedekatan lebih banyak; yang salah naik sedikit atau
+  turun. Sifat **tersembunyi** ("???") dan terungkap bertahap lewat obrolan.
+- Ngobrol dengan orang yang sama paling banyak sekali sehari.
+- **Romansa: teman → pacar → menikah.** Teman dekat bisa diajak kencan dan bisa
+  menolak. Pacar bisa dilamar (biaya nikah tetap). Satu pacar/pasangan dalam satu
+  waktu. **Pacar bisa putus** kalau lama diabaikan (ada peringatan dulu);
+  **pasangan menikah tidak cerai**.
+- **Ajak jalan lewat telepon** dari tab People: makan atau bioskop. Bisa
+  menolak. Bayar untuk berdua, kedekatan naik lebih banyak dari ngobrol biasa.
+- **Orang asing**: NPC di jalan bisa diklik dan disapa (10 menit). Peluang
+  berhasil tergantung karisma dan kebersihan. Yang berhasil jadi kenalan baru
+  dan **wajahnya jadi potretnya**. Paling banyak **3 sapaan per hari**.
+
+### 11.7 Tampilan
+- **Laptop/PC dulu** (dua kolom: peta + panel bertab), HP tetap bisa (bertumpuk).
+- Bar status di atas: jam, hari, uang, dan enam bar (Kesehatan, Energi, Mood,
+  Lapar, Haus, Kebersihan).
+- Setelah Lanjut Hari/Minggu muncul laporan "apa yang berubah".
+
+### 11.8 Sengaja tidak dibuat
+Waktu tempuh jalan kaki antar tempat · isi kulkas/belanja bahan · kenalan
+bernama berkeliaran di jalan (mereka ada di dalam ruangan) · mode per jam tanpa
+skip · AI saat main · cerai · NPC saling menikah · musik latar.

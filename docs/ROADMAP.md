@@ -91,5 +91,55 @@ dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 - [ ] ~~Ukur ulang FPS~~ — **tidak bisa diukur di lingkungan sesi ini**, lihat `ARCHITECTURE.md` §11. Jangan percaya angka FPS apa pun sampai diukur di jendela yang benar-benar menggambar.
 - [x] **Checkpoint:** game terasa utuh dari layar pertama sampai Life Summary
 
+## Fase 6 — Hidup per jam
+
+Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
+`docs/GDD.md` §7 dan §11, keputusan teknis di `docs/ARCHITECTURE.md` §11.
+
+### A — Perbaikan & wajah
+- [ ] Mobil tidak lagi berjalan mundur
+- [ ] Karakter menghadap depan (kolom pose tilesheet dibetulkan)
+- [ ] Wajah beda-beda lewat palette swap; potret di People dan Life Summary
+- [ ] Pembuat karakter: rakit badan + warna rambut/baju/kulit + Acak
+- [ ] Bug: fokus tersembunyi setelah tutup usaha/pensiun/berhenti kerja; log yang tidak dipotong; save dengan id tak dikenal; efek atribut di dialog event; Life Summary untuk usaha/atlet
+- [ ] Klik bagian mana pun dari gedung → jalan ke pintunya; hover pintu disorot
+- [ ] Laporan "apa yang berubah" setelah Lanjut Hari/Minggu
+- [ ] **Checkpoint:** kota terlihat benar dan orang bisa dibedakan dari wajahnya
+
+### B — Jam, siang-malam, kebutuhan, tampilan baru
+- [ ] `SCHEMA_VERSION` 4 dengan migrasi
+- [ ] Jam, nama hari, langit pagi→malam di peta
+- [ ] Lapar, Haus, Kebersihan
+- [ ] Aksi berdurasi (makan, minum, mandi, kopi, check-up, workout) dengan progress bar
+- [ ] Blok fokus 09–17, begadang s/d 02:00
+- [ ] Tata letak baru: bar status atas, peta + panel bertab
+- [ ] **Checkpoint:** satu hari bisa dimainkan per jam, dan skip tetap aman
+
+### C — Aturan kerja
+- [ ] Sabtu–Minggu libur kerja, gaji mingguan tetap
+- [ ] Bolos: catatan absen → teguran → dipecat
+- [ ] Jam buka tempat
+- [ ] Keseimbangan disetel ulang lewat simulasi seumur hidup
+- [ ] **Checkpoint:** minggu terasa punya ritme kerja dan libur
+
+### D — Ruangan dalam gedung
+- [ ] Aset interior CC0 (izin user dulu)
+- [ ] Ruangan untuk 8 gedung; rumah 3 versi; usaha 6 tata letak
+- [ ] Furnitur yang bisa diklik untuk aksi
+- [ ] Orang yang dikenal hadir menurut jadwal, dengan nama
+- [ ] **Checkpoint:** masuk kafe dan melihat siapa di dalam
+
+### E — Mall
+- [ ] Gedung Mall di Eastside
+- [ ] Food court, toko barang, toko baju, bioskop
+- [ ] **Checkpoint:** belanja dan hiburan punya tempatnya sendiri
+
+### F — Ngobrol & hubungan
+- [ ] Dialog tertulis dengan jawaban bercabang dan sifat tersembunyi
+- [ ] Pacaran → menikah; pacar bisa putus
+- [ ] Ajak jalan lewat telepon
+- [ ] Sapa orang asing → jadi kenalan
+- [ ] **Checkpoint:** hubungan terasa seperti mengenal orang, bukan angka
+
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.
