@@ -231,6 +231,26 @@ export const BALANCE = {
     lateNightEnergyPerHour: -6,
   },
 
+  /**
+   * Weekends and missed days (GDD §11.3, user decisions 23 Sep 2026).
+   *
+   * Employees get Saturday and Sunday off, lived as rest days, and are paid
+   * for the days they work. Paying the weekend too (7/5 on weekdays) was
+   * tried first and doubled a clerk's lifetime money: with weekends to rest
+   * on, careful players almost never need a week off any more. Measured over
+   * three lives, 23 Sep 2026: peak $450k before weekends, $945k at 7/5,
+   * $490k paying weekdays only - back inside GDD §9.4.
+   */
+  work: {
+    /** A mark for skipping work fades completely in about a month. */
+    strikeFadePerDay: 1 / 30,
+    /** A warning at this many marks, the sack at this many. */
+    warnAtStrikes: 3,
+    fireAtStrikes: 5,
+    /** Turning up unwashed counts for half a missed day. */
+    unwashedStrike: 0.5,
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

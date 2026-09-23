@@ -144,6 +144,11 @@ export function Hud({ world }: { world: WorldState }): React.JSX.Element {
           Running on empty. While energy stays this low you lose health every day. Rest at Home.
         </p>
       )}
+      {character.career.type === 'job' && (character.career.strikes ?? 0) >= BALANCE.work.warnAtStrikes && (
+        <p className="warning" role="status">
+          Your boss has warned you about missed days. Miss more and you will be let go.
+        </p>
+      )}
       {losing !== null && (
         <p className="warning" role="status">
           {losing.name} is losing {money(-losing.profit)} a week. Mind the shop, or close it.

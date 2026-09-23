@@ -23,6 +23,7 @@ import { POSSESSIONS } from '../data/possessions';
 import { JOBS, findJob } from '../data/jobs';
 import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
+import { closedReason } from '../core/day';
 import { ActionList } from './ActionList';
 import { money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
@@ -65,6 +66,11 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
       </nav>
 
       <p className="panel__hint">{location.blurb}</p>
+      {closedReason(location.id, world.minuteOfDay) && (
+        <p className="closed" role="status">
+          {closedReason(location.id, world.minuteOfDay)}
+        </p>
+      )}
 
       <ActionList world={world} />
 

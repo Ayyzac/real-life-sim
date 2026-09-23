@@ -11,8 +11,9 @@ import { findPossession, replacedBy, withPurchase } from './belongings';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
-import { advanceDay, advanceWeek, resolveEvent, withLogEntry, withMilestone } from './clock';
-import { performAction, startBlock } from './day';
+import { advanceDay, advanceWeek, resolveEvent } from './clock';
+import { performAction, skipWork, startBlock } from './day';
+import { withLogEntry, withMilestone } from './log';
 import { createWorld, type NewGameOptions } from './character';
 import { BALANCE } from '../data/balance';
 import { dollars } from './money';
@@ -37,6 +38,7 @@ export type GameIntent =
   | { type: 'advanceWeek' }
   | { type: 'doAction'; actionId: string }
   | { type: 'startBlock' }
+  | { type: 'skipWork' }
   | { type: 'setFocus'; focusId: FocusId }
   | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
@@ -187,6 +189,9 @@ export class GameStore {
 
       case 'startBlock':
         return state ? startBlock(state) : state;
+
+      case 'skipWork':
+        return state ? skipWork(state) : state;
 
       case 'chooseEventOption':
         return state ? resolveEvent(state, intent.choiceId) : state;

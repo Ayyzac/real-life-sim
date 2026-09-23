@@ -1130,3 +1130,19 @@ body {
     transition: none;
   }
 }
+
+.btn--risky {
+  border-color: rgb(255 122 107 / 0.45);
+  color: #ffb3aa;
+}
+
+.closed {
+  margin: -4px 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgb(255 180 84 / 0.1);
+  border: 1px solid rgb(255 180 84 / 0.35);
+  color: var(--warn);
+  font-size: 0.8rem;
+}
+

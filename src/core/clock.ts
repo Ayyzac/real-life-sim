@@ -1,12 +1,13 @@
 import { BALANCE } from '../data/balance';
 import { dailyUpkeep } from './belongings';
-import { findFocus } from '../data/focuses';
+import { DEFAULT_FOCUS_ID, findFocus } from '../data/focuses';
 import { tradeOneDay } from './careers/business';
 import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
 import { partnerOf, relationshipsOneDay, rollRelationships } from './relationships';
 import { workOneDay } from './careers/job';
 import { ageInYears } from './character';
-import { bedtimeCost, morningNeeds } from './day';
+import { bedtimeCost, isWeekend, morningNeeds, SKIPPED_WORK } from './day';
+import { withLogEntry, withMilestone } from './log';
 import { applyEffect, findChoice, findEvent, needsDecision, rollEvent } from './events';
 import { restoreRng, type Rng } from './rng';
 import type { Attributes, EventLogEntry, Stats, WorldState } from './types';
@@ -52,13 +53,6 @@ function clampAttributes(attributes: Attributes): Attributes {
   };
 }
 
-export function withLogEntry(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
-  return [entry, ...log].slice(0, BALANCE.eventLogLimit);
-}
-
-export function withMilestone(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
-  return [entry, ...log].slice(0, BALANCE.milestoneLimit);
-}
 
 /** Health lost purely to ageing. Zero while young, compounding later. */
 export function ageingHealthLossPerDay(ageYears: number): number {
@@ -107,7 +101,13 @@ function checkDeath(state: WorldState): WorldState {
 export function applyDailyRules(state: WorldState): WorldState {
   const character = state.character;
   const focus = findFocus(character.focusId);
-  const { effects } = focus;
+  // Weekends are off for employees, and a skipped day is simply not worked
+  // (GDD §11.3). The weekend is lived as a rest day; a skipped day as nothing
+  // in particular, so skipping is never a way to recover.
+  const weekendOff = focus.worksJob === true && isWeekend(state.clockDay);
+  const skipped = focus.worksJob === true && state.doneToday.includes(SKIPPED_WORK);
+  const today = weekendOff ? findFocus(DEFAULT_FOCUS_ID) : skipped ? null : focus;
+  const effects = today?.effects ?? {};
 
   let stats: Stats = { ...character.stats };
   let attributes: Attributes = { ...character.attributes };
@@ -128,10 +128,11 @@ export function applyDailyRules(state: WorldState): WorldState {
   attributes.physical += effects.physical ?? 0;
   attributes.charisma += effects.charisma ?? 0;
 
-  if (focus.worksJob) {
+  if (focus.worksJob && !skipped) {
+    // A weekend still counts as time in the job - only the pay stops.
     const worked = workOneDay(career, attributes);
     career = worked.career;
-    stats.money += worked.income;
+    if (!weekendOff) stats.money += worked.income;
     if (worked.promotedTo) {
       const entry: EventLogEntry = {
         day: state.clockDay,
@@ -163,7 +164,7 @@ export function applyDailyRules(state: WorldState): WorldState {
 
   // The people around the character, every day (GDD §10): everyone ages,
   // closeness fades unless it is kept up, and the family costs what it costs.
-  const social = relationshipsOneDay(state.people, focus.socialises === true);
+  const social = relationshipsOneDay(state.people, today?.socialises === true);
   stats.mood += social.moodPerDay;
 
   // What the character owns and how they live, every day (GDD §9). A better
@@ -172,11 +173,16 @@ export function applyDailyRules(state: WorldState): WorldState {
   stats.energy += upkeep.perDay.energy ?? 0;
   stats.mood += upkeep.perDay.mood ?? 0;
   stats.health += upkeep.perDay.health ?? 0;
-  if (focus.restores) stats.energy += upkeep.restBonusPerDay;
+  if (today?.restores) stats.energy += upkeep.restBonusPerDay;
 
   // ponytail: money is allowed to go negative instead of blocking the activity.
   // Buying, however, is not: you cannot spend money you do not have (store.ts).
-  stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0) + upkeep.costPerDay + social.costPerDay;
+  stats.money -= BALANCE.livingCostPerDay + (today?.costPerDay ?? 0) + upkeep.costPerDay + social.costPerDay;
+
+  // Marks for missed work fade on their own (GDD §11.3).
+  if (career.type === 'job' && (career.strikes ?? 0) > 0) {
+    career = { ...career, strikes: Math.max(0, (career.strikes ?? 0) - BALANCE.work.strikeFadePerDay) };
+  }
 
   // Owing money wears on you (GDD §9.4). It presses rather than kills: the
   // health floor keeps debt from being a death sentence on its own.

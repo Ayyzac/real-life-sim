@@ -54,7 +54,8 @@ describe('applyDailyRules (the certain half of a day)', () => {
     );
   });
 
-  it('pays a wage when the focus is Work and the character has a job', () => {
+  it('pays a wage for a weekday worked', () => {
+    // Day 0 is a Monday.
     const before = world({
       focusId: 'work',
       career: { type: 'job', jobId: 'cashier', tenureDays: 0, level: 0 },
@@ -64,6 +65,19 @@ describe('applyDailyRules (the certain half of a day)', () => {
     expect(after.character.stats.money).toBe(
       before.character.stats.money + CASHIER_DAILY - BALANCE.livingCostPerDay,
     );
+    expect(after.character.career).toMatchObject({ tenureDays: 1 });
+  });
+
+  it('gives an employee Saturday off: no pay, a rest day, and it still counts as time served', () => {
+    const saturday = {
+      ...world({ focusId: 'work', career: { type: 'job', jobId: 'cashier', tenureDays: 0, level: 0 } }),
+      clockDay: 5,
+    };
+    const rested = applyDailyRules({ ...saturday, character: { ...saturday.character, focusId: 'rest' } });
+    const after = applyDailyRules(saturday);
+
+    expect(after.character.stats.money).toBe(saturday.character.stats.money - BALANCE.livingCostPerDay);
+    expect(after.character.stats.energy).toBe(rested.character.stats.energy);
     expect(after.character.career).toMatchObject({ tenureDays: 1 });
   });
 
@@ -154,7 +168,8 @@ describe('advanceWeek', () => {
     const after = resolveAll(advanceWeek(before));
     const earned = after.character.stats.money - before.character.stats.money;
 
-    expect(earned).toBe(7 * (CASHIER_DAILY - BALANCE.livingCostPerDay));
+    // Five paid days, seven days of bills (GDD §11.3).
+    expect(earned).toBe(5 * CASHIER_DAILY - 7 * BALANCE.livingCostPerDay);
     // The point of the number: a full working week is a PROFIT, but a thin one.
     expect(earned).toBeGreaterThan(0);
     expect(earned).toBeLessThan(200);

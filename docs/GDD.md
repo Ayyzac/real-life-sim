@@ -248,8 +248,14 @@ Semua keputusan di bagian ini diambil user lewat enam putaran tanya-jawab pada
 ### 11.3 Kerja: akhir pekan dan bolos
 - **Sabtu–Minggu hanya kerja kantoran yang libur.** Usaha, atlet, belajar, gym,
   sosialisasi, dan berobat tetap berjalan — itu pilihan pemain sendiri.
-- Hari libur pegawai dihitung sebagai **Istirahat** (tanpa gaji). Gaji hari kerja
-  dinaikkan ×7/5 sehingga **gaji mingguan tetap sama**.
+- Hari libur pegawai dihitung sebagai **Istirahat** (tanpa gaji). Pegawai
+  **dibayar untuk hari yang dikerjakan** — lima hari per minggu.
+  *Diubah user 23 Sep 2026:* rencana awal menaikkan gaji hari kerja ×7/5 agar
+  gaji mingguan sama. Diukur lewat simulasi, itu **menggandakan** uang pegawai
+  seumur hidup (~$450rb → ~$945rb), karena dengan libur akhir pekan pemain
+  cermat hampir tidak pernah butuh minggu istirahat lagi. User memilih
+  mengembalikan total seumur hidup ke sekitar semula (target §9.4): gaji per
+  minggu turun, tapi minggu kerja jadi lebih banyak.
 - **Bolos boleh**: pukul 09:00 di hari kerja ada pilihan "Skip work". Siang jadi
   bebas, tapi hari itu tidak digaji dan dapat **1 catatan absen**. Catatan pudar
   sendiri seiring waktu. **3 catatan aktif = teguran** (peringatan di layar),

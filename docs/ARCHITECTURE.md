@@ -600,6 +600,24 @@ tanpa tombol reset. Ketiganya sekarang dipatok test.
 | Jam melompat = karakter sudah di sana | Kalau lokasi berubah bersamaan dengan jam (blok kerja), karakter dipindah langsung, tidak berjalan. | Tanpa ini karakter berjalan ke kantor pukul 17:00, setelah kerjanya selesai. |
 | Aksen jadi kuning lampu jalan | `--accent: #ffc861`, sama dengan sorot gedung di peta. | Aksen hijau lama adalah warna bawaan yang generik; kuning = "sekarang" dan "bisa diklik", di peta maupun di panel. |
 
+#### Fase 6C — akhir pekan, bolos, jam buka (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Akhir pekan dihitung di `applyDailyRules` | Fokus kerja di hari ke-5/6 memakai efek Istirahat dan tidak dibayar; masa kerja tetap bertambah. | Satu tempat untuk semua aturan harian, jadi hari yang di-skip dan hari yang dimainkan sama persis. |
+| Hari bolos = hari "kosong" | Tidak dibayar, tidak menambah masa kerja, **dan tidak memberi efek Istirahat**. | Kalau bolos dihitung istirahat, bolos jadi cara murah untuk memulihkan energi. |
+| Catatan absen di varian `job` | `strikes?: number`, opsional — save lama tidak perlu migrasi. Pudar `1/30` per hari. | Ikut hilang bersama pekerjaannya; tidak ada field yang tertinggal saat berganti karier. |
+| `withLogEntry`/`withMilestone` pindah ke `src/core/log.ts` | Dipakai `clock.ts`, `store.ts`, dan `day.ts`. | `day.ts` butuh menulis log (teguran, dipecat), tapi `clock.ts` sudah mengimpor `day.ts`. |
+| Jam buka di data lokasi | `opens`/`closes` di `src/data/locations.ts`; `closedReason()` di `day.ts`. | Konten = data. |
+| **Gaji: dibayar per hari kerja** | Faktor ×7/5 yang direncanakan dibuang. | Diukur (3 kehidupan, pegawai kantoran, pemain cermat): sebelum akhir pekan puncak ~$450rb; ×7/5 → ~$945rb; tanpa faktor → ~$490rb. Umur mati 86–88 di ketiganya. User memilih kembali ke ~$450rb (target GDD §9.4). |
+
+**Pergeseran yang disengaja:** pemain yang "kerja terus tanpa istirahat" dulu
+mati di umur 25–31; sekarang ~50, karena akhir pekan selalu jadi hari
+istirahat. Tangga kesulitan di entri Fase 1 Demo B ("Tidak pernah istirahat:
+19-28") tidak berlaku lagi untuk pegawai — yang masih berlaku untuk fokus
+tanpa akhir pekan (belajar, latihan). Test "kerja saja mati 15+ tahun lebih
+cepat" tetap lolos.
+
 **Catatan pengukuran:** animasi jam memakai `requestAnimationFrame`. Di pane
 browser sesi ini yang sering tidak menggambar, jam di layar melompat langsung
 ke waktu akhir; state-nya tetap benar (diuji lewat DOM). FPS tetap belum

@@ -115,12 +115,12 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Tata letak baru: bar status atas, peta + panel bertab (Here / People / Log); People bisa dibuka dari mana saja
 - [x] **Checkpoint:** satu hari bisa dimainkan per jam, dan skip tetap aman — 335 test, semua test keseimbangan seumur hidup lolos tanpa disentuh
 
-### C — Aturan kerja
-- [ ] Sabtu–Minggu libur kerja, gaji mingguan tetap
-- [ ] Bolos: catatan absen → teguran → dipecat
-- [ ] Jam buka tempat
-- [ ] Keseimbangan disetel ulang lewat simulasi seumur hidup
-- [ ] **Checkpoint:** minggu terasa punya ritme kerja dan libur
+### C — Aturan kerja — SELESAI
+- [x] Sabtu–Minggu libur kerja (dihitung hari istirahat), dibayar untuk hari yang dikerjakan
+- [x] Bolos: catatan absen → teguran di 3 → dipecat di 5; catatan pudar ±1 per bulan; datang kotor = ½
+- [x] Jam buka tempat, dengan alasan yang jelas saat tutup ("Closed · opens 07:00", "Closes at 22:00")
+- [x] Keseimbangan disetel ulang lewat simulasi seumur hidup: umur mati tetap 86–88, uang pegawai kembali ±$490rb
+- [x] **Checkpoint:** minggu terasa punya ritme kerja dan libur — 348 test
 
 ### D — Ruangan dalam gedung
 - [ ] Aset interior CC0 (izin user dulu)

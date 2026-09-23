@@ -1,8 +1,10 @@
 import { ACTIONS, findAction, type ActionDefinition } from '../data/actions';
 import { BALANCE } from '../data/balance';
-import { findFocus } from '../data/focuses';
+import { DEFAULT_FOCUS_ID, findFocus } from '../data/focuses';
+import { findJob } from '../data/jobs';
 import { LOCATIONS } from '../data/locations';
-import type { Needs, Stats, WorldState } from './types';
+import { withLogEntry, withMilestone } from './log';
+import type { EventLogEntry, Needs, Stats, WorldState } from './types';
 
 /**
  * One day, hour by hour (GDD §11). Pure functions over WorldState.
@@ -18,19 +20,40 @@ import type { Needs, Stats, WorldState } from './types';
  */
 
 const D = BALANCE.day;
+const W = BALANCE.work;
+
+/** Marks today in `doneToday` as a day off work taken without asking. */
+export const SKIPPED_WORK = 'skipped-work';
+
+/** Day 0 of every life is a Monday, so days 5 and 6 of each week are the weekend. */
+export function isWeekend(clockDay: number): boolean {
+  return clockDay % 7 >= 5;
+}
+
+/** "07:00", for messages written by the simulation. */
+export function hhmm(minute: number): string {
+  const wrapped = minute % (24 * 60);
+  return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
+}
 
 function clamp(value: number): number {
   return Math.min(BALANCE.statMax, Math.max(BALANCE.statMin, value));
 }
 
-/** Every focus except resting takes up the working day (GDD §11.1). */
-export function hasBlock(focusId: string): boolean {
-  return findFocus(focusId).restores !== true;
+/**
+ * Whether today has a 09:00-17:00 block at all (GDD §11.1, §11.3). Resting
+ * never does. An employee's weekend, or a day they skipped, does not either.
+ */
+export function blockToday(state: WorldState): boolean {
+  const focus = findFocus(state.character.focusId);
+  if (focus.restores) return false;
+  if (focus.worksJob && (isWeekend(state.clockDay) || state.doneToday.includes(SKIPPED_WORK))) return false;
+  return true;
 }
 
 /** The working day has not happened yet today. */
 export function blockPending(state: WorldState): boolean {
-  return hasBlock(state.character.focusId) && state.minuteOfDay < D.blockEnd;
+  return blockToday(state) && state.minuteOfDay < D.blockEnd;
 }
 
 /** When the current stretch of free time runs out, in minutes after midnight. */
@@ -91,8 +114,20 @@ function busy(state: WorldState): boolean {
   return state.deceased || state.pendingEvent !== null;
 }
 
+function place(locationId: string): (typeof LOCATIONS)[number] | undefined {
+  return LOCATIONS.find((l) => l.id === locationId);
+}
+
 function placeName(locationId: string): string {
-  return LOCATIONS.find((l) => l.id === locationId)?.label ?? locationId;
+  return place(locationId)?.label ?? locationId;
+}
+
+/** Why a place is closed at this minute, or null while it is open (GDD §11.4). */
+export function closedReason(locationId: string, minute: number): string | null {
+  const hours = place(locationId);
+  if (!hours) return null;
+  if (minute < hours.opens || minute >= hours.closes) return `Closed \u00b7 opens ${hhmm(hours.opens)}`;
+  return null;
 }
 
 /** Why an action cannot be done right now, in the player's words - or null. */
@@ -100,6 +135,10 @@ export function actionBlocker(state: WorldState, action: ActionDefinition): stri
   if (busy(state)) return 'Not now';
   if (state.character.location !== action.locationId) return `Only at the ${placeName(action.locationId)}`;
   if (!action.needs && state.doneToday.includes(action.id)) return 'Already done today';
+  const closed = closedReason(action.locationId, state.minuteOfDay);
+  if (closed) return closed;
+  const closes = place(action.locationId)?.closes ?? D.latest;
+  if (closes < D.latest && state.minuteOfDay + action.minutes > closes) return `Closes at ${hhmm(closes)}`;
   if (state.minuteOfDay + action.minutes > freeUntil(state)) {
     return blockPending(state) ? 'Not enough time before work' : 'Too late tonight';
   }
@@ -158,11 +197,69 @@ export function performAction(state: WorldState, actionId: string): WorldState {
  */
 export function startBlock(state: WorldState): WorldState {
   if (busy(state) || !blockPending(state)) return state;
+  const focus = findFocus(state.character.focusId);
+  const unwashed = focus.worksJob === true && state.character.needs.hygiene < D.lowNeed;
+
   const played = passTime(state, D.blockEnd - state.minuteOfDay, D.blockNeedsRate);
-  return {
-    ...played,
-    character: { ...played.character, location: findFocus(state.character.focusId).locationId },
-  };
+  const arrived = { ...played, character: { ...played.character, location: focus.locationId } };
+  return unwashed ? withStrike(arrived, W.unwashedStrike, 'Turned up to work unwashed. People noticed.') : arrived;
+}
+
+/** Whether skipping work is on offer right now: a working weekday, before it starts. */
+export function canSkipWork(state: WorldState): boolean {
+  return (
+    !busy(state) &&
+    state.character.career.type === 'job' &&
+    findFocus(state.character.focusId).worksJob === true &&
+    blockPending(state)
+  );
+}
+
+/**
+ * Takes the day off without asking (GDD §11.3). The day is free, it is not
+ * paid, and it leaves a mark. Marks fade; enough of them and the job is gone.
+ */
+export function skipWork(state: WorldState): WorldState {
+  if (!canSkipWork(state)) return state;
+  const skipped = { ...state, doneToday: [...state.doneToday, SKIPPED_WORK] };
+  return withStrike(skipped, 1, 'Skipped work today.');
+}
+
+/** Adds a mark against the job, with the warning and the sack when they come. */
+function withStrike(state: WorldState, amount: number, why: string): WorldState {
+  const career = state.character.career;
+  if (career.type !== 'job') return state;
+
+  const before = career.strikes ?? 0;
+  const strikes = before + amount;
+  const day = state.clockDay;
+  let eventLog = withLogEntry(state.eventLog, { day, tone: 'bad', text: why });
+  const job = findJob(career.jobId);
+
+  if (strikes >= W.fireAtStrikes) {
+    const fired: EventLogEntry = { day, tone: 'bad', text: `Fired from the ${job.title} job for missing work.` };
+    const focus = findFocus(state.character.focusId);
+    return {
+      ...state,
+      eventLog: withLogEntry(eventLog, fired),
+      milestones: withMilestone(state.milestones, fired),
+      character: {
+        ...state.character,
+        career: { type: 'none' },
+        focusId: focus.worksJob ? DEFAULT_FOCUS_ID : focus.id,
+      },
+    };
+  }
+
+  if (before < W.warnAtStrikes && strikes >= W.warnAtStrikes) {
+    eventLog = withLogEntry(eventLog, {
+      day,
+      tone: 'bad',
+      text: `Your boss has had a word about your attendance. Keep missing days and you will be let go.`,
+    });
+  }
+
+  return { ...state, eventLog, character: { ...state.character, career: { ...career, strikes } } };
 }
 
 /** What tonight costs tomorrow: bed hungry or thirsty, and every hour past midnight. */

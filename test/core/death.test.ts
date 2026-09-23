@@ -107,7 +107,8 @@ describe('death', () => {
   });
 
   it('exhaustion alone wears a body down but does not finish it', () => {
-    let state = world({ focusId: 'work', ageInDays: 0 });
+    // Studying, not working: since Phase 6 an employee rests every weekend.
+    let state = world({ focusId: 'study', ageInDays: 0 });
     state.character.stats.energy = 0;
 
     // Two years of running on empty, while still young enough that ageing

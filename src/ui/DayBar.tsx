@@ -1,4 +1,4 @@
-import { hasBlock } from '../core/day';
+import { blockToday, isWeekend } from '../core/day';
 import type { WorldState } from '../core/types';
 import { BALANCE } from '../data/balance';
 import { findFocus } from '../data/focuses';
@@ -23,11 +23,13 @@ const SKY_GRADIENT = `linear-gradient(90deg, ${SKY_BAND.map(([minute, colour]) =
 
 export function DayBar({ world, shownMinute }: { world: WorldState; shownMinute: number }): React.JSX.Element {
   const focus = findFocus(world.character.focusId);
-  const block = hasBlock(focus.id);
+  const block = blockToday(world);
   const blockDone = world.minuteOfDay >= D.blockEnd;
   const summary = block
     ? `${focus.label} 09:00 to 17:00${blockDone ? ', done' : ''}`
-    : 'A free day';
+    : focus.worksJob && isWeekend(world.clockDay)
+      ? 'The weekend, no work'
+      : 'A free day';
 
   return (
     <div className="daybar" role="img" aria-label={`Now ${clockTime(shownMinute)}. ${summary}.`}>

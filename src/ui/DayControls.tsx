@@ -1,4 +1,4 @@
-import { blockPending, hasBlock } from '../core/day';
+import { blockPending, blockToday, canSkipWork, isWeekend } from '../core/day';
 import type { WorldState } from '../core/types';
 import { BALANCE } from '../data/balance';
 import { findFocus } from '../data/focuses';
@@ -36,9 +36,11 @@ export function DayControls({ world }: { world: WorldState }): React.JSX.Element
         <p className="controls__hint">
           {working
             ? `${focus.label} runs 09:00–17:00. Until then the morning is yours.`
-            : hasBlock(focus.id)
+            : blockToday(world)
               ? `${focus.label} is done for today and counts when you sleep. The evening is yours.`
-              : 'A free day. Sleep when you are done.'}
+              : focus.worksJob && isWeekend(world.clockDay)
+                ? 'The weekend. No work today, and it counts as a rest day.'
+                : 'A free day. Sleep when you are done.'}
         </p>
       )}
 
@@ -60,6 +62,17 @@ export function DayControls({ world }: { world: WorldState }): React.JSX.Element
             onClick={() => gameStore.dispatch({ type: 'advanceDay' })}
           >
             Sleep <span className="btn__sub">next day</span>
+          </button>
+        )}
+        {canSkipWork(world) && (
+          <button
+            type="button"
+            className="btn btn--risky"
+            disabled={busy}
+            onClick={() => gameStore.dispatch({ type: 'skipWork' })}
+            title="The day is yours, but it is not paid and your boss will notice. Five marks and you are out."
+          >
+            Skip work
           </button>
         )}
         {working && (

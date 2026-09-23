@@ -51,7 +51,14 @@ export type FocusId = string;
  */
 export type CareerState =
   | { type: 'none' }
-  | { type: 'job'; jobId: string; tenureDays: number; level: number }
+  | {
+      type: 'job';
+      jobId: string;
+      tenureDays: number;
+      level: number;
+      /** Marks for missed work (GDD §11.3). Fade daily; absent means none. */
+      strikes?: number;
+    }
   | { type: 'business'; businessId: string; daysOpen: number; level: number }
   | {
       type: 'sports';
