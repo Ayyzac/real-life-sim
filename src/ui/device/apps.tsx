@@ -13,6 +13,7 @@ import { runTimed, useProgress } from '../progress';
 import { openTalk } from '../talk';
 import { gameStore } from '../useGame';
 import { closeDevice } from './device';
+import { Bank, Crypto, Stocks } from './finance';
 
 /**
  * The apps (GDD §12), as a list: adding an app = adding an entry here. `on`
@@ -203,4 +204,7 @@ export const APPS: readonly DeviceApp[] = [
   { id: 'weather', label: 'Weather', icon: '☂', on: 'both', Component: Weather },
   { id: 'taxi', label: 'Taxi', icon: '▣', on: 'phone', Component: Taxi },
   { id: 'delivery', label: 'Food', icon: '☕', on: 'both', Component: Delivery },
+  { id: 'bank', label: 'Bank', icon: '$', on: 'both', Component: Bank },
+  { id: 'stocks', label: 'Stocks', icon: '↗', on: 'both', Component: Stocks },
+  { id: 'crypto', label: 'Crypto', icon: '₿', on: 'both', Component: Crypto },
 ];

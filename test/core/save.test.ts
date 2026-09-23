@@ -311,4 +311,16 @@ describe('migrating an older save', () => {
     storage.data.set(SAVE_KEY, JSON.stringify({ ...world, schemaVersion: 6, character: oldCharacter }));
     expect(saves.load()?.character.deliveries).toEqual([]);
   });
+
+  it('opens an empty bank account and a market for an older save (v7 -> v8)', () => {
+    const world = createWorld({ name: 'Saver', backgroundId: 'athlete', seed: 9 });
+    const { market: _m, portfolio: _p, bank: _b, ...oldWorld } = world;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...oldWorld, schemaVersion: 7, clockDay: 40 }));
+
+    const loaded = saves.load();
+    expect(loaded?.bank).toEqual({ savings: 0, loan: 0 });
+    expect(loaded?.portfolio).toEqual({});
+    expect(loaded?.market.hour).toBe(40 * 24 + 7);
+    expect(Object.keys(loaded?.market.prices ?? {}).length).toBeGreaterThan(5);
+  });
 });

@@ -12,6 +12,7 @@ import { isGymMember } from './gym';
 import { buyItem, consumeItem } from './bag';
 import { caughtInRain } from './weather';
 import { deliverDue, orderFood, takeTaxi } from './phone';
+import { advanceMarket, bankMove, buyAsset, sellAsset, type BankMove } from './finance';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -51,6 +52,9 @@ export type GameIntent =
   | { type: 'talk'; personId: string; style: ReplyStyle; remote?: boolean }
   | { type: 'taxi'; locationId: LocationId }
   | { type: 'orderFood'; itemId: string }
+  | { type: 'buyAsset'; assetId: string; dollars: number }
+  | { type: 'sellAsset'; assetId: string; share: number }
+  | { type: 'bank'; move: BankMove; amount: number }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
   | { type: 'greetStranger'; look: number }
@@ -96,7 +100,9 @@ export class GameStore {
     const reduced = this.reduce(intent);
     // Food ordered by phone arrives whenever the clock passes its time,
     // whatever moved the clock.
-    const next = reduced ? deliverDue(reduced) : reduced;
+    // Markets move by the hour in the same way.
+    // Only after a real change: a refused click must leave the world untouched.
+    const next = reduced && reduced !== before ? advanceMarket(deliverDue(reduced)) : reduced;
     if (next === before) return;
 
     this.state = next;
@@ -308,6 +314,15 @@ export class GameStore {
 
       case 'orderFood':
         return state ? orderFood(state, intent.itemId) : state;
+
+      case 'buyAsset':
+        return state ? buyAsset(state, intent.assetId, intent.dollars) : state;
+
+      case 'sellAsset':
+        return state ? sellAsset(state, intent.assetId, intent.share) : state;
+
+      case 'bank':
+        return state ? bankMove(state, intent.move, intent.amount) : state;
 
       case 'askOut':
         return state ? askOut(state, intent.personId) : state;

@@ -737,6 +737,18 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Pesan antar | `character.deliveries: {itemId, at}[]`, `at` = menit sejak hidup mulai. `deliverDue()` dijalankan store setelah **setiap** perubahan, jadi tiba lewat detak, aksi, atau tidur. Harga ×1,5 + $3; slot tas dipesan saat order. | Satu tempat, apa pun yang memajukan jam. Schema → 7. |
 | Berita = turunan hash | `headlinesFor()` (`src/core/news.ts`) + template di `src/data/news.ts`: cuaca, diskon terbaik, kabar kenalan, dua berita kota. | Membaca berita tidak mengubah apa pun. |
 
+#### Fase 7F — bank, saham, crypto (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Harga = hash, bukan RNG | `nextPrice()` di `src/core/finance.ts`: log-return normal dari hash (id karakter, aset, hari/jam). Saham bergerak di tengah malam menuju hari kerja; crypto tiap jam, drift 0. | RNG simulasi tidak tersentuh, jadi semua test seumur hidup identik. Harga yang sama setiap save dimuat. |
+| **Hash FNV perlu diaduk** | `normalFrom()` memakai finaliser murmur3 di atas `hashText`. | Test distribusi menangkapnya: kunci yang cuma beda jam menghasilkan rata-rata +0,054 (7× galat baku) — cukup untuk memberi crypto tren naik diam-diam. `hashText` sendiri tidak diubah supaya wajah dan jadwal tetap sama. |
+| Pasar mengejar jam setelah perubahan | `advanceMarket()` dijalankan store setelah setiap perubahan **nyata** (sama dengan antar makanan); klik yang ditolak tidak mengubah apa pun. Skip seminggu = 168 langkah jam. | Satu tempat, apa pun yang memajukan jam. `applyDailyRules` tetap bersih dari pasar. |
+| Bank di aturan harian | `bankOneDay()`: bunga tabungan 2%/th, pinjaman 18%/th, cicilan min $5 atau 1%/hari dari kas (boleh bikin utang, seperti tagihan lain). Batas pinjaman $5.000. | Tagihan harian tinggal di tempat yang sama dengan biaya hidup dan gym. |
+| Puncak kekayaan = net worth | `peakMoney` kini kas + tabungan + portofolio − pinjaman (`netWorth()`). | Menabung di bank tidak boleh terlihat seperti jatuh miskin di Life Summary. Tanpa bank/portofolio angkanya sama persis dengan sebelumnya. |
+| Fee 0,5% saham, 1% crypto, minimal $10 | Beli tidak bisa pakai utang. | Bolak-balik trading pelan-pelan merugi, sesuai kenyataan. |
+| Schema → 8 | `market`, `portfolio`, `bank` di `WorldState`. Migrasi membuka pasar di jam save itu; aset baru di update mendatang otomatis dapat harga awal. | |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

@@ -7,6 +7,7 @@ import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
 import { partnerOf, relationshipsOneDay, rollRelationships } from './relationships';
 import { workOneDay } from './careers/job';
 import { gymRenewal } from './gym';
+import { bankOneDay, netWorth } from './finance';
 import { ageInYears } from './character';
 import { bedtimeCost, isWeekend, morningNeeds, SKIPPED_WORK } from './day';
 import { withLogEntry, withMilestone } from './log';
@@ -196,6 +197,10 @@ export function applyDailyRules(state: WorldState): WorldState {
   const gym = gymRenewal(character, state.clockDay);
   stats.money -= gym.cost;
 
+  // Savings grow a little; a loan grows and is paid down from cash (GDD §12).
+  const banked = bankOneDay(state.bank);
+  stats.money -= banked.payment;
+
   // Marks for missed work fade on their own (GDD §11.3).
   if (career.type === 'job' && (career.strikes ?? 0) > 0) {
     career = { ...career, strikes: Math.max(0, (career.strikes ?? 0) - BALANCE.work.strikeFadePerDay) };
@@ -228,6 +233,7 @@ export function applyDailyRules(state: WorldState): WorldState {
     people: social.people,
     eventLog,
     milestones,
+    bank: banked.bank,
     character: {
       ...character,
       needs: morningNeeds(),
@@ -241,7 +247,7 @@ export function applyDailyRules(state: WorldState): WorldState {
 
   return checkDeath({
     ...afterRules,
-    peakMoney: Math.max(afterRules.peakMoney, afterRules.character.stats.money),
+    peakMoney: Math.max(afterRules.peakMoney, netWorth(afterRules)),
   });
 }
 
@@ -342,7 +348,7 @@ function simulateOneDay(state: WorldState): WorldState {
   next = {
     ...next,
     rng: rng.snapshot(),
-    peakMoney: Math.max(next.peakMoney, next.character.stats.money),
+    peakMoney: Math.max(next.peakMoney, netWorth(next)),
   };
 
   return checkDeath(next);
@@ -395,14 +401,14 @@ export function resolveEvent(state: WorldState, choiceId: string): WorldState {
     text: choice.outcome,
   };
 
-  const resolved: WorldState = checkDeath({
+  const answered: WorldState = {
     ...state,
     character,
     eventLog: withLogEntry(state.eventLog, entry),
     milestones: event.milestone ? withMilestone(state.milestones, entry) : state.milestones,
     pendingEvent: null,
-    peakMoney: Math.max(state.peakMoney, character.stats.money),
-  });
+  };
+  const resolved: WorldState = checkDeath({ ...answered, peakMoney: Math.max(state.peakMoney, netWorth(answered)) });
 
   return advanceDays(resolved, pending.daysRemaining);
 }

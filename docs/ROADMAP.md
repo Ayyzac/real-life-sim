@@ -154,7 +154,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 - [x] **C** — Supermarket + tas (inventory), diskon harian — 410 test
 - [x] **D** — Hujan: jalan sepi, payung (prakiraan menyusul di app HP, 7E) — 416 test
 - [x] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar — 426 test
-- [ ] **F** — Bank, saham, crypto
+- [x] **F** — Bank, saham, crypto — 436 test
 - [ ] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game)
 - [ ] **H** — Casino + slot online
 - [ ] **I** — Obrolan pohon dialog per topik

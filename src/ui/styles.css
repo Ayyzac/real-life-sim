@@ -1463,3 +1463,59 @@ body {
   background: var(--panel-2);
   border: 1px solid var(--line);
 }
+
+.amount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.amount input {
+  font: inherit;
+  width: 7em;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.asset {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.asset__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.asset__price {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.asset__body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asset__held {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.spark {
+  flex: none;
+  width: 60px;
+  height: 20px;
+}

@@ -300,6 +300,25 @@ export const BALANCE = {
     delivery: { markup: 1.5, fee: 3, minutes: 30 },
   },
 
+  /**
+   * The bank and the markets (GDD §12). Savings earn a little, a loan costs a
+   * lot more, and every trade pays a fee - so trading back and forth is a
+   * slow way to lose money, as it should be.
+   */
+  bank: {
+    savingsRate: 0.02,
+    loanRate: 0.18,
+    maxLoan: 5_000,
+    /** Each day at least this, or this share of the loan, whichever is more. */
+    minPayment: 5,
+    paymentShare: 0.01,
+    stockFee: 0.005,
+    cryptoFee: 0.01,
+    minTrade: 10,
+    /** Daily closing prices kept for the charts. */
+    historyDays: 30,
+  },
+
   weather: {
     rainChance: 0.25,
     earliestHour: 6,

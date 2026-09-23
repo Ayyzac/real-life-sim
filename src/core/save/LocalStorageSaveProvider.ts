@@ -8,6 +8,8 @@ import { DEFAULT_LIFESTYLE_ID, LIFESTYLES } from '../../data/lifestyles';
 import { LOCATIONS } from '../../data/locations';
 import { POSSESSIONS } from '../../data/possessions';
 import { ITEMS } from '../../data/items';
+import { ASSETS } from '../../data/markets';
+import { startingMarket } from '../finance';
 import { SPORTS } from '../../data/sports';
 import type { CareerState, Character } from '../types';
 import type { WorldState } from '../types';
@@ -119,12 +121,13 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   if (!character) return null;
 
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
-  // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag; 6 -> 7 deliveries. Every field is filled if missing, so the same path
+  // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag; 6 -> 7 deliveries;
+  // 7 -> 8 the bank and the markets. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
     return {
-      ...withPhase6World(withPhase5World(parsed)),
+      ...withPhase7World(withPhase6World(withPhase5World(parsed))),
       schemaVersion: SCHEMA_VERSION,
       character: withPhase7Fields(withPhase6Fields(withPhase5Fields(character))),
     };
@@ -176,6 +179,25 @@ function withPhase7Fields(character: Character): Character {
   };
 }
 
+/**
+ * No money in the bank and nothing on the markets before Phase 7F. Every
+ * asset gets a price, including ones added after this save was made.
+ */
+function withPhase7World(world: WorldState): WorldState {
+  const fresh = startingMarket(world);
+  const market = world.market && typeof world.market.hour === 'number' ? world.market : fresh;
+  return {
+    ...world,
+    market: {
+      hour: market.hour,
+      prices: { ...fresh.prices, ...market.prices },
+      history: { ...fresh.history, ...market.history },
+    },
+    portfolio: world.portfolio && typeof world.portfolio === 'object' ? world.portfolio : {},
+    bank: world.bank ?? { savings: 0, loan: 0 },
+  };
+}
+
 function withPhase6Fields(character: Character): Character {
   return { ...character, needs: character.needs ?? { ...BALANCE.day.morningNeeds } };
 }
@@ -222,6 +244,7 @@ export function withKnownIds(state: WorldState): WorldState {
 
   return {
     ...state,
+    portfolio: Object.fromEntries(Object.entries(state.portfolio).filter(([id]) => known(ASSETS, id))),
     pendingEvent:
       state.pendingEvent && known(EVENTS, state.pendingEvent.eventId) ? state.pendingEvent : null,
     character: {

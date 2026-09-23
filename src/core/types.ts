@@ -192,6 +192,26 @@ export interface Memory {
   day: number;
 }
 
+/** Prices on the phone's markets (GDD §12), moved from the hour, never the RNG. */
+export interface Market {
+  prices: Record<string, number>;
+  /** Closing prices, oldest first, for the charts. */
+  history: Record<string, number[]>;
+  /** The hour of the life (clockDay * 24 + hour) prices are up to date to. */
+  hour: number;
+}
+
+export interface Holding {
+  units: number;
+  /** Dollars paid in, for showing gain or loss. */
+  cost: number;
+}
+
+export interface Bank {
+  savings: number;
+  loan: number;
+}
+
 export interface WorldState {
   /** Bumped whenever the saved shape changes, so old saves can be migrated. */
   schemaVersion: number;
@@ -224,6 +244,10 @@ export interface WorldState {
   memories: Memory[];
   /** Non-null while an event is waiting for the player to choose. */
   pendingEvent: PendingEvent | null;
+  market: Market;
+  /** What the player owns on the markets, by asset id. */
+  portfolio: Record<string, Holding>;
+  bank: Bank;
   deceased: boolean;
   /** Plain-language reason, set at the moment of death. */
   deathCause?: string;

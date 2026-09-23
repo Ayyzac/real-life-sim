@@ -5,15 +5,16 @@ import { DEFAULT_LIFESTYLE_ID } from '../data/lifestyles';
 import { decodeLook, encodeLook } from './look';
 import { createRng } from './rng';
 import { startingPeople } from './relationships';
+import { startingMarket } from './finance';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
- * 7 since Phase 7E (deliveries); 6 added the bag, 5 the gym membership,
- * 4 the time of day and needs.
+ * 8 since Phase 7F (bank and markets); 7 added deliveries, 6 the bag, 5 the
+ * gym membership, 4 the time of day and needs.
  * Older saves back to version 2 are MIGRATED rather than thrown away - see
  * LocalStorageSaveProvider.
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 export interface NewGameOptions {
   name: string;
@@ -96,6 +97,9 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
     memories: [],
     pendingEvent: null,
     deceased: false,
+    market: startingMarket({ clockDay: 0, minuteOfDay: BALANCE.day.wake }),
+    portfolio: {},
+    bank: { savings: 0, loan: 0 },
   };
 }
 
