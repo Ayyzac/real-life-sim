@@ -14,7 +14,10 @@ Simulasi hidup kota modern, sudut pandang top-down 2D pixel art, di mana pemain 
 4. Sistem menjalankan: perubahan stat otomatis (gaji masuk, biaya hidup keluar, energi berkurang, dst.), lalu mengecek apakah ada **event acak** yang terpicu (sakit, promosi, ajakan teman, dst.), lalu menampilkan hasilnya ke pemain.
 5. Kembali ke langkah 1. Berulang sampai karakter meninggal (usia tua, sakit parah, atau kecelakaan — lihat §6).
 
-Waktu **tidak pernah maju sendiri** tanpa pemain menekan tombol (lihat `CLAUDE.md`).
+~~Waktu **tidak pernah maju sendiri** tanpa pemain menekan tombol.~~ — **dicabut
+23 Sep 2026** atas permintaan user: sejak Fase 7 jam berjalan sendiri (1 jam
+game = 1 menit nyata), dengan pause dan kecepatan. Lihat §12 dan `CLAUDE.md`
+aturan 3.
 
 **Sejak Fase 6 (keputusan user, 23 Sep 2026):** satu hari juga bisa dimainkan
 **per jam** — makan, minum, mandi, ngobrol, belanja, masing-masing makan waktu.

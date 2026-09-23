@@ -58,6 +58,11 @@ export function runTimed(label: string, minutes: number, intent: GameIntent): vo
   }, durationMs);
 }
 
+/** Something is being timed right now; the clock waits for it. */
+export function timing(): boolean {
+  return current !== null;
+}
+
 export function useProgress(): Progress | null {
   return useSyncExternalStore(subscribe, () => current);
 }

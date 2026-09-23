@@ -13,7 +13,8 @@ import { SidePanel } from './SidePanel';
 import { TalkDialog } from './TalkDialog';
 import { useTalk } from './talk';
 import { play, preload, soundFor } from './sound';
-import { useGame } from './useGame';
+import { gameStore, useGame } from './useGame';
+import { startClock, useHoldClock } from './clock';
 import type { WorldState } from '../core/types';
 
 /**
@@ -44,6 +45,8 @@ function useChangeReport(world: WorldState | null): Report | null {
   useEffect(() => {
     const before = previous.current;
     previous.current = world;
+    // The clock ticking over is not news; falling asleep at 02:00 is.
+    if (world && before && gameStore.causeOf(world) === 'tick' && world.clockDay === before.clockDay) return;
     const next = changesBetween(before, world);
     if (next) setReport(next);
     else if (!world || before?.character.id !== world.character.id) setReport(null);
@@ -57,6 +60,9 @@ export function App(): React.JSX.Element {
   useSound(world);
   const report = useChangeReport(world);
   const talking = useTalk();
+  useHoldClock('talk', talking !== null);
+
+  useEffect(() => startClock(gameStore), []);
 
   if (world === null) {
     return (

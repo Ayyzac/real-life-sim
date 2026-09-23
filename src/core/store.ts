@@ -13,7 +13,7 @@ import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent } from './clock';
-import { performAction, skipWork, startBlock } from './day';
+import { performAction, skipWork, startBlock, tick } from './day';
 import { withLogEntry, withMilestone } from './log';
 import { createWorld, type NewGameOptions } from './character';
 import { BALANCE } from '../data/balance';
@@ -39,6 +39,7 @@ import type { Character, FocusId, LocationId, WorldState } from './types';
 export type GameIntent =
   | { type: 'newGame'; name: string; backgroundId: string; appearanceRow?: number; look?: number; seed?: number }
   | { type: 'advanceDay' }
+  | { type: 'tick'; minutes: number }
   | { type: 'advanceWeek' }
   | { type: 'doAction'; actionId: string }
   | { type: 'startBlock' }
@@ -84,17 +85,34 @@ export class GameStore {
   subscribe = (listener: () => void): (() => void) => this.bus.on('changed', listener);
 
   dispatch = (intent: GameIntent): void => {
+    const before = this.state;
     const next = this.reduce(intent);
-    if (next === this.state) return;
+    if (next === before) return;
 
     this.state = next;
+    if (next) this.causes.set(next, intent.type);
     // Autosave on every change (ARCHITECTURE §7). One write per player action
     // rather than one per simulated day - a week is 7 days but still one click.
-    if (next) this.saves.save(next);
-    else this.saves.clear();
+    // The running clock is the exception: it changes the world every second,
+    // so it is written once per game hour, plus whenever the page goes away.
+    if (!next) this.saves.clear();
+    else if (intent.type !== 'tick' || !before || hourOf(before) !== hourOf(next)) this.saves.save(next);
 
     this.bus.emit('changed', next);
   };
+
+  /** Writes the current world now - for when the page is closing. */
+  flush = (): void => {
+    if (this.state) this.saves.save(this.state);
+  };
+
+  /**
+   * Which intent produced this world, if it came from here. Lets a screen
+   * tell the clock ticking over from something the player did.
+   */
+  causeOf = (world: WorldState): GameIntent['type'] | undefined => this.causes.get(world);
+
+  private readonly causes = new WeakMap<WorldState, GameIntent['type']>();
 
   private reduce(intent: GameIntent): WorldState | null {
     const state = this.state;
@@ -232,6 +250,13 @@ export class GameStore {
 
       case 'advanceWeek':
         return state ? advanceWeek(state) : state;
+
+      case 'tick': {
+        if (!state) return state;
+        const next = tick(state, intent.minutes);
+        // 02:00 is as late as it goes, the same as for an action.
+        return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
+      }
 
       case 'doAction': {
         if (!state) return state;
@@ -479,6 +504,10 @@ export class GameStore {
       }
     }
   }
+}
+
+function hourOf(world: WorldState): number {
+  return world.clockDay * 100 + Math.floor(world.minuteOfDay / 60);
 }
 
 /**

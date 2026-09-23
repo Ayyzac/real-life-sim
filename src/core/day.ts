@@ -154,6 +154,19 @@ export function actionsHere(state: WorldState): readonly ActionDefinition[] {
 }
 
 /**
+ * The clock running on its own (GDD §12): up to `minutes` pass, but never
+ * past the next thing that has to happen - the start of the working day, or
+ * 02:00. At 09:00 it simply stops until the player goes to work or skips it.
+ *
+ * Whatever drives the clock lives outside the core (src/ui/clock.ts); this
+ * only says what a stretch of time does.
+ */
+export function tick(state: WorldState, minutes: number): WorldState {
+  if (busy(state)) return state;
+  return passTime(state, Math.min(minutes, freeUntil(state) - state.minuteOfDay));
+}
+
+/**
  * Does one thing from src/data/actions.ts. The time passes first, then the
  * result lands - you are fed at the end of the meal, not the start.
  */

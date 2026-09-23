@@ -72,7 +72,8 @@ export class InteriorScene extends Phaser.Scene {
   private highlight?: Phaser.GameObjects.Rectangle;
   private tipText?: Phaser.GameObjects.Text;
   private unsubscribe?: () => void;
-  private lastTime = -1;
+  /** Who was here last time the room was drawn, so the running clock does not redraw it every second. */
+  private lastHere = '';
 
   constructor(
     private readonly store: GameStore,
@@ -125,7 +126,7 @@ export class InteriorScene extends Phaser.Scene {
       .setVisible(false);
 
     this.placeVisitors(world);
-    this.lastTime = timeKey(world);
+    this.lastHere = whoIsHere(world, this.locationId).map((person) => person.id).join();
 
     const camera = this.cameras.main;
     camera.setZoom(ROOM_ZOOM);
@@ -376,9 +377,10 @@ export class InteriorScene extends Phaser.Scene {
       return;
     }
 
-    const time = timeKey(world);
-    if (time !== this.lastTime) {
-      this.lastTime = time;
+    // The clock runs every second now; redraw only when somebody comes or goes.
+    const here = whoIsHere(world, this.locationId).map((person) => person.id).join();
+    if (here !== this.lastHere) {
+      this.lastHere = here;
       this.placeVisitors(world);
     }
   };
@@ -394,8 +396,4 @@ export class InteriorScene extends Phaser.Scene {
 
 function centre(tile: number): number {
   return tile * TILE_SIZE + TILE_SIZE / 2;
-}
-
-function timeKey(world: WorldState): number {
-  return world.clockDay * 10_000 + world.minuteOfDay;
 }

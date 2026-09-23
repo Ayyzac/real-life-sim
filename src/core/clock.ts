@@ -21,7 +21,8 @@ import type { Attributes, EventLogEntry, Stats, WorldState } from './types';
  * That keeps the state serialisable, makes tests trivial, and lets the React
  * layer detect changes by identity instead of deep comparison.
  *
- * Time NEVER advances on its own. These are called from a button press only
+ * Whole days only pass when the player sleeps or skips; the running clock
+ * within a day lives in src/core/day.ts and is driven from the UI
  * (CLAUDE.md rule 3).
  *
  * A week can STOP PART-WAY. When an event needs the player to decide, the

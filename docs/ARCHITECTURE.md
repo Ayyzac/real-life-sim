@@ -43,6 +43,10 @@ Dokumen ini menjabarkan `CLAUDE.md` §"Aturan arsitektur inti" menjadi struktur 
   ke 07:00. Waktu yang di-skip tidak menurunkan kebutuhan — itulah yang membuat
   autopilot tetap "hidup wajar" dan semua test keseimbangan seumur hidup tetap sah.
   Aturan mainnya di `GDD.md` §11.
+- **Sejak Fase 7:** jam juga maju sendiri. `src/ui/clock.ts` (lapisan UI, satu-satunya
+  timer di proyek) mengirim intent `{ type: 'tick', minutes }`; core menjalankannya
+  lewat `tick()` di `day.ts`, yang berhenti sendiri di 09:00 (blok belum jalan) dan
+  tidur otomatis di 02:00. Core tetap tanpa timer.
 
 ## 3. Konten sebagai data
 
@@ -682,6 +686,20 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Tombol Join/Cancel di tab Here, bukan furnitur | Sama-sama satu klik; furnitur gym tetap menampilkan "Members only". | Ponytail: jalur klik furnitur hanya kenal aksi, menambah jenis kedua tidak sepadan. |
 | Migrasi v4 → 5 | `gymPaidUntil: null`; yang sedang berfokus Exercise kembali ke Rest. | Tidak ada yang didaftarkan dan ditagih tanpa ditanya. Pencarian fokus memakai `FOCUSES.find`, bukan `findFocus` yang melempar error dan akan menghapus save. |
 | Simulasi atlet membayar gym | `liveAsAthlete` jadi member selama berfokus Exercise. | Supaya biaya gym masuk angka seumur hidup. Semua test keseimbangan tetap lolos tanpa disetel. |
+
+#### Fase 7B — jam berjalan sendiri (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Satu timer, di UI | `startClock(store)` di `src/ui/clock.ts`: `setInterval` 250 ms, `minutesDue()` murni mengubah waktu nyata jadi menit game (sisa dibawa ke detak berikutnya). Langkah dibatasi 1 detik nyata. | Tab yang macet atau debugger tidak boleh menumpahkan satu jam sekaligus. |
+| `tick()` di core berhenti sendiri | Dipotong di `freeUntil()`; 02:00 → tidur lewat store (pola `doAction`). | Pukul 09:00 tidak butuh modal khusus: jam cukup berhenti, dan tombol "Go to work"/"Skip work" yang sudah ada muncul dengan petunjuk "The clock waits". Ponytail: nol komponen baru. |
+| Penahan jam = daftar alasan | `holdClock`/`useHoldClock(reason, active)`. Obrolan menahan jam; aksi berdurasi (`timing()`), event yang menunggu, dan tab tersembunyi dicek langsung. | HP, laptop, mini-game, casino nanti tinggal mendaftar satu alasan. |
+| Laporan "apa yang berubah" mengabaikan detak | `GameStore.causeOf(world)` (WeakMap, bukan bagian save). Tertidur jam 02:00 tetap dilaporkan. | Tanpa ini laporan "1 min, hunger −0" muncul tiap detik. |
+| Save per jam game | `tick` menyimpan hanya saat jam berganti; `flush()` saat `pagehide` / tab disembunyikan. | Paling lama 1 jam game (1 menit nyata) hilang kalau browser crash. |
+| Ruangan menggambar ulang pengunjung hanya saat berubah | Kunci = daftar id orang di ruangan, bukan jam. | Jam berubah tiap detik; menghapus-membuat sprite tiap detik itu boros. |
+| Kecepatan di localStorage sendiri | `real-life-sim:speed`, seperti volume. | Milik perangkat, bukan milik karakter. |
+
+**Diuji di browser:** pane sesi ini `document.hidden: true`, jadi jam **benar berhenti sendiri** di sana. Dengan `hidden` dipaksa `false` lewat konsol: 1× ≈ 1 menit game per detik, Pause menahan, 4× ≈ 4 menit/detik, pukul 02:00 tidur otomatis dengan laporan "Yesterday", dan pukul 09:00 jam berhenti dengan status "Waiting for you".
 
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 

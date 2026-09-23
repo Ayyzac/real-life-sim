@@ -7,8 +7,9 @@ import { runTimed, useProgress } from './progress';
 import { gameStore } from './useGame';
 
 /**
- * The only things that move time (CLAUDE.md rule 3): start the working day,
- * sleep, or skip a week. There is no timer anywhere in this project.
+ * The big moves in a day: start the working day, sleep, or skip a week. The
+ * clock runs on its own in between (src/ui/clock.ts) and stops at 09:00 until
+ * the player picks one of these (GDD §12).
  *
  * The main button follows the day. Before work it starts work; after, it
  * goes to bed. Skipping a week is always there for the player who would
@@ -27,7 +28,9 @@ export function DayControls({ world }: { world: WorldState }): React.JSX.Element
         <ProgressBar />
       ) : (
         <p className="controls__hint">
-          {working
+          {working && world.minuteOfDay >= BALANCE.day.blockStart
+            ? `It is 09:00. The clock waits until you go${canSkipWork(world) ? ' or skip it' : ''}.`
+            : working
             ? `${focus.label} runs 09:00–17:00. Until then the morning is yours.`
             : blockToday(world)
               ? `${focus.label} is done for today and counts when you sleep. The evening is yours.`

@@ -150,7 +150,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 `docs/GDD.md` §7 dan §12, keputusan teknis di `docs/ARCHITECTURE.md` §11.
 
 - [x] **A** — Rumah kosong (keluarga datang hanya kalau diundang) + membership gym — 393 test
-- [ ] **B** — Jam berjalan sendiri: pause, 1×/2×/4×, pilihan pukul 09:00
+- [x] **B** — Jam berjalan sendiri: pause, 1×/2×/4×, berhenti menunggu pukul 09:00 — 402 test
 - [ ] **C** — Supermarket + tas (inventory), diskon harian
 - [ ] **D** — Hujan: jalan sepi, payung, prakiraan
 - [ ] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar

@@ -795,6 +795,41 @@ body {
   letter-spacing: 0.14em;
 }
 
+.clockctl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.clockctl__btn {
+  font: inherit;
+  font-size: 0.7rem;
+  min-width: 28px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.clockctl__btn:hover {
+  border-color: var(--accent);
+}
+
+.clockctl__btn--on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.clockctl__status {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-left: 4px;
+  min-width: 7em;
+}
+
 .hud__money {
   justify-self: end;
   font-size: 1.35rem;

@@ -14,6 +14,8 @@ import { DayBar } from './DayBar';
 import { clockTime, dayName, money, weekNumber } from './format';
 import { Portrait } from './Portrait';
 import { useShownMinute } from './progress';
+import { SPEEDS, setSpeed, togglePause, useClock } from './clock';
+import { blockPending, freeUntil } from '../core/day';
 
 /**
  * Everything about the character at a glance, always on screen: who, when,
@@ -83,6 +85,40 @@ function businessWeek(character: Character): { name: string; profit: number } | 
   return { name: business.name, profit: profitPerDay(business, career.level, attended) * DAYS_PER_WEEK };
 }
 
+/** Pause and speed for the running clock (GDD §12), and why it is stopped. */
+function ClockControls({ world }: { world: WorldState }): React.JSX.Element {
+  const { paused, speed, held } = useClock();
+  const atWork = blockPending(world) && world.minuteOfDay >= freeUntil(world);
+  const status = paused ? 'Paused' : atWork || held ? 'Waiting for you' : `${speed}×`;
+
+  return (
+    <div className="clockctl" role="group" aria-label="Clock">
+      <button
+        type="button"
+        className={`clockctl__btn ${paused ? 'clockctl__btn--on' : ''}`}
+        onClick={togglePause}
+        aria-pressed={paused}
+        title={paused ? 'Let the clock run' : 'Stop the clock'}
+      >
+        {paused ? '\u25B6' : '\u275A\u275A'}
+      </button>
+      {SPEEDS.map((option) => (
+        <button
+          type="button"
+          key={option}
+          className={`clockctl__btn ${!paused && speed === option ? 'clockctl__btn--on' : ''}`}
+          onClick={() => setSpeed(option)}
+          aria-pressed={!paused && speed === option}
+          title={`One game hour every ${60 / option} real seconds`}
+        >
+          {option}×
+        </button>
+      ))}
+      <span className="clockctl__status">{status}</span>
+    </div>
+  );
+}
+
 export function Hud({ world }: { world: WorldState }): React.JSX.Element {
   const { character, people } = world;
   const { stats, needs, attributes } = character;
@@ -109,6 +145,7 @@ export function Hud({ world }: { world: WorldState }): React.JSX.Element {
           <span className="hud__date">
             {dayName(world.clockDay, shownMinute)} &middot; Week {weekNumber(world.clockDay)}
           </span>
+          <ClockControls world={world} />
         </div>
 
         <div className={`hud__money ${stats.money < 0 ? 'hud__money--debt' : ''}`}>{money(stats.money)}</div>

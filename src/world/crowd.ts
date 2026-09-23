@@ -8,9 +8,9 @@ import { POSE, VIEW, lookFrame } from './looks';
 /**
  * The people and traffic that make the town look inhabited.
  *
- * Decoration only. Nothing here reads or writes simulation state, so it does
- * not break CLAUDE.md rule 3: that rule stops the *simulation* running on a
- * timer, and these are render frames, the same as any animation.
+ * Decoration only. Nothing here reads or writes simulation state: these are
+ * render frames, the same as any animation. The only thing allowed to move
+ * the simulation on a timer is src/ui/clock.ts (CLAUDE.md rule 3).
  *
  * Everyone moves in a straight line along a fixed row and wraps around at the
  * edge. No pathfinding, no collisions - a crowd that has to think is a crowd
