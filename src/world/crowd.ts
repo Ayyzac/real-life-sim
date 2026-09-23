@@ -30,11 +30,27 @@ interface Walker {
   view?: number;
   /** So forty people do not all step in time. */
   phase: number;
+  /** People only: how they look, so a hello can carry the face over. */
+  look?: number;
+  /** A name, once the player has got to know them. Follows them about. */
+  label?: Phaser.GameObjects.Text;
+}
+
+/** A stranger under the pointer. */
+export interface Stranger {
+  index: number;
+  look: number;
+  x: number;
+  y: number;
 }
 
 export interface Crowd {
   update(deltaMs: number): void;
   destroy(): void;
+  /** The person walking at this point of the map, if any. */
+  strangerAt(x: number, y: number): Stranger | null;
+  /** Puts a name over someone the player has just met. */
+  name(index: number, text: string, resolution: number): void;
 }
 
 export function createCrowd(
@@ -65,6 +81,7 @@ export function createCrowd(
       speed: between(PERSON_SPEED.min, PERSON_SPEED.max) * (goingRight ? 1 : -1),
       view,
       phase: rng() * STEP_MS * 2,
+      look,
     });
   }
 
@@ -100,11 +117,42 @@ export function createCrowd(
         if (walker.view !== undefined && walker.object instanceof Phaser.GameObjects.Image) {
           walker.object.setFrame(lookFrame(walker.view, stepPose(elapsed + walker.phase)));
         }
+        walker.label?.setPosition(walker.object.x, walker.object.y - 9);
       }
     },
     destroy(): void {
-      for (const walker of walkers) walker.object.destroy();
+      for (const walker of walkers) {
+        walker.object.destroy();
+        walker.label?.destroy();
+      }
       walkers.length = 0;
+    },
+    strangerAt(x: number, y: number): Stranger | null {
+      const index = walkers.findIndex(
+        (walker) =>
+          walker.look !== undefined &&
+          !walker.label &&
+          Math.abs(walker.object.x - x) <= TILE_SIZE / 2 &&
+          Math.abs(walker.object.y - y) <= TILE_SIZE / 2,
+      );
+      const walker = walkers[index];
+      if (!walker || walker.look === undefined) return null;
+      return { index, look: walker.look, x: walker.object.x, y: walker.object.y };
+    },
+    name(index: number, text: string, resolution: number): void {
+      const walker = walkers[index];
+      if (!walker || walker.label) return;
+      walker.label = scene.add
+        .text(walker.object.x, walker.object.y - 9, text, {
+          fontFamily: 'monospace',
+          fontSize: '6px',
+          color: '#ffffff',
+          backgroundColor: '#0e1119aa',
+          padding: { x: 1, y: 0 },
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(depth + 0.5)
+        .setResolution(resolution);
     },
   };
 }

@@ -209,20 +209,25 @@ describe('rollRelationships', () => {
 });
 
 describe('marriageCandidates', () => {
-  it('offers only people you are close enough to', () => {
+  it('offers only the person you are seeing, once close enough', () => {
     const rng = createRng(19);
-    const close = makePerson(rng, 'friend', 30, R.marriageClosenessRequired);
-    const distant = makePerson(rng, 'friend', 30, R.marriageClosenessRequired - 1);
+    const close = makePerson(rng, 'dating', 30, R.marriageClosenessRequired);
+    const distant = makePerson(rng, 'dating', 30, R.marriageClosenessRequired - 1);
 
     expect(marriageCandidates([close, distant]).map((p) => p.id)).toEqual([close.id]);
   });
 
   it('never offers somebody too young to marry', () => {
     const rng = createRng(101);
-    const young = makePerson(rng, 'friend', R.marriageMinAgeYears - 1, 100);
-    const grown = makePerson(rng, 'friend', R.marriageMinAgeYears, 100);
+    const young = makePerson(rng, 'dating', R.marriageMinAgeYears - 1, 100);
+    const grown = makePerson(rng, 'dating', R.marriageMinAgeYears, 100);
 
     expect(marriageCandidates([young, grown]).map((p) => p.id)).toEqual([grown.id]);
+  });
+
+  it('never offers a friend you are not seeing: dating comes first (GDD §11.6)', () => {
+    const rng = createRng(31);
+    expect(marriageCandidates([makePerson(rng, 'friend', 30, 100)])).toHaveLength(0);
   });
 
   it('never offers family or children', () => {

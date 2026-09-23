@@ -28,14 +28,13 @@ export interface ChangeReport {
   lost: string[];
 }
 
-/** Stat moves smaller than this are rounding noise, not news. */
-const STAT_NOISE = 0.5;
 /** Attributes move an order of magnitude slower, so they get a finer sieve. */
 const ATTRIBUTE_NOISE = 0.05;
 
+/** Rounded for display; anything that rounds to nothing is not news. */
 function round(value: number, places: number): number {
   const factor = 10 ** places;
-  return Math.round(value * factor) / factor;
+  return Math.round(value * factor) / factor || 0;
 }
 
 export function changesBetween(before: WorldState | null, after: WorldState | null): ChangeReport | null {
@@ -52,15 +51,15 @@ export function changesBetween(before: WorldState | null, after: WorldState | nu
   if (money !== 0) changes.push({ label: 'money', amount: Math.round(money), money: true });
 
   for (const key of ['health', 'energy', 'mood'] as const) {
-    const delta = a.stats[key] - b.stats[key];
-    if (Math.abs(delta) >= STAT_NOISE) changes.push({ label: key, amount: round(delta, 0) });
+    const delta = round(a.stats[key] - b.stats[key], 0);
+    if (delta !== 0) changes.push({ label: key, amount: delta });
   }
   // Within a day, needs are the news. Across a night they reset to morning,
   // which is not something the player did.
   if (days === 0) {
     for (const key of ['hunger', 'thirst', 'hygiene'] as const) {
-      const delta = a.needs[key] - b.needs[key];
-      if (Math.abs(delta) >= STAT_NOISE) changes.push({ label: key, amount: round(delta, 0) });
+      const delta = round(a.needs[key] - b.needs[key], 0);
+      if (delta !== 0) changes.push({ label: key, amount: delta });
     }
   }
   for (const key of ['intelligence', 'physical', 'charisma'] as const) {
@@ -72,8 +71,8 @@ export function changesBetween(before: WorldState | null, after: WorldState | nu
   for (const person of after.people) {
     const was = earlier.get(person.id);
     if (!was) continue;
-    const delta = person.closeness - was.closeness;
-    if (Math.abs(delta) >= STAT_NOISE) changes.push({ label: person.name, amount: round(delta, 0) });
+    const delta = round(person.closeness - was.closeness, 0);
+    if (delta !== 0) changes.push({ label: person.name, amount: delta });
   }
 
   const now = new Set(after.people.map((person) => person.id));

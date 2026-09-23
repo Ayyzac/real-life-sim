@@ -136,12 +136,13 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Keluarga dan teman kadang ada di Mall (malam hari, akhir pekan)
 - [x] **Checkpoint:** belanja dan hiburan punya tempatnya sendiri — 366 test
 
-### F — Ngobrol & hubungan
-- [ ] Dialog tertulis dengan jawaban bercabang dan sifat tersembunyi
-- [ ] Pacaran → menikah; pacar bisa putus
-- [ ] Ajak jalan lewat telepon
-- [ ] Sapa orang asing → jadi kenalan
-- [ ] **Checkpoint:** hubungan terasa seperti mengenal orang, bukan angka
+### F — Ngobrol & hubungan — SELESAI
+- [x] Dialog tertulis: 35 pembuka (per peran, kedekatan, waktu, pekerjaan, anak kecil) × 3 jawaban (bercanda / tulus / bertanya), reaksi per gaya dan hasil
+- [x] 6 sifat tersembunyi ("???"), terungkap setelah 2 jawaban yang pas
+- [x] Pacaran → menikah (lamaran hanya untuk pacar); pacar yang lama diabaikan memutuskan hubungan, pasangan menikah tidak cerai
+- [x] Ajak makan malam / nonton lewat telepon dari tab People (bisa ditolak: belum dekat, atau sedang kerja)
+- [x] Sapa orang asing di jalan → peluang jadi kenalan dengan wajah yang sama, maks 3 sapaan sehari
+- [x] **Checkpoint:** hubungan terasa seperti mengenal orang, bukan angka — 387 test
 
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.

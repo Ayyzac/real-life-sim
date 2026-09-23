@@ -10,6 +10,8 @@ import { Hud } from './Hud';
 import { LifeSummary } from './LifeSummary';
 import { Settings } from './Settings';
 import { SidePanel } from './SidePanel';
+import { TalkDialog } from './TalkDialog';
+import { useTalk } from './talk';
 import { play, preload, soundFor } from './sound';
 import { useGame } from './useGame';
 import type { WorldState } from '../core/types';
@@ -54,6 +56,7 @@ export function App(): React.JSX.Element {
   const world = useGame();
   useSound(world);
   const report = useChangeReport(world);
+  const talking = useTalk();
 
   if (world === null) {
     return (
@@ -92,7 +95,13 @@ export function App(): React.JSX.Element {
             <p className="panel__hint">Click a building to walk there. The Here tab shows what you can do inside.</p>
           </section>
 
-          {waiting ? <EventDialog pending={world.pendingEvent!} /> : <DayControls world={world} />}
+          {waiting ? (
+            <EventDialog pending={world.pendingEvent!} />
+          ) : talking ? (
+            <TalkDialog world={world} open={talking} />
+          ) : (
+            <DayControls world={world} />
+          )}
           {report && <ChangeReport report={report} />}
         </div>
 

@@ -2,7 +2,7 @@ import { blockPending, blockToday, canSkipWork, isWeekend } from '../core/day';
 import type { WorldState } from '../core/types';
 import { BALANCE } from '../data/balance';
 import { findFocus } from '../data/focuses';
-import { duration } from './format';
+import { ProgressBar } from './ProgressBar';
 import { runTimed, useProgress } from './progress';
 import { gameStore } from './useGame';
 
@@ -24,14 +24,7 @@ export function DayControls({ world }: { world: WorldState }): React.JSX.Element
   return (
     <div className="controls">
       {progress ? (
-        <div className="progress" role="status" aria-live="polite">
-          <span className="progress__label">
-            {progress.label} &middot; {duration(progress.minutes)}
-          </span>
-          <span className="progress__track">
-            <span className="progress__fill" style={{ animationDuration: `${progress.durationMs}ms` }} />
-          </span>
-        </div>
+        <ProgressBar />
       ) : (
         <p className="controls__hint">
           {working

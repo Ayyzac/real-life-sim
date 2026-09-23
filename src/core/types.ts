@@ -134,7 +134,7 @@ export interface EventLogEntry {
 }
 
 /** How someone came into the player's life (GDD §10). */
-export type RelationKind = 'family' | 'friend' | 'colleague' | 'partner' | 'child';
+export type RelationKind = 'family' | 'friend' | 'colleague' | 'dating' | 'partner' | 'child';
 
 /**
  * One person the player knows, simulated in full while they are alive.
@@ -159,6 +159,11 @@ export interface Person {
    * greeted). Everyone else's look is worked out from their id.
    */
   look?: number;
+  /**
+   * Replies that landed well, towards working out who they are (GDD §11.6).
+   * Absent means none yet.
+   */
+  traitHints?: number;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { BODIES, HAIR_COLOURS, SKIN_TONES, TOP_COLOURS } from '../data/looks';
+import { hashText } from './hash';
 import type { Character } from './types';
 
 /**
@@ -44,18 +45,13 @@ export function decodeLook(look: number): LookParts {
 }
 
 /**
- * A stable look from an id (FNV-1a). People met through the simulation get
+ * A stable look from an id. People met through the simulation get
  * one without the save having to store it, and without drawing from the
  * simulation's RNG - which is saved, so spending it on faces would shift every
  * event that follows.
  */
 export function lookFromId(id: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < id.length; i += 1) {
-    hash ^= id.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0) % LOOK_COUNT;
+  return hashText(id) % LOOK_COUNT;
 }
 
 export function lookOf(person: { id: string; look?: number }): number {

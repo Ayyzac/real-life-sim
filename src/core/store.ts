@@ -18,6 +18,8 @@ import { createWorld, type NewGameOptions } from './character';
 import { BALANCE } from '../data/balance';
 import { characterLook, decodeLook, encodeLook } from './look';
 import { dollars } from './money';
+import { askOut, greetStranger, invite, talk, type Outing } from './talk';
+import type { ReplyStyle } from '../data/dialogue';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
 import type { Character, FocusId, LocationId, WorldState } from './types';
@@ -41,6 +43,10 @@ export type GameIntent =
   | { type: 'startBlock' }
   | { type: 'skipWork' }
   | { type: 'buyClothes'; top: number }
+  | { type: 'talk'; personId: string; style: ReplyStyle }
+  | { type: 'askOut'; personId: string }
+  | { type: 'invite'; personId: string; outing: Outing }
+  | { type: 'greetStranger'; look: number }
   | { type: 'setFocus'; focusId: FocusId }
   | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
@@ -194,6 +200,18 @@ export class GameStore {
 
       case 'skipWork':
         return state ? skipWork(state) : state;
+
+      case 'talk':
+        return state ? talk(state, intent.personId, intent.style) : state;
+
+      case 'askOut':
+        return state ? askOut(state, intent.personId) : state;
+
+      case 'invite':
+        return state ? invite(state, intent.personId, intent.outing) : state;
+
+      case 'greetStranger':
+        return state ? greetStranger(state, intent.look) : state;
 
       case 'buyClothes': {
         // A new top from the Mall (GDD §11.5): the time, price and mood of an

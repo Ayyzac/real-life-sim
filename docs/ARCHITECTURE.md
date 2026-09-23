@@ -638,6 +638,18 @@ cepat" tetap lolos.
 | Baju baru = aksi biasa + ganti tampilan | Intent `buyClothes {top}` menjalankan aksi `buy_clothes` (30 menit, $60, mood sekali sehari) lalu mengganti warna atasan di `character.look`. Aksi ini ditandai `custom` sehingga tidak ikut daftar tombol. | Jam, harga, jam buka, dan "tidak cukup uang" semuanya memakai aturan yang sudah dites, tanpa jalur kedua. |
 | Toko barang pindah dari Home | Tombol beli ada di Mall; Home tinggal daftar milik. `buyPossession` di store **tidak** memeriksa lokasi. | Pintu satu-satunya ke tombol itu ada di Mall; menambah pemeriksaan lokasi di store akan merusak test lama tanpa menambah keamanan bagi pemain. |
 
+#### Fase 6F — ngobrol & hubungan (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Kalimat dan sifat dipilih lewat hash | `openerFor()`, `traitOf()` di `src/core/talk.ts` memakai `hashText()` (`src/core/hash.ts`, dipakai bersama tampilan wajah dan jadwal). | Sama seperti jadwal: tampilan tidak boleh memakai RNG yang tersimpan. |
+| Hanya sapaan ke orang asing yang melempar dadu | `greetStranger` memakai RNG simulasi dan menyimpannya kembali. | Ini aksi pemain yang hasilnya memang untung-untungan, sama seperti event. |
+| Reaksi dihitung di UI **sebelum** mengirim | `verdictFor()` murni, jadi dialog bisa langsung menampilkan reaksi yang sesuai dengan hasil di core. | State tetap berubah sekali, di core; UI hanya membaca aturan yang sama. |
+| Lamaran hanya untuk pacar | `marriageCandidates` kini hanya `dating`. | Keputusan user: teman → pacar → menikah. Test lama tentang calon nikah disesuaikan. |
+| Putus = aturan harian, bukan dadu | Pacar dengan kedekatan < 25 selama 60 hari menjadi teman lagi (`relationshipsOneDay`). Tab People memperingatkan lebih dulu. | "Selalu ada peringatan dulu", dan bisa dites sampai ke harinya. |
+| Durasi undangan ditebak di UI | `inviteMinutes()`: ditolak = 5 menit, diterima = 2 jam. | Tanpa ini animasi 2 jam diputar untuk telepon yang ditolak. |
+| Isi dialog lebih sedikit dari rencana | ±35 pembuka × 3 jawaban + 18 reaksi, bukan 300–400 kalimat. | Ponytail: cukup untuk variasi harian (dipilih per orang per hari), dan tiap kalimat dites terisi. Menambah = menambah entri di `src/data/dialogue.ts`. |
+
 **Test tata letak menangkap empat kesalahan sebelum dilihat mata:** satu titik
 pengunjung di rumah besar tertutup kursi, dan tiga di ruang usaha tertutup
 konter, rak, dan meja. Test-nya memeriksa setiap titik pengunjung dan setiap

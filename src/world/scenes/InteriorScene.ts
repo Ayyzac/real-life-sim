@@ -29,6 +29,10 @@ import { canvasPoint, textResolution } from '../pointer';
 export interface WorldHooks {
   /** Do an action from src/data/actions.ts, with the on-screen timing. */
   perform(actionId: string): void;
+  /** Open a conversation with someone the player knows (GDD §11.6). */
+  talk(personId: string): void;
+  /** Say hello to a stranger walking past, who looks like this. */
+  greet(look: number): void;
 }
 
 export const TEXTURES: Record<Sheet, string> = { town: 'town', indoor: 'indoor' };
@@ -49,6 +53,7 @@ interface Hotspot {
   exit?: boolean;
   /** A person the player knows; redrawn whenever the clock moves. */
   visitor?: boolean;
+  personId?: string;
 }
 
 export class InteriorScene extends Phaser.Scene {
@@ -225,7 +230,8 @@ export class InteriorScene extends Phaser.Scene {
         width: 1,
         height: 1,
         visitor: true,
-        tip: () => `${person.name} · ${person.kind}`,
+        personId: person.id,
+        tip: () => `Talk to ${person.name}`,
       });
     });
   }
@@ -261,7 +267,7 @@ export class InteriorScene extends Phaser.Scene {
   private onPointerMove = (pointer: Phaser.Input.Pointer): void => {
     const tile = this.tileAt(pointer);
     const spot = tile && !this.locked() ? this.hotspotAt(tile) : undefined;
-    this.game.canvas.style.cursor = spot?.action || spot?.exit ? 'pointer' : '';
+    this.game.canvas.style.cursor = spot?.action || spot?.exit || spot?.personId ? 'pointer' : '';
     if (!spot) {
       this.highlight?.setVisible(false);
       this.tipText?.setVisible(false);
@@ -283,6 +289,7 @@ export class InteriorScene extends Phaser.Scene {
     if (!tile) return;
 
     const spot = this.hotspotAt(tile);
+    if (spot?.personId) return this.hooks.talk(spot.personId);
     if (spot?.exit) return this.walkTo(ROOM.exit, { exit: true });
     if (spot?.action) return this.walkTo(this.besideOf(spot), { action: spot.action });
     this.walkTo(tile, null);

@@ -34,6 +34,6 @@ export function createPhaserGame(parent: HTMLElement, store: GameStore, hooks: W
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [new TownScene(store), new InteriorScene(store, hooks)],
+    scene: [new TownScene(store, hooks), new InteriorScene(store, hooks)],
   });
 }

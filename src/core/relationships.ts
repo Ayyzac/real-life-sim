@@ -84,6 +84,8 @@ function clampCloseness(value: number): number {
 
 export interface RelationshipDay {
   people: Person[];
+  /** Someone you were seeing ended it today, if so (GDD §11.6). */
+  breakup: Person | null;
   /** Money owed today for dependent children. */
   costPerDay: number;
   /** Mood from having a partner and children around. */
@@ -103,11 +105,18 @@ export function relationshipsOneDay(
 ): RelationshipDay {
   const drift = socialising ? R.closenessPerSocialDay : R.closenessDriftPerDay;
 
+  let breakup: Person | null = null;
   const next = people.map((person) => {
     const closeness = clampCloseness(person.closeness + drift);
-    const neglected =
-      closeness <= R.driftAwayBelow ? person.neglectedDays + 1 : 0;
-    return { ...person, ageDays: person.ageDays + 1, closeness, neglectedDays: neglected };
+    // Someone you are seeing notices sooner than a friend does.
+    const cold = person.kind === 'dating' ? closeness < R.breakupBelow : closeness <= R.driftAwayBelow;
+    const neglected = cold ? person.neglectedDays + 1 : 0;
+    const aged = { ...person, ageDays: person.ageDays + 1, closeness, neglectedDays: neglected };
+    if (person.kind === 'dating' && neglected >= R.breakupAfterDays) {
+      breakup = aged;
+      return { ...aged, kind: 'friend' as const, neglectedDays: 0 };
+    }
+    return aged;
   });
 
   const partner = partnerOf(next);
@@ -115,6 +124,7 @@ export function relationshipsOneDay(
 
   return {
     people: next,
+    breakup,
     costPerDay: dependents.length * R.childCostPerDay,
     moodPerDay:
       (partner ? R.partnerMoodPerDay : 0) + childrenOf(next).length * R.childMoodPerDay,
@@ -261,11 +271,15 @@ export function rollRelationships(
 }
 
 /** Everyone who could be married: not family, not a child, close enough. */
+/**
+ * Who can be proposed to: the person you are seeing, once close enough
+ * (GDD §11.6 - friend, then dating, then married).
+ */
 export function marriageCandidates(people: readonly Person[]): Person[] {
   if (partnerOf(people)) return [];
   return people.filter(
     (p) =>
-      (p.kind === 'friend' || p.kind === 'colleague') &&
+      p.kind === 'dating' &&
       p.closeness >= R.marriageClosenessRequired &&
       ageYearsOf(p) >= R.marriageMinAgeYears,
   );

@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/balance';
+import { LINES } from '../data/dialogue';
 import { dailyUpkeep } from './belongings';
 import { DEFAULT_FOCUS_ID, findFocus } from '../data/focuses';
 import { tradeOneDay } from './careers/business';
@@ -166,6 +167,16 @@ export function applyDailyRules(state: WorldState): WorldState {
   // closeness fades unless it is kept up, and the family costs what it costs.
   const social = relationshipsOneDay(state.people, today?.socialises === true);
   stats.mood += social.moodPerDay;
+  if (social.breakup) {
+    const entry: EventLogEntry = {
+      day: state.clockDay,
+      tone: 'bad',
+      text: LINES.breakup.replace('{name}', social.breakup.name),
+    };
+    eventLog = withLogEntry(eventLog, entry);
+    milestones = withMilestone(milestones, entry);
+    stats.mood += BALANCE.relationships.breakupMood;
+  }
 
   // What the character owns and how they live, every day (GDD §9). A better
   // home is worth more on the days they actually rest in it.

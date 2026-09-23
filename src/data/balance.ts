@@ -195,6 +195,24 @@ export const BALANCE = {
 
     /** A partner is worth having around. */
     partnerMoodPerDay: 0.6,
+
+    /**
+     * Talking to someone (GDD §11.6). A reply that suits them moves closeness
+     * a lot, one that does not a little, and one that grates takes some back.
+     * Charisma scales the good side; being unwashed halves it.
+     */
+    talk: { minutes: 30, good: 5, neutral: 2, bad: -2, mood: 1, revealAfter: 2 },
+    /** Dating: close enough to ask, and close enough (with their nature) to say yes. */
+    askOutCloseness: 60,
+    acceptCloseness: 70,
+    /** Someone you are seeing and have let go cold for this long ends it. */
+    breakupBelow: 25,
+    breakupAfterDays: 60,
+    breakupMood: -6,
+    /** An outing by phone: dinner at the Cafe or a film at the Mall, paid for two. */
+    invite: { minutes: 120, cost: 30, closeness: 8, mood: 4, minCloseness: 25 },
+    /** Saying hello to strangers in the street. */
+    greet: { minutes: 10, perDay: 3, baseChance: 0.25, charismaPerPoint: 0.005, maxChance: 0.75, closeness: 20 },
     /** Losing someone hurts in proportion to how close you were. */
     griefMoodPerCloseness: 0.45,
   },

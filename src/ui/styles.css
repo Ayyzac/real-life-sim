@@ -1167,3 +1167,92 @@ body {
   opacity: 1;
 }
 
+/* ---------- people and talk ---------- */
+
+.btn--small {
+  padding: 5px 10px;
+  font-size: 0.72rem;
+}
+
+.person__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.survivors__item .btn--small {
+  margin-left: 4px;
+}
+
+.talk {
+  display: grid;
+  gap: 12px;
+  border-color: var(--accent);
+}
+
+.talk__head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.talk__who {
+  flex: 1;
+  min-width: 0;
+}
+
+.talk__name {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.talk__trait {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.talk__trait strong {
+  color: var(--text);
+}
+
+.talk__line {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--line);
+  font-size: 0.9rem;
+}
+
+.talk__line--good {
+  border-left-color: var(--good);
+}
+
+.talk__line--bad {
+  border-left-color: var(--bad);
+}
+
+.talk__replies {
+  display: grid;
+  gap: 8px;
+}
+
+.talk__style {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.talk__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+

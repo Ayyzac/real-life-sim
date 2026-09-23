@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react';
 import type Phaser from 'phaser';
 
 import { actionBlocker } from '../core/day';
+import { greetBlocker } from '../core/talk';
 import { findAction } from '../data/actions';
+import { BALANCE } from '../data/balance';
 import { createPhaserGame } from '../world/phaserGame';
 import { runTimed } from './progress';
+import { openTalk } from './talk';
 import { gameStore } from './useGame';
 
 /**
@@ -18,6 +21,14 @@ const hooks = {
     const action = findAction(actionId);
     if (!world || actionBlocker(world, action) !== null) return;
     runTimed(action.label, action.minutes, { type: 'doAction', actionId });
+  },
+  talk(personId: string): void {
+    openTalk(personId);
+  },
+  greet(look: number): void {
+    const world = gameStore.getState();
+    if (!world || greetBlocker(world) !== null) return;
+    runTimed('Saying hello', BALANCE.relationships.greet.minutes, { type: 'greetStranger', look });
   },
 };
 

@@ -26,11 +26,12 @@ import {
   locationAt,
   type TownBuilding,
 } from '../../data/town';
-import { createCrowd, stepPose, type Crowd } from '../crowd';
+import { createCrowd, stepPose, type Crowd, type Stranger } from '../crowd';
 import { lookTexture } from '../lookTexture';
 import { POSE, VIEW, lookFrame } from '../looks';
 import { findPath, type Point } from '../pathfinding';
 import { canvasPoint, textResolution } from '../pointer';
+import type { WorldHooks } from './InteriorScene';
 import { skyAt } from '../sky';
 
 /**
@@ -106,6 +107,10 @@ export class TownScene extends Phaser.Scene {
   private hovered?: TownBuilding;
   /** What the hovered building is and who is in it, or why it is shut. */
   private tip?: Phaser.GameObjects.Text;
+  /** The stranger just greeted, to name them if the hello worked. */
+  private greeted: Stranger | null = null;
+  /** The tip is showing a stranger rather than a building. */
+  private tipOnStranger = false;
   /** The day-night wash over the whole town (GDD §11.1). Render only. */
   private sky?: Phaser.GameObjects.Rectangle;
   private skyNow = { r: 0, g: 0, b: 0, a: 0 };
@@ -127,7 +132,10 @@ export class TownScene extends Phaser.Scene {
   private unsubscribe?: () => void;
   private lastLocation?: LocationId;
 
-  constructor(private readonly store: GameStore) {
+  constructor(
+    private readonly store: GameStore,
+    private readonly hooks: WorldHooks,
+  ) {
     super('Town');
   }
 
@@ -443,6 +451,14 @@ export class TownScene extends Phaser.Scene {
       return;
     }
 
+    // Someone walking past: say hello (GDD §11.6).
+    const stranger = this.strangerAt(point);
+    if (stranger) {
+      this.greeted = stranger;
+      this.hooks.greet(stranger.look);
+      return;
+    }
+
     const clicked = this.tileAt(point);
     // Anywhere on a building means "go in": walk to its door.
     const building = buildingAt(clicked.x, clicked.y);
@@ -457,13 +473,32 @@ export class TownScene extends Phaser.Scene {
     if (route.length === 0) this.onArrived();
   };
 
+  private strangerAt(point: { x: number; y: number }): Stranger | null {
+    const world = this.cameras.main.getWorldPoint(point.x, point.y);
+    return this.crowd?.strangerAt(world.x, world.y) ?? null;
+  }
+
   /** Lights up the building under the pointer, so it is plain what a click does. */
   private onPointerMove = (pointer: Phaser.Input.Pointer): void => {
     const point = canvasPoint(this.game, pointer);
+    const stranger = point && !this.isLocked(this.store.getState()) ? this.strangerAt(point) : null;
+    if (stranger) {
+      this.hovered = undefined;
+      this.tipOnStranger = true;
+      this.highlight?.setVisible(false);
+      this.game.canvas.style.cursor = 'pointer';
+      this.tip
+        ?.setText('A stranger \u00b7 say hello')
+        .setOrigin(0.5, 1)
+        .setPosition(stranger.x, stranger.y - 9)
+        .setVisible(true);
+      return;
+    }
     const tile = point ? this.tileAt(point) : null;
     const building =
       tile && !this.isLocked(this.store.getState()) ? buildingAt(tile.x, tile.y) : undefined;
-    if (building === this.hovered) return;
+    if (building === this.hovered && !this.tipOnStranger) return;
+    this.tipOnStranger = false;
 
     this.hovered = building;
     this.game.canvas.style.cursor = building ? 'pointer' : '';
@@ -578,6 +613,7 @@ export class TownScene extends Phaser.Scene {
     this.refreshLock(world);
     this.refreshLook(world);
     if (!world) return;
+    this.nameGreeted(world);
 
     const location = world.character.location;
     const time = timeKey(world);
@@ -602,6 +638,16 @@ export class TownScene extends Phaser.Scene {
     const route = findPath(this.walkable, this.tile, doorOf(location));
     if (route) this.path = route;
   };
+
+  /** A hello that worked: the stranger now has a name over their head. */
+  private nameGreeted(world: WorldState): void {
+    const greeted = this.greeted;
+    if (!greeted) return;
+    const met = world.people.find((person) => person.look === greeted.look);
+    if (!met) return;
+    this.crowd?.name(greeted.index, met.name.split(' ')[0] ?? met.name, TEXT_RESOLUTION);
+    this.greeted = null;
+  }
 
   /** The character's look (GDD §3.2). Cosmetic, so only the sprite cares. */
   private refreshLook(world: WorldState | null): void {

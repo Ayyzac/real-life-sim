@@ -30,6 +30,7 @@ import { runTimed, useProgress } from './progress';
 import { characterLook, decodeLook, lookOf } from '../core/look';
 import { whoIsHere } from '../core/schedule';
 import { Portrait } from './Portrait';
+import { openTalk } from './talk';
 import { ActionList } from './ActionList';
 import { duration, money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
@@ -518,8 +519,11 @@ function HereNow({ world }: { world: WorldState }): React.JSX.Element | null {
           <li key={person.id} className="survivors__item">
             <Portrait look={lookOf(person)} scale={2} />
             <span>
-              {person.name} <span className="here-now__kind">{person.kind}</span>
+              {person.name} <span className="here-now__kind">{person.kind === 'dating' ? 'seeing' : person.kind}</span>
             </span>
+            <button type="button" className="btn btn--small" onClick={() => openTalk(person.id)}>
+              Talk
+            </button>
           </li>
         ))}
       </ul>
