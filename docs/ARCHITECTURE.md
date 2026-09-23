@@ -701,6 +701,17 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 
 **Diuji di browser:** pane sesi ini `document.hidden: true`, jadi jam **benar berhenti sendiri** di sana. Dengan `hidden` dipaksa `false` lewat konsol: 1× ≈ 1 menit game per detik, Pause menahan, 4× ≈ 4 menit/detik, pukul 02:00 tidur otomatis dengan laporan "Yesterday", dan pukul 09:00 jam berhenti dengan status "Waiting for you".
 
+#### Fase 7C — supermarket & tas (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Supermarket = `LocationId` ke-9 | Gedung (40,0) 6×4 di Eastside sebelah Stadion, pintu (42,3), buka 07–23. Ruangan dengan rak dan kasir. | Menambah nilai ke union tidak merusak save lama. |
+| Tas = `character.inventory: string[]` | Satu id per slot, maks 12. Payung (`tool`) tidak habis dan cukup satu. | Paling kecil yang masih bisa dihitung; tumpukan cukup dihitung saat ditampilkan. |
+| `landEffects()` dipakai bersama | Dipecah dari `performAction`; dipakai aksi dan tas. Treat sekali sehari memakai kunci `item:<id>` di `doneToday`. | Aturan kebutuhan/treat tidak boleh punya dua salinan yang bisa melenceng. |
+| Diskon = potongan dolar utuh, dari hash hari | `dealOf()` di `src/core/bag.ts`; ±25% barang, tidak pernah gratis, air $1 tidak pernah diskon. | Uang di game selalu dolar utuh. "20% off" roti $2 yang tetap $2 ternyata terlihat di browser — diganti "$1 off". |
+| Belanja tidak makan menit | Jam berjalan sendiri selagi pemain memilih. | Ponytail: waktu belanja sudah "gratis" dari jam yang berjalan. |
+| Migrasi v5 → 6 | `inventory: []`; id barang yang tidak dikenal dibuang di `withKnownIds`. | Pola yang sama dengan barang permanen. |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

@@ -132,6 +132,8 @@ export const BUILDINGS: readonly TownBuilding[] = [
   { locationId: 'stadium', x: 29, y: 0, width: 9, height: 4, wallTile: 41, bandTile: 68, doorTile: 338, doorX: 33, tint: 0x9fd8a8 },
   // Across the road from the Stadium (GDD §11.5).
   { locationId: 'mall', x: 35, y: 9, width: 8, height: 4, wallTile: 180, bandTile: 153, doorTile: 443, doorX: 38 },
+  // Next door to the Stadium (GDD §12).
+  { locationId: 'supermarket', x: 40, y: 0, width: 6, height: 4, wallTile: 41, bandTile: 68, doorTile: 443, doorX: 42, tint: 0xf2a7a0 },
 ];
 
 /** Scenery. Blocks walking, so keep them off the pavement. */

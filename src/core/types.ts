@@ -41,7 +41,8 @@ export type LocationId =
   | 'cafe'
   | 'business'
   | 'stadium'
-  | 'mall';
+  | 'mall'
+  | 'supermarket';
 
 /** Id of an entry in src/data/focuses.ts. */
 export type FocusId = string;
@@ -105,6 +106,8 @@ export interface Character {
    * for someone who is not a member.
    */
   gymPaidUntil: number | null;
+  /** Ids of entries in src/data/items.ts, one per slot (GDD §12). */
+  inventory: string[];
 }
 
 /**

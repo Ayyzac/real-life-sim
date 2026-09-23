@@ -7,6 +7,7 @@ import { JOBS } from '../../data/jobs';
 import { DEFAULT_LIFESTYLE_ID, LIFESTYLES } from '../../data/lifestyles';
 import { LOCATIONS } from '../../data/locations';
 import { POSSESSIONS } from '../../data/possessions';
+import { ITEMS } from '../../data/items';
 import { SPORTS } from '../../data/sports';
 import type { CareerState, Character } from '../types';
 import type { WorldState } from '../types';
@@ -118,7 +119,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   if (!character) return null;
 
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
-  // time of day and needs; 4 -> 5 the gym membership. Every field is filled if missing, so the same path
+  // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
@@ -166,7 +167,12 @@ function withPhase7Fields(character: Character): Character {
   // Not findFocus: an unknown id would throw here and lose the save. Unknown
   // ids are repaired later, in withKnownIds.
   const lapsed = gymPaidUntil === null && FOCUSES.find((f) => f.id === character.focusId)?.membersOnly === true;
-  return { ...character, gymPaidUntil, focusId: lapsed ? DEFAULT_FOCUS_ID : character.focusId };
+  return {
+    ...character,
+    gymPaidUntil,
+    focusId: lapsed ? DEFAULT_FOCUS_ID : character.focusId,
+    inventory: Array.isArray(character.inventory) ? character.inventory : [],
+  };
 }
 
 function withPhase6Fields(character: Character): Character {
@@ -224,6 +230,7 @@ export function withKnownIds(state: WorldState): WorldState {
       lifestyleId: known(LIFESTYLES, character.lifestyleId) ? character.lifestyleId : DEFAULT_LIFESTYLE_ID,
       location: known(LOCATIONS, character.location) ? character.location : 'home',
       owned: character.owned.filter((id) => known(POSSESSIONS, id)),
+      inventory: character.inventory.filter((id) => known(ITEMS, id)),
     },
   };
 }

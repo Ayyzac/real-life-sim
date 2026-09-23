@@ -151,7 +151,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 
 - [x] **A** — Rumah kosong (keluarga datang hanya kalau diundang) + membership gym — 393 test
 - [x] **B** — Jam berjalan sendiri: pause, 1×/2×/4×, berhenti menunggu pukul 09:00 — 402 test
-- [ ] **C** — Supermarket + tas (inventory), diskon harian
+- [x] **C** — Supermarket + tas (inventory), diskon harian — 410 test
 - [ ] **D** — Hujan: jalan sepi, payung, prakiraan
 - [ ] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar
 - [ ] **F** — Bank, saham, crypto

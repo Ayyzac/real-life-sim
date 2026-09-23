@@ -176,22 +176,37 @@ export function performAction(state: WorldState, actionId: string): WorldState {
 
   const firstToday = !state.doneToday.includes(action.id);
   const played = passTime(state, action.minutes);
-  const { stats, attributes, needs } = played.character;
-  const treat = firstToday ? (action.effects ?? {}) : {};
-  const topUp = action.needs ?? {};
+  return landEffects(
+    { ...played, doneToday: firstToday ? [...played.doneToday, action.id] : played.doneToday },
+    action.needs ?? {},
+    firstToday ? (action.effects ?? {}) : {},
+    action.cost ?? 0,
+  );
+}
 
+/**
+ * The result of doing something: needs topped up, the treat (if it counts
+ * today) and the bill. Shared by actions, the bag and anything else that
+ * works the same way, so the rules cannot drift apart.
+ */
+export function landEffects(
+  state: WorldState,
+  topUp: Partial<Needs>,
+  treat: NonNullable<ActionDefinition['effects']>,
+  cost: number,
+): WorldState {
+  const { stats, attributes, needs } = state.character;
   return {
-    ...played,
-    doneToday: firstToday ? [...played.doneToday, action.id] : played.doneToday,
+    ...state,
     character: {
-      ...played.character,
+      ...state.character,
       needs: {
         hunger: clamp(needs.hunger + (topUp.hunger ?? 0)),
         thirst: clamp(needs.thirst + (topUp.thirst ?? 0)),
         hygiene: clamp(needs.hygiene + (topUp.hygiene ?? 0)),
       },
       stats: {
-        money: stats.money - (action.cost ?? 0),
+        money: stats.money - cost,
         health: clamp(stats.health + (treat.health ?? 0)),
         energy: clamp(stats.energy + (treat.energy ?? 0)),
         mood: clamp(stats.mood + (treat.mood ?? 0)),

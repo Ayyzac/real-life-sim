@@ -9,6 +9,7 @@ import {
 import { findSport, meetsRequirements as meetsSportRequirements } from './careers/sports';
 import { findPossession, replacedBy, withPurchase } from './belongings';
 import { isGymMember } from './gym';
+import { buyItem, consumeItem } from './bag';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -63,6 +64,8 @@ export type GameIntent =
   | { type: 'setLifestyle'; lifestyleId: string }
   | { type: 'marry'; personId: string }
   | { type: 'joinGym' }
+  | { type: 'buyItem'; itemId: string }
+  | { type: 'useItem'; itemId: string }
   | { type: 'leaveGym' }
   | { type: 'reset' };
 
@@ -240,6 +243,15 @@ export class GameStore {
             focusId: focus.membersOnly ? DEFAULT_FOCUS_ID : focus.id,
           },
         };
+      }
+
+      case 'buyItem':
+        return state ? buyItem(state, intent.itemId) : state;
+
+      case 'useItem': {
+        if (!state) return state;
+        const next = consumeItem(state, intent.itemId);
+        return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
       }
 
       case 'reset':

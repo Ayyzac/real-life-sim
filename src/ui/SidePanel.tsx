@@ -4,18 +4,20 @@ import type { WorldState } from '../core/types';
 import { EventLog } from './EventLog';
 import { LocationMenu } from './LocationMenu';
 import { People } from './People';
+import { Bag } from './Bag';
 
 /**
- * Everything the player can look at or do, in three tabs beside the map.
+ * Everything the player can look at or do, in tabs beside the map.
  * Which tab is open is view state only; nothing about it is saved.
  */
-type Tab = 'here' | 'people' | 'log';
+type Tab = 'here' | 'people' | 'bag' | 'log';
 
 export function SidePanel({ world, locked }: { world: WorldState; locked: boolean }): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('here');
   const tabs: { id: Tab; label: string }[] = [
     { id: 'here', label: 'Here' },
     { id: 'people', label: `People \u00b7 ${world.people.length}` },
+    { id: 'bag', label: `Bag · ${world.character.inventory.length}` },
     { id: 'log', label: 'Log' },
   ];
 
@@ -39,6 +41,7 @@ export function SidePanel({ world, locked }: { world: WorldState; locked: boolea
       <div className="side__body" role="tabpanel">
         {tab === 'here' && <LocationMenu world={world} />}
         {tab === 'people' && <People world={world} />}
+        {tab === 'bag' && <Bag world={world} />}
         {tab === 'log' && <EventLog entries={world.eventLog} />}
       </div>
     </aside>

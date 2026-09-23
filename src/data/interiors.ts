@@ -360,6 +360,30 @@ const MALL: Interior = {
   ],
 };
 
+/** Shelves and a till; the shopping itself is in the Here tab (GDD §12). */
+const SUPERMARKET: Interior = {
+  id: 'supermarket',
+  label: 'Supermarket',
+  floor: T.grey,
+  wall: T.concrete(0xf2a7a0),
+  pieces: [
+    { x: 1, y: 2, frames: I.fridge },
+    { x: 2, y: 2, frames: I.fridge },
+    { x: 3, y: 2, frames: I.cooler },
+    { x: 5, y: 2, frames: I.bottles },
+    { x: 1, y: 4, frames: I.bookshelf },
+    { x: 9, y: 4, frames: I.bookshelf },
+    { x: 9, y: 6, frames: I.counter },
+    { x: 13, y: 6, frames: I.plant },
+  ],
+  staff: [{ x: 10, y: 5, role: 'Cashier', look: look(2, 3, 4, 2) }],
+  spots: [
+    { x: 2, y: 5 },
+    { x: 6, y: 3 },
+    { x: 12, y: 3 },
+  ],
+};
+
 const EMPTY_UNIT: Interior = {
   id: 'business_empty',
   label: 'Empty unit',
@@ -412,6 +436,7 @@ export const INTERIORS: readonly Interior[] = [
   WORK,
   STADIUM,
   MALL,
+  SUPERMARKET,
   EMPTY_UNIT,
   ...Object.values(BUSINESSES),
 ];
@@ -438,6 +463,8 @@ export function interiorFor(locationId: LocationId, character: Pick<Character, '
       return STADIUM;
     case 'mall':
       return MALL;
+    case 'supermarket':
+      return SUPERMARKET;
     case 'business':
       return character.career.type === 'business'
         ? (BUSINESSES[character.career.businessId] ?? EMPTY_UNIT)

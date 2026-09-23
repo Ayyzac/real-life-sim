@@ -291,4 +291,17 @@ describe('migrating an older save', () => {
     expect(loaded?.character.gymPaidUntil).toBeNull();
     expect(loaded?.character.focusId).toBe('rest');
   });
+
+  it('gives an older save an empty bag, and drops things that no longer exist (v5 -> v6)', () => {
+    const world = createWorld({ name: 'Packer', backgroundId: 'athlete', seed: 9 });
+    const { inventory: _i, ...oldCharacter } = world.character;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...world, schemaVersion: 5, character: oldCharacter }));
+    expect(saves.load()?.character.inventory).toEqual([]);
+
+    storage.data.set(
+      SAVE_KEY,
+      JSON.stringify({ ...world, character: { ...world.character, inventory: ['bread', 'gold_bar'] } }),
+    );
+    expect(saves.load()?.character.inventory).toEqual(['bread']);
+  });
 });

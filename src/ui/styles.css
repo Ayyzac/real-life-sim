@@ -230,6 +230,17 @@ body {
   color: var(--bad);
 }
 
+.panel__count {
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.price__was {
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .badge {
   font-size: 0.62rem;
   text-transform: uppercase;

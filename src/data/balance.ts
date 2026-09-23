@@ -275,6 +275,12 @@ export const BALANCE = {
    */
   gym: { fee: 45, days: 30 },
 
+  /**
+   * The bag and the Supermarket (GDD §12). A quarter of things are on offer
+   * on any given day, 10-40% off.
+   */
+  bag: { slots: 12, dealChance: 0.25, dealSizes: [10, 20, 30, 40] },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],
