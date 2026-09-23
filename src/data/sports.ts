@@ -62,6 +62,28 @@ export const SPORTS: readonly SportDefinition[] = [
     keyAttribute: 'physical',
     requirements: { physical: 40, charisma: 25 },
   },
+  {
+    id: 'swimming',
+    name: 'Swimming',
+    blurb: 'Lengths before dawn, every day, for years. Meets come round often.',
+    matchIntervalDays: 24,
+    opponentSkill: 36,
+    winPrize: 3_000,
+    losePrize: 100,
+    keyAttribute: 'physical',
+    requirements: { physical: 26 },
+  },
+  {
+    id: 'boxing',
+    name: 'Boxing',
+    blurb: 'Pays more than it should, and takes it back out of you.',
+    matchIntervalDays: 40,
+    opponentSkill: 60,
+    winPrize: 9_500,
+    losePrize: 300,
+    keyAttribute: 'physical',
+    requirements: { physical: 48 },
+  },
 ];
 
 export function findSport(id: string): SportDefinition {

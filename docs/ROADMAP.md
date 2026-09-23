@@ -77,10 +77,12 @@ dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 - [x] Life Summary menyebut siapa yang masih ada dan siapa yang hilang
 - [x] **Checkpoint:** pemain punya lingkungan sosial yang berubah sendiri seiring waktu
 
-### C — Isi & keseimbangan
-- [ ] Perbanyak isi kira-kira dua kali lipat: ~45 event, ~10 pekerjaan, ~6 usaha, ~5 cabang olahraga
-- [ ] Penyetelan menyeluruh lewat simulasi seumur hidup, target di GDD §9.4
-- [ ] **Checkpoint:** satu kehidupan terasa tidak mengulang, dan uang terasa jadi pilihan
+### C — Isi & keseimbangan — SELESAI
+- [x] Isi jadi kira-kira dua kali lipat: **48 event** (dari 21), **11 pekerjaan** (dari 5), **6 usaha** (dari 3), **5 cabang olahraga** (dari 3)
+- [x] Aturan utang: uang minus akhirnya punya akibat — menutup utang yang dicatat sejak Fase 1
+- [x] Peringatan di dashboard saat uang minus
+- [x] Penyetelan menyeluruh lewat simulasi seumur hidup, target di GDD §9.4
+- [x] **Checkpoint:** satu kehidupan terasa tidak mengulang, dan uang terasa jadi pilihan
 
 ### D — Suara & penutup
 - [ ] Efek suara CC0 (tanpa musik), termasuk membereskan AudioContext yang dimatikan sejak Fase 0

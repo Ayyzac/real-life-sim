@@ -63,6 +63,36 @@ export const BUSINESSES: readonly BusinessDefinition[] = [
     neglectedShare: 0.25,
     requirements: { physical: 35 },
   },
+  {
+    id: 'laundrette',
+    name: 'Laundrette',
+    blurb: 'Machines do the work. You mostly turn up to empty the coin box.',
+    startupCost: 18_000,
+    revenuePerDay: 120,
+    costPerDay: 34,
+    neglectedShare: 0.8,
+    requirements: {},
+  },
+  {
+    id: 'bookshop',
+    name: 'Bookshop',
+    blurb: 'Never going to make you rich. Very pleasant to be in.',
+    startupCost: 34_000,
+    revenuePerDay: 175,
+    costPerDay: 55,
+    neglectedShare: 0.55,
+    requirements: { intelligence: 40 },
+  },
+  {
+    id: 'restaurant',
+    name: 'Restaurant',
+    blurb: 'The busiest thing you can own, and the least forgiving of absence.',
+    startupCost: 70_000,
+    revenuePerDay: 320,
+    costPerDay: 110,
+    neglectedShare: 0.2,
+    requirements: { charisma: 40, physical: 30 },
+  },
 ];
 
 export function findBusiness(id: string): BusinessDefinition {

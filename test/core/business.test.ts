@@ -29,11 +29,26 @@ describe('business data', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('costs more to open the more it earns', () => {
-    const sorted = [...BUSINESSES].sort((a, b) => a.startupCost - b.startupCost);
-    const revenues = sorted.map((b) => b.revenuePerDay);
+  it('never offers a business that a cheaper one beats at everything', () => {
+    // Raw takings are the wrong measure once businesses differ in how much
+    // survives neglect: the laundrette is dear because it runs itself, not
+    // because it out-earns a workshop. What must hold is that paying more
+    // buys you an advantage SOMEWHERE, or nobody would ever buy it.
+    for (const dear of BUSINESSES) {
+      for (const cheap of BUSINESSES) {
+        if (cheap.startupCost >= dear.startupCost) continue;
 
-    expect(revenues).toEqual([...revenues].sort((a, b) => a - b));
+        const betterMinded =
+          profitPerDay(dear, 0, true) > profitPerDay(cheap, 0, true);
+        const betterAlone =
+          profitPerDay(dear, 0, false) > profitPerDay(cheap, 0, false);
+
+        expect(
+          betterMinded || betterAlone,
+          `${dear.id} costs more than ${cheap.id} but is worse at both`,
+        ).toBe(true);
+      }
+    }
   });
 
   it('is worth running: every business pays while minded', () => {

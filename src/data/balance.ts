@@ -16,6 +16,25 @@ export const BALANCE = {
   /** Rent, food, transport. Charged every day, working or not. */
   livingCostPerDay: 22,
 
+  /**
+   * Being in debt (GDD §9.4).
+   *
+   * Phase 1 allowed money to go negative with no consequence and recorded it
+   * as a deliberate simplification to be settled in Phase 5 balancing. This is
+   * that settlement. Debt is still allowed - bills do not stop because you
+   * cannot pay them - but it wears on you, which gives the player a reason to
+   * do something about it and a signal that something is wrong.
+   *
+   * Small on purpose: it should press, not kill. The exhaustion floor already
+   * guarantees that only visible decline ends a life (§6).
+   */
+  debt: {
+    moodPerDay: -0.55,
+    healthPerDay: -0.07,
+    /** Debt never pushes health below this on its own. */
+    healthFloor: 30,
+  },
+
   /** Stats other than money are clamped to this range. */
   statMin: 0,
   statMax: 100,
@@ -156,8 +175,18 @@ export const BALANCE = {
     marriageClosenessRequired: 70,
     marriageMinAgeYears: 20,
 
-    /** Each child, every day, for as long as they are dependent. */
-    childCostPerDay: 16,
+    /**
+     * Each child, every day, for as long as they are dependent.
+     *
+     * Four children to eighteen comes to about $184,000: the same order as a
+     * house, so a big family and a good home are comparable decisions
+     * (GDD §9.4), with just enough left over for something smaller.
+     *
+     * Found by simulation, not by guessing. At 16/day a family cost $420,000
+     * and bankrupted every career; at 10/day it still left an ordinary earner
+     * permanently under water.
+     */
+    childCostPerDay: 7,
     childMoodPerDay: 0.35,
     childDependentUntilAgeYears: 18,
     /** Chance per day of a child arriving, once married. */

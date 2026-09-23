@@ -469,6 +469,56 @@ Dua angka diperbaiki setelah membaca simulasi pertama: peluang bertemu orang
 baru diturunkan (99 kenalan seumur hidup terlalu ramai) dan kurva kematian NPC
 dilunakkan (mereka mati di awal 70-an, terlalu muda).
 
+#### Fase 5C — isi & keseimbangan (hasil implementasi)
+
+Isi naik kira-kira dua kali lipat, semuanya lewat penambahan entri data — mesin
+tidak disentuh sama sekali:
+
+| Jenis | Sebelum | Sesudah |
+|---|--:|--:|
+| Event kehidupan | 21 | **48** |
+| Pekerjaan | 5 | **11** |
+| Jenis usaha | 3 | **6** |
+| Cabang olahraga | 3 | **5** |
+
+**Utang akhirnya punya akibat.** Fase 1 membiarkan uang minus tanpa konsekuensi
+dan mencatatnya sebagai penyederhanaan yang harus dibereskan di balancing Fase 5.
+Sekarang: saat saldo negatif, mood dan kesehatan terkikis tiap hari, dengan
+**lantai kesehatan** supaya utang menekan tapi tidak membunuh sendirian — janji
+yang sama dengan lantai kelelahan di §6. Ditambah peringatan di dashboard, karena
+tenggelam pelan-pelan tanpa sinyal adalah kelas bug terburuk di proyek ini.
+
+**Yang ditemukan lewat simulasi, bukan lewat membaca kode:**
+
+| Temuan | Perbaikan |
+|---|---|
+| Dua usaha baru **kalah di segala hal** dari yang lebih murah — tidak ada alasan membelinya | Angka disetel ulang, dan aturan testnya diganti: "yang lebih mahal harus lebih baik di salah satu sisi", bukan "pemasukan harus naik berurutan". Pemasukan mentah jadi ukuran yang salah begitu tiap usaha beda ketahanannya saat ditinggal. |
+| Anak seharga $16/hari membuat **semua jalur karier bangkrut** — $420.000 seumur hidup | Diturunkan ke $7/hari. Empat anak sampai umur 18 kini sekitar $184.000, seukuran rumah, sesuai target GDD §9.4 |
+| Kolam event dicurigai jadi penyebab kebangkrutan | **Diukur, bukan ditebak**: seluruh kolam cuma −$75.000 seumur hidup. Bukan penyebabnya. Curiga tanpa mengukur akan membuat saya menyetel angka yang salah. |
+
+**Angka seumur hidup sesudah penyetelan** (pemain cermat, menabung):
+
+| Karier | Puncak uang |
+|---|--:|
+| Pegawai kantoran | ~$180.000 |
+| Pemilik restoran | ~$500.000 |
+| Dokter bedah | ~$1.500.000 |
+
+Melawan penyerapnya — flat $90.000, rumah $260.000, perahu $150.000, keluarga
+~$184.000, hidup nyaman ~$400.000 seumur hidup, hidup mewah ~$1,5 juta — target
+GDD §9.4 tercapai untuk penghasilan biasa: **satu kehidupan pegawai kantoran
+cukup untuk salah satu**, tidak semuanya. Penghasilan yang jauh lebih besar
+memang bisa membeli lebih banyak, dan itu memang gunanya memilih karier.
+
+**Catatan jujur soal metode.** Dua kali saya hampir menyetel angka game
+berdasarkan hasil simulasi yang salah, karena **skripnya** yang keliru, bukan
+gamenya: sekali aturan "bersosialisasi kalau ada yang renggang" menyala hampir
+tiap minggu sehingga pemainnya tidak pernah bekerja, sekali lagi anomali di
+skrip belanja yang belum terpecahkan. Yang menyelamatkan keduanya adalah
+menelusuri satu kehidupan langkah demi langkah sampai angkanya masuk akal,
+bukan mempercayai tabel ringkasan. **Kalau hasil simulasi mengejutkan, curigai
+skripnya dulu.**
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

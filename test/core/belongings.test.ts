@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { dailyUpkeep, replacedBy, withPurchase } from '../../src/core/belongings';
 import { createWorld } from '../../src/core/character';
 import { advanceDay, advanceWeek } from '../../src/core/clock';
+import { BALANCE } from '../../src/data/balance';
 import { LIFESTYLES, findLifestyle } from '../../src/data/lifestyles';
 import { POSSESSIONS, findPossession } from '../../src/data/possessions';
 import type { Character, WorldState } from '../../src/core/types';
@@ -157,5 +158,48 @@ describe('belongings inside a simulated week', () => {
 
     expect(frugal.character.stats.money).toBeGreaterThan(ordinary.character.stats.money);
     expect(frugal.character.stats.mood).toBeLessThan(ordinary.character.stats.mood);
+  });
+});
+
+/**
+ * Debt was allowed with no consequence from Phase 1, written down at the time
+ * as a simplification to settle in Phase 5 balancing (GDD §9.4). This is that
+ * settlement, so it is pinned.
+ */
+describe('owing money', () => {
+  const broke = (money: number): WorldState =>
+    world({ focusId: 'study', stats: { money, health: 80, energy: 80, mood: 80 } });
+
+  it('wears on mood while the balance is negative', () => {
+    const solvent = advanceDay(broke(5_000));
+    const indebted = advanceDay(broke(-5_000));
+
+    expect(indebted.character.stats.mood).toBeLessThan(solvent.character.stats.mood);
+  });
+
+  it('wears on health too', () => {
+    const solvent = advanceDay(broke(5_000));
+    const indebted = advanceDay(broke(-5_000));
+
+    expect(indebted.character.stats.health).toBeLessThan(solvent.character.stats.health);
+  });
+
+  it('presses but never kills on its own', () => {
+    // Health stops at the debt floor, so being poor is not a death sentence -
+    // the same promise the exhaustion floor makes (GDD §6).
+    let state = broke(-50_000);
+    for (let day = 0; day < 400 && !state.deceased; day += 1) state = advanceDay(state);
+
+    expect(state.character.stats.health).toBeGreaterThanOrEqual(BALANCE.debt.healthFloor);
+  });
+
+  it('does nothing at all to somebody who is merely poor but not overdrawn', () => {
+    // Both still in credit once the day's bills are paid, so the penalty must
+    // not fire for either. A pound left over is not the same as owing.
+    const poor = advanceDay(broke(1_000));
+    const rich = advanceDay(broke(100_000));
+
+    expect(poor.character.stats.mood).toBeCloseTo(rich.character.stats.mood, 5);
+    expect(poor.character.stats.health).toBeCloseTo(rich.character.stats.health, 5);
   });
 });

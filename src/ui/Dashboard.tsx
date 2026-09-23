@@ -157,6 +157,13 @@ export function Dashboard({
         </p>
       )}
 
+      {stats.money < 0 && (
+        <p className="warning" role="status">
+          You are living beyond your means. Debt wears on your mood and your health every day
+          &mdash; cut back at Home, or earn more.
+        </p>
+      )}
+
       {stats.health < 35 && (
         <p className="warning" role="status">
           Your health is failing. The Hospital repairs it fastest, the Gym more cheaply.

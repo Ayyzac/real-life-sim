@@ -171,6 +171,15 @@ export function applyDailyRules(state: WorldState): WorldState {
   // Buying, however, is not: you cannot spend money you do not have (store.ts).
   stats.money -= BALANCE.livingCostPerDay + (focus.costPerDay ?? 0) + upkeep.costPerDay + social.costPerDay;
 
+  // Owing money wears on you (GDD §9.4). It presses rather than kills: the
+  // health floor keeps debt from being a death sentence on its own.
+  if (stats.money < 0) {
+    stats.mood += BALANCE.debt.moodPerDay;
+    if (stats.health > BALANCE.debt.healthFloor) {
+      stats.health = Math.max(BALANCE.debt.healthFloor, stats.health + BALANCE.debt.healthPerDay);
+    }
+  }
+
   stats.mood += BALANCE.moodDriftPerDay;
   stats.health -= ageingHealthLossPerDay(ageInYears(character));
   if (stats.energy < BALANCE.lowEnergyThreshold && stats.health > BALANCE.exhaustionHealthFloor) {
