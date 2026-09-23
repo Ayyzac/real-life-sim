@@ -1630,3 +1630,68 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
 }
+
+/* ---------- casino ---------- */
+
+.casino__game {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.casino__title {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.casino__reels {
+  display: flex;
+  gap: 6px;
+}
+
+.casino__reel {
+  display: grid;
+  place-items: center;
+  min-width: 52px;
+  height: 52px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.casino__result {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.casino__result--win {
+  color: var(--good);
+}
+
+.casino__result--lose {
+  color: var(--bad);
+}
+
+.casino__detail {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.casino__hand {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.casino__cards {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}

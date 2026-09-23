@@ -134,6 +134,8 @@ export const BUILDINGS: readonly TownBuilding[] = [
   { locationId: 'mall', x: 35, y: 9, width: 8, height: 4, wallTile: 180, bandTile: 153, doorTile: 443, doorX: 38 },
   // Next door to the Stadium (GDD §12).
   { locationId: 'supermarket', x: 40, y: 0, width: 6, height: 4, wallTile: 41, bandTile: 68, doorTile: 443, doorX: 42, tint: 0xf2a7a0 },
+  // Next to the Mall, open when everything else is shutting (GDD §12).
+  { locationId: 'casino', x: 27, y: 9, width: 7, height: 4, wallTile: 41, bandTile: 68, doorTile: 443, doorX: 30, tint: 0x9d7fd6 },
 ];
 
 /** Scenery. Blocks walking, so keep them off the pavement. */
@@ -160,7 +162,6 @@ export const PROPS: readonly TownProp[] = [
   { x: 39, y: 1, tile: 346 },
   { x: 47, y: 2, tile: 291 },
   { x: 26, y: 10, tile: 238 },
-  { x: 30, y: 10, tile: 291 },
   { x: 34, y: 11, tile: 292 },
   { x: 44, y: 10, tile: 345 },
   { x: 48, y: 11, tile: 346 },

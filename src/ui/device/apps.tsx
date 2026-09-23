@@ -15,6 +15,7 @@ import { gameStore } from '../useGame';
 import { closeDevice } from './device';
 import { Bank, Crypto, Stocks } from './finance';
 import { Freelance, Jobs, Mail } from './laptopApps';
+import { OnlineSlots } from '../Casino';
 
 /**
  * The apps (GDD §12), as a list: adding an app = adding an entry here. `on`
@@ -208,6 +209,7 @@ export const APPS: readonly DeviceApp[] = [
   { id: 'bank', label: 'Bank', icon: '$', on: 'both', Component: Bank },
   { id: 'stocks', label: 'Stocks', icon: '↗', on: 'both', Component: Stocks },
   { id: 'crypto', label: 'Crypto', icon: '₿', on: 'both', Component: Crypto },
+  { id: 'slots', label: 'Slots', icon: '7', on: 'both', Component: OnlineSlots },
   { id: 'jobs', label: 'Jobs', icon: '⚒', on: 'laptop', Component: Jobs },
   { id: 'mail', label: 'Email', icon: '✉', on: 'laptop', Component: Mail },
   { id: 'freelance', label: 'Side work', icon: '⌨', on: 'laptop', Component: Freelance },

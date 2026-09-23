@@ -156,7 +156,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 - [x] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar — 426 test
 - [x] **F** — Bank, saham, crypto — 436 test
 - [x] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game) — 445 test
-- [ ] **H** — Casino + slot online
+- [x] **H** — Casino + slot online — 452 test
 - [ ] **I** — Obrolan pohon dialog per topik
 - [ ] **J** — Media sosial
 

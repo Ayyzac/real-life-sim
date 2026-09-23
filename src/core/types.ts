@@ -42,7 +42,8 @@ export type LocationId =
   | 'business'
   | 'stadium'
   | 'mall'
-  | 'supermarket';
+  | 'supermarket'
+  | 'casino';
 
 /** Id of an entry in src/data/focuses.ts. */
 export type FocusId = string;
@@ -224,6 +225,23 @@ export interface Email {
   read: boolean;
 }
 
+/** A blackjack hand in play (GDD §12). Saved, so a refresh cannot escape it. */
+export interface BlackjackHand {
+  bet: number;
+  player: number[];
+  dealer: number[];
+}
+
+/** How the last bet went, for the screen to show. */
+export interface LastBet {
+  game: 'slot' | 'roulette' | 'blackjack';
+  venue: 'casino' | 'online';
+  bet: number;
+  /** Paid back, the stake included: 0 is a loss. */
+  won: number;
+  detail: string;
+}
+
 export interface WorldState {
   /** Bumped whenever the saved shape changes, so old saves can be migrated. */
   schemaVersion: number;
@@ -264,6 +282,8 @@ export interface WorldState {
   applications: { jobId: string; day: number }[];
   /** Newest first, trimmed. */
   inbox: Email[];
+  blackjack: BlackjackHand | null;
+  lastBet: LastBet | null;
   deceased: boolean;
   /** Plain-language reason, set at the moment of death. */
   deathCause?: string;

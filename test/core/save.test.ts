@@ -332,4 +332,13 @@ describe('migrating an older save', () => {
     expect(loaded?.applications).toEqual([]);
     expect(loaded?.inbox).toEqual([]);
   });
+
+  it('starts an older save with no hand on the table (v9 -> v10)', () => {
+    const world = createWorld({ name: 'Punter', backgroundId: 'athlete', seed: 9 });
+    const { blackjack: _b, lastBet: _l, ...oldWorld } = world;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...oldWorld, schemaVersion: 9 }));
+    const loaded = saves.load();
+    expect(loaded?.blackjack).toBeNull();
+    expect(loaded?.lastBet).toBeNull();
+  });
 });

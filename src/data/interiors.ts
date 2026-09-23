@@ -384,6 +384,33 @@ const SUPERMARKET: Interior = {
   ],
 };
 
+/** Machines along the wall and two tables; the games are in the Here tab (GDD §12). */
+const CASINO: Interior = {
+  id: 'casino',
+  label: 'Casino',
+  floor: T.orangeCarpet,
+  wall: T.concrete(0x9d7fd6),
+  pieces: [
+    { x: 1, y: 2, frames: I.cooler },
+    { x: 2, y: 2, frames: I.cooler },
+    { x: 3, y: 2, frames: I.cooler },
+    { x: 4, y: 2, frames: I.cooler },
+    { x: 2, y: 4, frames: I.ovalTable },
+    { x: 9, y: 4, frames: I.longTable },
+    { x: 12, y: 2, frames: I.bottles },
+    { x: 13, y: 6, frames: I.plantTall },
+  ],
+  staff: [
+    { x: 2, y: 5, role: 'Croupier', look: look(3, 4, 7, 1) },
+    { x: 10, y: 3, role: 'Dealer', look: look(5, 2, 1, 2) },
+  ],
+  spots: [
+    { x: 5, y: 3 },
+    { x: 8, y: 6 },
+    { x: 12, y: 4 },
+  ],
+};
+
 const EMPTY_UNIT: Interior = {
   id: 'business_empty',
   label: 'Empty unit',
@@ -437,6 +464,7 @@ export const INTERIORS: readonly Interior[] = [
   STADIUM,
   MALL,
   SUPERMARKET,
+  CASINO,
   EMPTY_UNIT,
   ...Object.values(BUSINESSES),
 ];
@@ -465,6 +493,8 @@ export function interiorFor(locationId: LocationId, character: Pick<Character, '
       return MALL;
     case 'supermarket':
       return SUPERMARKET;
+    case 'casino':
+      return CASINO;
     case 'business':
       return character.career.type === 'business'
         ? (BUSINESSES[character.career.businessId] ?? EMPTY_UNIT)

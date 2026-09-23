@@ -36,6 +36,7 @@ import { duration, money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
 import { isGymMember } from '../core/gym';
 import { Shop } from './Bag';
+import { CasinoSection } from './Casino';
 import { BALANCE } from '../data/balance';
 
 /**
@@ -89,6 +90,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
       {location.id === 'mall' && <MallSection world={world} />}
       {location.id === 'gym' && <GymSection world={world} />}
       {location.id === 'supermarket' && <Shop world={world} />}
+      {location.id === 'casino' && <CasinoSection world={world} />}
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}

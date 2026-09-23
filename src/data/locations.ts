@@ -47,6 +47,13 @@ export const LOCATIONS: readonly LocationDefinition[] = [
     closes: 22 * 60,
   },
   {
+    id: 'casino',
+    label: 'Casino',
+    blurb: 'Slots, roulette and blackjack. The house always wins, on average.',
+    opens: 18 * 60,
+    closes: 26 * 60,
+  },
+  {
     id: 'supermarket',
     label: 'Supermarket',
     blurb: 'Food for the bag, on offer or not.',

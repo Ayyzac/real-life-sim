@@ -14,6 +14,8 @@ import { caughtInRain } from './weather';
 import { deliverDue, orderFood, takeTaxi } from './phone';
 import { advanceMarket, bankMove, buyAsset, sellAsset, type BankMove } from './finance';
 import { applyForJob, doGig, emailPerson, offerBlocker } from './laptop';
+import { dealBlackjack, hitBlackjack, spinRoulette, spinSlot, standBlackjack, type RouletteBet } from './gamble';
+import type { Venue } from '../data/gambling';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -61,6 +63,11 @@ export type GameIntent =
   | { type: 'readEmail'; emailId: string }
   | { type: 'emailPerson'; personId: string }
   | { type: 'freelance'; gigId: string; score: number }
+  | { type: 'spinSlot'; bet: number; venue: Venue }
+  | { type: 'spinRoulette'; bet: number; on: RouletteBet }
+  | { type: 'dealBlackjack'; bet: number }
+  | { type: 'hitBlackjack' }
+  | { type: 'standBlackjack' }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
   | { type: 'greetStranger'; look: number }
@@ -363,6 +370,17 @@ export class GameStore {
         return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
       }
 
+      case 'spinSlot':
+      case 'spinRoulette':
+      case 'dealBlackjack':
+      case 'hitBlackjack':
+      case 'standBlackjack': {
+        if (!state) return state;
+        const next = gamble(state, intent);
+        // The last hand can run into 02:00 like anything else.
+        return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
+      }
+
       case 'askOut':
         return state ? askOut(state, intent.personId) : state;
 
@@ -598,6 +616,24 @@ export class GameStore {
 
 function hourOf(world: WorldState): number {
   return world.clockDay * 100 + Math.floor(world.minuteOfDay / 60);
+}
+
+function gamble(
+  state: WorldState,
+  intent: Extract<GameIntent, { type: 'spinSlot' | 'spinRoulette' | 'dealBlackjack' | 'hitBlackjack' | 'standBlackjack' }>,
+): WorldState {
+  switch (intent.type) {
+    case 'spinSlot':
+      return spinSlot(state, intent.bet, intent.venue);
+    case 'spinRoulette':
+      return spinRoulette(state, intent.bet, intent.on);
+    case 'dealBlackjack':
+      return dealBlackjack(state, intent.bet);
+    case 'hitBlackjack':
+      return hitBlackjack(state);
+    case 'standBlackjack':
+      return standBlackjack(state);
+  }
 }
 
 /**

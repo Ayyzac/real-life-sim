@@ -761,6 +761,20 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Isi mini-game diacak dengan `createRng(Date.now())` | Instans RNG sendiri, bukan RNG yang disimpan. | Kata atau paket berikutnya tidak boleh menggeser dadu hidup. `Math.random()` tetap tidak dipakai. |
 | Schema → 9 | `applications`, `inbox`. | |
 
+#### Fase 7H — casino & slot online (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Casino = `LocationId` ke-10 | Gedung (27,9) 7×4 di Eastside, sebelah Mall, pintu (30,12), buka 18:00–02:00. Satu pohon di (30,10) dibuang karena tertimpa gedung. | Test peta menangkap tumpang-tindih semacam ini. |
+| Judi memakai RNG simulasi | `src/core/gamble.ts`, pola `greetStranger`: `restoreRng` → hasil → `rng.snapshot()` disimpan. | Taruhan pemain memang dadu sungguhan; karena tersimpan, muat ulang tidak membatalkan kekalahan. |
+| Slot = tabel peluang × bayaran | `SLOT_TABLES` di `src/data/gambling.ts`: casino mengembalikan 92%, online 85,5% (lebih sering menang kecil, jarang besar). Dipatok test analitis + 50.000 putaran. | "Bandar selalu unggul; judol lebih curang" (keputusan user) sebagai angka yang bisa dicek. |
+| Roulette Eropa | 0–36, satu nol; warna/ganjil-genap 1:1, angka 35:1. | |
+| Blackjack | Sepatu tak berujung (kartu 1–13 dari RNG), dealer berdiri di 17, blackjack 3:2, tanpa split/double. Tangan yang sedang berjalan disimpan di `WorldState.blackjack`; taruhan diambil saat dibagi. | Refresh tidak bisa kabur dari tangan yang kalah. Tanpa split/double = setengah kode, tetap blackjack. |
+| Jam berhenti di meja | `CasinoSection` menahan jam selama tab Here di Casino terbuka; tiap taruhan makan 1–2 menit game. | GDD §12: jam berhenti saat casino terbuka. |
+| Hasil terakhir = `WorldState.lastBet` | Satu kolom untuk semua permainan; tiap meja menampilkannya kalau itu miliknya. | Paling kecil yang cukup untuk layar. |
+| Tanpa kecanduan | Hanya untung-rugi uang. | Keputusan user. |
+| Schema → 10 | `blackjack`, `lastBet`. | |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.
