@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { ChangeReport } from './ChangeReport';
+import { changesBetween, type ChangeReport as Report } from './changes';
 import { CharacterCreation } from './CharacterCreation';
 import { Dashboard } from './Dashboard';
 import { EventDialog } from './EventDialog';
@@ -33,9 +35,26 @@ function useSound(world: WorldState | null): void {
   }, [world]);
 }
 
+/** The last Advance's before-and-after, kept until the next one (GDD §11.7). */
+function useChangeReport(world: WorldState | null): Report | null {
+  const previous = useRef<WorldState | null>(world);
+  const [report, setReport] = useState<Report | null>(null);
+
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = world;
+    const next = changesBetween(before, world);
+    if (next) setReport(next);
+    else if (!world || before?.character.id !== world.character.id) setReport(null);
+  }, [world]);
+
+  return report;
+}
+
 export function App(): React.JSX.Element {
   const world = useGame();
   useSound(world);
+  const report = useChangeReport(world);
 
   if (world === null) {
     return (
@@ -77,6 +96,7 @@ export function App(): React.JSX.Element {
       ) : (
         <>
           <TimeControls />
+          {report && <ChangeReport report={report} />}
           <LocationMenu world={world} />
         </>
       )}

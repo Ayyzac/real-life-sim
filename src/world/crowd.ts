@@ -1,14 +1,9 @@
 import Phaser from 'phaser';
 
-import {
-  CAR_TILES,
-  CAR_TINTS,
-  CROWD,
-  NPC_SHEET_ROWS,
-  TILE_SIZE,
-  TOWN_COLUMNS,
-  personFrames,
-} from '../data/town';
+import { LOOK_COUNT } from '../core/look';
+import { CAR_TILES, CAR_TINTS, CROWD, TILE_SIZE, TOWN_COLUMNS } from '../data/town';
+import { lookTexture } from './lookTexture';
+import { POSE, VIEW, lookFrame } from './looks';
 
 /**
  * The people and traffic that make the town look inhabited.
@@ -19,16 +14,22 @@ import {
  *
  * Everyone moves in a straight line along a fixed row and wraps around at the
  * edge. No pathfinding, no collisions - a crowd that has to think is a crowd
- * that costs frames, and the player is never going to interact with it.
+ * that costs frames.
  */
 
 const PERSON_SPEED = { min: 8, max: 20 };
 const CAR_SPEED = { min: 34, max: 58 };
 const MARGIN = TILE_SIZE * 2;
+/** How long each walking step is shown, in milliseconds. */
+export const STEP_MS = 220;
 
 interface Walker {
-  object: Phaser.GameObjects.GameObject & { x: number; setFlipX?: (v: boolean) => unknown };
+  object: Phaser.GameObjects.Image | Phaser.GameObjects.Container;
   speed: number;
+  /** Set for people, who swap between their two walking frames. */
+  view?: number;
+  /** So forty people do not all step in time. */
+  phase: number;
 }
 
 export interface Crowd {
@@ -44,23 +45,27 @@ export function createCrowd(
 ): Crowd {
   const width = TOWN_COLUMNS * TILE_SIZE;
   const walkers: Walker[] = [];
-  const objects: Phaser.GameObjects.GameObject[] = [];
+  let elapsed = 0;
 
   const pick = <T,>(list: readonly T[]): T => list[Math.floor(rng() * list.length)]!;
   const between = (min: number, max: number): number => min + rng() * (max - min);
 
   for (let i = 0; i < CROWD.people; i += 1) {
     const row = CROWD.walkRows[i % CROWD.walkRows.length]!;
-    const frames = personFrames(pick(NPC_SHEET_ROWS));
+    const look = Math.floor(rng() * LOOK_COUNT);
     const goingRight = rng() < 0.5;
+    const view = goingRight ? VIEW.right : VIEW.left;
 
     const person = scene.add
-      .image(rng() * width, row * TILE_SIZE + TILE_SIZE / 2, texture, frames.side)
-      .setDepth(depth)
-      .setFlipX(!goingRight);
+      .image(rng() * width, row * TILE_SIZE + TILE_SIZE / 2, lookTexture(scene, texture, look), lookFrame(view, POSE.stand))
+      .setDepth(depth);
 
-    walkers.push({ object: person, speed: between(PERSON_SPEED.min, PERSON_SPEED.max) * (goingRight ? 1 : -1) });
-    objects.push(person);
+    walkers.push({
+      object: person,
+      speed: between(PERSON_SPEED.min, PERSON_SPEED.max) * (goingRight ? 1 : -1),
+      view,
+      phase: rng() * STEP_MS * 2,
+    });
   }
 
   for (let i = 0; i < CROWD.cars; i += 1) {
@@ -76,26 +81,35 @@ export function createCrowd(
         .setTint(tint),
     );
     const car = scene.add.container(rng() * width, y, parts).setDepth(depth);
-    // Nose-up sprite, quarter-turned: east is +90, west is -90.
-    car.setAngle(goingRight ? 90 : -90);
+    // Nose-down sprite (src/data/town.ts), so the bottom has to lead: a
+    // quarter turn anticlockwise points it east, clockwise points it west.
+    car.setAngle(goingRight ? -90 : 90);
 
-    walkers.push({ object: car, speed: between(CAR_SPEED.min, CAR_SPEED.max) * (goingRight ? 1 : -1) });
-    objects.push(car);
+    walkers.push({ object: car, speed: between(CAR_SPEED.min, CAR_SPEED.max) * (goingRight ? 1 : -1), phase: 0 });
   }
 
   return {
     update(deltaMs: number): void {
+      elapsed += deltaMs;
       const seconds = deltaMs / 1000;
+
       for (const walker of walkers) {
         walker.object.x += walker.speed * seconds;
         if (walker.speed > 0 && walker.object.x > width + MARGIN) walker.object.x = -MARGIN;
         else if (walker.speed < 0 && walker.object.x < -MARGIN) walker.object.x = width + MARGIN;
+        if (walker.view !== undefined && walker.object instanceof Phaser.GameObjects.Image) {
+          walker.object.setFrame(lookFrame(walker.view, stepPose(elapsed + walker.phase)));
+        }
       }
     },
     destroy(): void {
-      for (const object of objects) object.destroy();
+      for (const walker of walkers) walker.object.destroy();
       walkers.length = 0;
-      objects.length = 0;
     },
   };
+}
+
+/** Which walking frame to show at a given moment. */
+export function stepPose(ms: number): number {
+  return Math.floor(ms / STEP_MS) % 2 === 0 ? POSE.stepA : POSE.stepB;
 }

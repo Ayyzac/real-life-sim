@@ -130,7 +130,7 @@ describe('the Life Summary', () => {
     expect(summary.background).toBe('Scholarship Kid');
     expect(summary.ageAtDeath).toBe(ageInYears(dead.character));
     expect(summary.cause).toBe(dead.deathCause);
-    expect(summary.finalJob).toBe('Cashier');
+    expect(summary.finalCareer).toBe('Cashier');
     expect(summary.weeksLived).toBe(Math.floor(dead.character.ageInDays / 7));
   });
 
@@ -161,6 +161,23 @@ describe('the Life Summary', () => {
 
   it('reports no job for someone who never had one', () => {
     const dead = playUntilDeath(world({ focusId: 'work', career: { type: 'none' } }));
-    expect(buildLifeSummary(dead).finalJob).toBeNull();
+    expect(buildLifeSummary(dead).finalCareer).toBeNull();
+  });
+
+  it('names a business owner\'s business, not "no job"', () => {
+    const dead = playUntilDeath(
+      world({ focusId: 'mind_business', career: { type: 'business', businessId: 'market_stall', daysOpen: 0, level: 0 } }),
+    );
+    expect(buildLifeSummary(dead).finalCareer).toMatch(/^Owner, /);
+  });
+
+  it('gives an athlete their sport and record', () => {
+    const dead = playUntilDeath(
+      world({
+        focusId: 'rest',
+        career: { type: 'sports', sportId: 'running', skill: 0, reputation: 0, daysSinceMatch: 0, wins: 3, losses: 1 },
+      }),
+    );
+    expect(buildLifeSummary(dead).finalCareer).toBe('Running (3-1)');
   });
 });

@@ -303,6 +303,26 @@ describe('GameStore', () => {
     expect(shop.getState()?.character.stats.money).toBe(afterOpening);
   });
 
+  it('closing a business also stops minding it, instead of a hidden focus that drains energy', () => {
+    const shop = rich(5_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    shop.dispatch({ type: 'setFocus', focusId: 'mind_business' });
+
+    shop.dispatch({ type: 'closeBusiness' });
+
+    expect(shop.getState()?.character.focusId).toBe('rest');
+  });
+
+  it('giving up a career leaves an unrelated focus alone', () => {
+    const shop = rich(5_000);
+    shop.dispatch({ type: 'openBusiness', businessId: 'market_stall' });
+    shop.dispatch({ type: 'setFocus', focusId: 'study' });
+
+    shop.dispatch({ type: 'closeBusiness' });
+
+    expect(shop.getState()?.character.focusId).toBe('study');
+  });
+
   // ---------- sport (GDD §4.3) ----------
 
   it('taking up a sport starts an athlete from nothing', () => {
@@ -365,8 +385,11 @@ describe('GameStore', () => {
   it('retiring records the record and leaves the character unemployed', () => {
     const club = rich(0, { attributes: { intelligence: 12, physical: 40, charisma: 30 } });
     club.dispatch({ type: 'joinSport', sportId: 'running' });
+    club.dispatch({ type: 'setFocus', focusId: 'train' });
 
     club.dispatch({ type: 'leaveSport' });
+
+    expect(club.getState()?.character.focusId).toBe('rest');
 
     expect(club.getState()?.character.career).toEqual({ type: 'none' });
     expect(club.getState()?.milestones[0]?.text).toContain('Retired from Running');
@@ -458,5 +481,40 @@ describe('GameStore', () => {
 
     expect(store.getState()).toBeNull();
     expect(saves.current).toBeNull();
+  });
+
+  it('quitting a job also stops going to work', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    store.dispatch({ type: 'takeJob', jobId: 'cashier' });
+    store.dispatch({ type: 'setFocus', focusId: 'work' });
+
+    store.dispatch({ type: 'quitJob' });
+
+    expect(store.getState()?.character.focusId).toBe('rest');
+  });
+
+  it('keeps the log trimmed however many things the player does between weeks', () => {
+    store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    for (let i = 0; i < 100; i += 1) {
+      store.dispatch({ type: 'takeJob', jobId: 'cashier' });
+      store.dispatch({ type: 'quitJob' });
+    }
+
+    const world = store.getState()!;
+    expect(world.eventLog.length).toBeLessThanOrEqual(80);
+    expect(world.milestones.length).toBeLessThanOrEqual(60);
+  });
+
+  it('writes money in the log as money', () => {
+    const shop = new GameStore(memorySaves());
+    shop.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
+    const world = shop.getState()!;
+    const funded = new GameStore(
+      memorySaves({ ...world, character: { ...world.character, stats: { ...world.character.stats, money: 5_000 } } }),
+    );
+
+    funded.dispatch({ type: 'buyPossession', possessionId: 'bicycle' });
+
+    expect(funded.getState()?.eventLog[0]?.text).toBe('Bought Bicycle for $1,500.');
   });
 });

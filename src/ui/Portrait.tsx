@@ -1,40 +1,56 @@
-import { SHEET_SPACING, TILE_SIZE, personFrames } from '../data/town';
+import { useEffect, useRef } from 'react';
+
+import { TILE_SIZE } from '../data/town';
+import { POSE, VIEW, loadTilesheet, lookSheet } from '../world/looks';
 
 /**
- * One of the tilesheet's people, drawn with CSS instead of Phaser.
+ * Someone's face: the standing, front-facing frame of their look.
  *
- * The character creation screen needs faces before any Phaser game exists, so
- * it slices the same spritesheet with background-position. One source of
- * truth for the frames: `personFrames`, exactly as the map uses.
+ * Painted from the same look sheet the map uses (src/world/looks.ts), so a
+ * person in a list is recognisably the person walking about in town.
  */
-const STRIDE = TILE_SIZE + SHEET_SPACING;
-const SHEET_WIDTH = 458;
-const SHEET_HEIGHT = 305;
-
 export function Portrait({
-  row,
+  look,
   scale = 3,
   className = '',
 }: {
-  row: number;
+  look: number;
   scale?: number;
   className?: string;
 }): React.JSX.Element {
-  const frame = personFrames(row).down;
-  const column = frame % 27;
-  const sheetRow = Math.floor(frame / 27);
+  const canvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let live = true;
+    void loadTilesheet().then((tilesheet) => {
+      const context = canvas.current?.getContext('2d');
+      if (!live || !context) return;
+      context.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+      context.drawImage(
+        lookSheet(tilesheet, look),
+        VIEW.down * TILE_SIZE,
+        POSE.stand * TILE_SIZE,
+        TILE_SIZE,
+        TILE_SIZE,
+        0,
+        0,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
+    });
+    return () => {
+      live = false;
+    };
+  }, [look]);
 
   return (
-    <span
+    <canvas
+      ref={canvas}
       className={`portrait ${className}`}
       aria-hidden="true"
-      style={{
-        width: TILE_SIZE * scale,
-        height: TILE_SIZE * scale,
-        backgroundImage: `url(${import.meta.env.BASE_URL}assets/town/tilemap.png)`,
-        backgroundSize: `${SHEET_WIDTH * scale}px ${SHEET_HEIGHT * scale}px`,
-        backgroundPosition: `-${column * STRIDE * scale}px -${sheetRow * STRIDE * scale}px`,
-      }}
+      width={TILE_SIZE}
+      height={TILE_SIZE}
+      style={{ width: TILE_SIZE * scale, height: TILE_SIZE * scale }}
     />
   );
 }

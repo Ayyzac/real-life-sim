@@ -1,7 +1,9 @@
 import { findBackground } from '../data/backgrounds';
+import { findBusiness } from '../data/businesses';
 import { findJob } from '../data/jobs';
+import { findSport } from '../data/sports';
 import { ageInYears } from './character';
-import type { Attributes, EventLogEntry, Memory, Person, WorldState } from './types';
+import type { Attributes, CareerState, EventLogEntry, Memory, Person, WorldState } from './types';
 import { childrenOf, partnerOf } from './relationships';
 
 /**
@@ -20,7 +22,7 @@ export interface LifeSummary {
   cause: string;
   finalMoney: number;
   peakMoney: number;
-  finalJob: string | null;
+  finalCareer: string | null;
   attributes: Attributes;
   /** Oldest first, so the summary reads forwards like a life does. */
   milestones: EventLogEntry[];
@@ -41,7 +43,8 @@ export interface LifeSummary {
  */
 function epitaphFor(state: WorldState, ageAtDeath: number, peakMoney: number): string {
   const { career, attributes } = state.character;
-  const employed = career.type === 'job';
+  const established = career.type !== 'none' && career.type !== 'sports' ? career.level >= 2 : false;
+  const champion = career.type === 'sports' && career.wins >= 100;
   const children = childrenOf(state.people).length;
 
   if (ageAtDeath < 40) return 'A life cut short. There was so much still ahead.';
@@ -52,7 +55,7 @@ function epitaphFor(state: WorldState, ageAtDeath: number, peakMoney: number): s
   if (partnerOf(state.people)) return 'They were not alone at the end.';
   if (state.people.length === 0) return 'They outlived everyone they knew.';
   if (peakMoney >= 250_000) return 'They wanted for nothing, in the end.';
-  if (employed && career.level >= 2) return 'They were good at what they did, and people knew it.';
+  if (established || champion) return 'They were good at what they did, and people knew it.';
   if (attributes.intelligence >= 70) return 'They never stopped learning.';
   if (attributes.physical >= 70) return 'They stayed strong to the last.';
   if (attributes.charisma >= 70) return 'A room was warmer for them being in it.';
@@ -71,6 +74,20 @@ function householdLine(people: readonly Person[]): string | null {
   return parts.join(', ');
 }
 
+/** What they were doing at the end, whichever of the three careers it was. */
+function careerTitle(career: CareerState): string | null {
+  switch (career.type) {
+    case 'job':
+      return findJob(career.jobId).title;
+    case 'business':
+      return `Owner, ${findBusiness(career.businessId).name}`;
+    case 'sports':
+      return `${findSport(career.sportId).name} (${career.wins}-${career.losses})`;
+    case 'none':
+      return null;
+  }
+}
+
 export function buildLifeSummary(state: WorldState): LifeSummary {
   const { character } = state;
   const ageAtDeath = ageInYears(character);
@@ -84,7 +101,7 @@ export function buildLifeSummary(state: WorldState): LifeSummary {
     cause: state.deathCause ?? 'Their life came to an end.',
     finalMoney: character.stats.money,
     peakMoney: state.peakMoney,
-    finalJob: character.career.type === 'job' ? findJob(character.career.jobId).title : null,
+    finalCareer: careerTitle(character.career),
     attributes: character.attributes,
     milestones: [...state.milestones].reverse(),
     survivors: state.people,

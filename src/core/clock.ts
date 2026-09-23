@@ -51,11 +51,11 @@ function clampAttributes(attributes: Attributes): Attributes {
   };
 }
 
-function withLogEntry(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
+export function withLogEntry(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
   return [entry, ...log].slice(0, BALANCE.eventLogLimit);
 }
 
-function withMilestone(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
+export function withMilestone(log: EventLogEntry[], entry: EventLogEntry): EventLogEntry[] {
   return [entry, ...log].slice(0, BALANCE.milestoneLimit);
 }
 
@@ -254,6 +254,7 @@ function rollOtherLives(state: WorldState, rng: Rng): WorldState {
     state.clockDay,
     partnerOf(state.people) !== undefined,
     rng,
+    state.character.career.type === 'job',
   );
   if (!outcome.text) return state;
 

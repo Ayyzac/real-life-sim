@@ -1,5 +1,6 @@
 import { BALANCE } from '../../data/balance';
 import { SPORTS, findSport, type SportDefinition } from '../../data/sports';
+import { dollars } from '../money';
 import type { Attributes, CareerState } from '../types';
 import type { Rng } from '../rng';
 
@@ -122,8 +123,8 @@ export function playMatch(
     won,
     prize,
     text: won
-      ? `Won at ${sport.name}. Took home ${prize}.`
-      : `Lost at ${sport.name}. Picked up ${prize}.`,
+      ? `Won at ${sport.name}. Took home ${dollars(prize)}.`
+      : `Lost at ${sport.name}. Picked up ${dollars(prize)}.`,
   };
 }
 

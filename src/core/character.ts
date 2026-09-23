@@ -2,6 +2,7 @@ import { BACKGROUNDS, findBackground } from '../data/backgrounds';
 import { BALANCE } from '../data/balance';
 import { DEFAULT_FOCUS_ID } from '../data/focuses';
 import { DEFAULT_LIFESTYLE_ID } from '../data/lifestyles';
+import { decodeLook, encodeLook } from './look';
 import { createRng } from './rng';
 import { startingPeople } from './relationships';
 import type { Character, EventLogEntry, WorldState } from './types';
@@ -16,8 +17,10 @@ export const SCHEMA_VERSION = 3;
 export interface NewGameOptions {
   name: string;
   backgroundId: string;
-  /** Which of the tilesheet's people to look like. Cosmetic only. */
+  /** Pre-Phase 6: which tilesheet row to look like. Ignored when `look` is given. */
   appearanceRow?: number;
+  /** Body and colours (src/core/look.ts). Cosmetic only. */
+  look?: number;
   /** Pass a fixed seed in tests; omit it and the run is seeded from the clock. */
   seed?: number;
 }
@@ -32,7 +35,7 @@ export function ageInYears(character: Character): number {
   return character.startAgeYears + Math.floor(character.ageInDays / 365);
 }
 
-export function createWorld({ name, backgroundId, appearanceRow, seed }: NewGameOptions): WorldState {
+export function createWorld({ name, backgroundId, appearanceRow, look, seed }: NewGameOptions): WorldState {
   const background = findBackground(backgroundId);
   const actualSeed = seed ?? (Date.now() >>> 0);
   const rng = createRng(actualSeed);
@@ -58,7 +61,11 @@ export function createWorld({ name, backgroundId, appearanceRow, seed }: NewGame
     career: { type: 'none' },
     focusId: DEFAULT_FOCUS_ID,
     location: 'home',
-    appearanceRow: clampAppearance(appearanceRow ?? DEFAULT_APPEARANCE_ROW),
+    appearanceRow:
+      look === undefined
+        ? clampAppearance(appearanceRow ?? DEFAULT_APPEARANCE_ROW)
+        : decodeLook(look).body * 3,
+    ...(look === undefined ? {} : { look: encodeLook(decodeLook(look)) }),
     lifestyleId: DEFAULT_LIFESTYLE_ID,
     owned: [],
   };

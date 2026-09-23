@@ -570,6 +570,23 @@ tanya-jawab. **FINAL — jangan tanya ulang.**
 
 **Dikerjakan bertahap (A–F di `ROADMAP.md`)** supaya tiap bagian bisa dicoba.
 
+#### Fase 6A — perbaikan & wajah (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Palette swap dibatasi **pita baris** | Warna hanya diganti di dalam rentang baris per bagian (`src/data/looks.ts`). | Paket Kenney memakai ulang warna: rambut badan 0 sewarna sepatunya, baju badan 2 sewarna rambut badan 0. Mengganti warna tanpa batas baris ikut mewarnai sepatu. Dipatok test. |
+| `look` opsional, `appearanceRow` tetap ada | `characterLook()` jatuh ke baris lama untuk save sebelum Fase 6. | Save tidak perlu naik versi hanya untuk kosmetik. |
+| Tekstur tampilan dibuat saat dipakai | `lookTexture()` membuat satu kanvas 4×3 frame per tampilan, sekali. | Kerumunan 40 orang = paling banyak 40 kanvas kecil; tidak ada gunanya menyiapkan 2.400. |
+| `repaint()` murni, tanpa Phaser | Dites di Vitest; bagian Phaser di `lookTexture.ts` terpisah. | Phaser tidak bisa dimuat di lingkungan test. |
+| Koin "teman atau kolega" tetap dilempar walau menganggur | Hasilnya saja yang dipaksa "teman". | Melewatkan lemparan akan menggeser urutan RNG dan mengubah semua simulasi seumur hidup yang dipatok test. |
+| Laporan perubahan = perbandingan state | `changesBetween(before, after)` di `src/ui/changes.ts`, pola yang sama dengan `soundFor`. | Aturan baru ikut terlaporkan tanpa ada yang harus ingat menambahkannya. |
+
+**Tiga bug yang ditemukan saat menelusuri, bukan dilaporkan user:** fokus
+"Mind the shop"/"Train"/"Work" tetap berjalan tersembunyi setelah karier
+dilepas (energi terkuras tanpa hasil); aksi di `store.ts` menambah log tanpa
+memotongnya; dan save yang menyebut id data tak dikenal membuat halaman kosong
+tanpa tombol reset. Ketiganya sekarang dipatok test.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

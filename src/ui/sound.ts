@@ -86,7 +86,7 @@ export function soundFor(before: WorldState | null, after: WorldState | null): S
 
   if (after.deceased && !before.deceased) return 'death';
   if (after.pendingEvent && !before.pendingEvent) return 'decide';
-  if (after.character.owned.length > before.character.owned.length) return 'buy';
+  if (after.character.owned.some((id) => !before.character.owned.includes(id))) return 'buy';
 
   const newest = after.eventLog[0];
   if (newest && newest !== before.eventLog[0]) {

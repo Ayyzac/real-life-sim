@@ -1,4 +1,4 @@
-import { findFocus } from '../data/focuses';
+import { DEFAULT_FOCUS_ID, findFocus } from '../data/focuses';
 import { EventBus } from './bus';
 import { meetsRequirements } from './careers/job';
 import {
@@ -11,11 +11,12 @@ import { findPossession, replacedBy, withPurchase } from './belongings';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
-import { advanceDay, advanceWeek, resolveEvent } from './clock';
+import { advanceDay, advanceWeek, resolveEvent, withLogEntry, withMilestone } from './clock';
 import { createWorld, type NewGameOptions } from './character';
+import { dollars } from './money';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
-import type { FocusId, LocationId, WorldState } from './types';
+import type { Character, FocusId, LocationId, WorldState } from './types';
 
 /**
  * The single seam between the simulation and everything that draws it.
@@ -29,7 +30,7 @@ import type { FocusId, LocationId, WorldState } from './types';
  */
 
 export type GameIntent =
-  | { type: 'newGame'; name: string; backgroundId: string; appearanceRow?: number; seed?: number }
+  | { type: 'newGame'; name: string; backgroundId: string; appearanceRow?: number; look?: number; seed?: number }
   | { type: 'advanceDay' }
   | { type: 'advanceWeek' }
   | { type: 'setFocus'; focusId: FocusId }
@@ -99,13 +100,13 @@ export class GameStore {
           day: state.clockDay,
           tone: 'good' as const,
           text: replaced
-            ? `Traded the ${replaced.name} for ${possession.name}, ${possession.price}.`
-            : `Bought ${possession.name} for ${possession.price}.`,
+            ? `Traded the ${replaced.name} for ${possession.name}, ${dollars(possession.price)}.`
+            : `Bought ${possession.name} for ${dollars(possession.price)}.`,
         };
         return {
           ...state,
-          eventLog: [bought, ...state.eventLog],
-          milestones: [bought, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, bought),
+          milestones: withMilestone(state.milestones, bought),
           character: {
             ...state.character,
             stats: {
@@ -124,14 +125,11 @@ export class GameStore {
 
         return {
           ...state,
-          eventLog: [
-            {
-              day: state.clockDay,
-              tone: 'neutral',
-              text: `Started living ${lifestyle.label.toLowerCase()}.`,
-            },
-            ...state.eventLog,
-          ],
+          eventLog: withLogEntry(state.eventLog, {
+            day: state.clockDay,
+            tone: 'neutral',
+            text: `Lifestyle changed to ${lifestyle.label}.`,
+          }),
           character: { ...state.character, lifestyleId: lifestyle.id },
         };
       }
@@ -152,8 +150,8 @@ export class GameStore {
         };
         return {
           ...state,
-          eventLog: [married, ...state.eventLog],
-          milestones: [married, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, married),
+          milestones: withMilestone(state.milestones, married),
           people: state.people.map((p) =>
             p.id === candidate.id ? { ...p, kind: 'partner' as const, closeness: 100 } : p,
           ),
@@ -219,8 +217,8 @@ export class GameStore {
         const hired = { day: state.clockDay, tone: 'good' as const, text: `Hired as ${job.title}.` };
         return {
           ...state,
-          eventLog: [hired, ...state.eventLog],
-          milestones: [hired, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, hired),
+          milestones: withMilestone(state.milestones, hired),
           character: {
             ...state.character,
             career: { type: 'job', jobId: job.id, tenureDays: 0, level: 0 },
@@ -243,12 +241,12 @@ export class GameStore {
         const opened = {
           day: state.clockDay,
           tone: 'good' as const,
-          text: `Opened ${business.name} for ${business.startupCost}.`,
+          text: `Opened ${business.name} for ${dollars(business.startupCost)}.`,
         };
         return {
           ...state,
-          eventLog: [opened, ...state.eventLog],
-          milestones: [opened, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, opened),
+          milestones: withMilestone(state.milestones, opened),
           character: {
             ...state.character,
             stats: {
@@ -273,12 +271,12 @@ export class GameStore {
         const grown = {
           day: state.clockDay,
           tone: 'good' as const,
-          text: `Put ${cost} into ${business.name}. Now level ${level}.`,
+          text: `Put ${dollars(cost)} into ${business.name}. Now level ${level}.`,
         };
         return {
           ...state,
-          eventLog: [grown, ...state.eventLog],
-          milestones: [grown, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, grown),
+          milestones: withMilestone(state.milestones, grown),
           character: {
             ...state.character,
             stats: { ...state.character.stats, money: state.character.stats.money - cost },
@@ -302,9 +300,9 @@ export class GameStore {
         };
         return {
           ...state,
-          eventLog: [closed, ...state.eventLog],
-          milestones: [closed, ...state.milestones],
-          character: { ...state.character, career: { type: 'none' } },
+          eventLog: withLogEntry(state.eventLog, closed),
+          milestones: withMilestone(state.milestones, closed),
+          character: leaveCareer(state.character),
         };
       }
 
@@ -324,8 +322,8 @@ export class GameStore {
         };
         return {
           ...state,
-          eventLog: [joined, ...state.eventLog],
-          milestones: [joined, ...state.milestones],
+          eventLog: withLogEntry(state.eventLog, joined),
+          milestones: withMilestone(state.milestones, joined),
           character: {
             ...state.character,
             career: {
@@ -355,9 +353,9 @@ export class GameStore {
         };
         return {
           ...state,
-          eventLog: [left, ...state.eventLog],
-          milestones: [left, ...state.milestones],
-          character: { ...state.character, career: { type: 'none' } },
+          eventLog: withLogEntry(state.eventLog, left),
+          milestones: withMilestone(state.milestones, left),
+          character: leaveCareer(state.character),
         };
       }
 
@@ -367,13 +365,29 @@ export class GameStore {
         const job = findJob(state.character.career.jobId);
         return {
           ...state,
-          eventLog: [
-            { day: state.clockDay, tone: 'neutral', text: `Quit the ${job.title} job.` },
-            ...state.eventLog,
-          ],
-          character: { ...state.character, career: { type: 'none' } },
+          eventLog: withLogEntry(state.eventLog, {
+            day: state.clockDay,
+            tone: 'neutral',
+            text: `Quit the ${job.title} job.`,
+          }),
+          character: leaveCareer(state.character),
         };
       }
     }
   }
+}
+
+/**
+ * Giving up a career also gives up the focus that only made sense with it.
+ * Without this, closing a shop left "Mind the shop" running: a day's energy
+ * spent every day on nothing, with its button gone from the menu.
+ */
+function leaveCareer(character: Character): Character {
+  const focus = findFocus(character.focusId);
+  const tied = focus.worksJob || focus.runsBusiness || focus.trainsSport;
+  return {
+    ...character,
+    career: { type: 'none' },
+    focusId: tied ? DEFAULT_FOCUS_ID : character.focusId,
+  };
 }

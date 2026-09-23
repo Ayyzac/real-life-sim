@@ -579,10 +579,63 @@ body {
   align-items: flex-start;
 }
 
-.faces {
+.look {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.look__preview {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.look__controls {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.look__row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
+}
+
+.look__label {
+  width: 44px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch--own {
+  background: repeating-linear-gradient(45deg, var(--panel-2) 0 4px, var(--line) 4px 8px);
+}
+
+.swatch:hover {
+  border-color: var(--muted);
+}
+
+.swatch--on {
+  border-color: var(--good);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--good);
 }
 
 .face {
@@ -626,6 +679,32 @@ body {
   min-width: 0;
 }
 
+.person__face {
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.survivors {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.survivors__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+}
+
 .person__track {
   margin-top: 6px;
   max-width: 220px;
@@ -650,4 +729,27 @@ body {
   width: 100%;
   max-width: 320px;
   accent-color: var(--good);
+}
+
+/* ---------- what the last advance changed ---------- */
+
+.report {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  background: var(--panel);
+  font-size: 0.8rem;
+}
+
+.report__title {
+  color: var(--accent);
+}
+
+.report__quiet {
+  color: var(--muted);
 }

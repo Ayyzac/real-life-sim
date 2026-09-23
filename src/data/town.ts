@@ -176,34 +176,11 @@ export const CROWD = {
 } as const;
 
 /**
- * People live in the four right-hand columns of the sheet: one person per
- * sheet row, four poses each, always in the same order.
- */
-export interface PersonFrames {
-  down: number;
-  downAlt: number;
-  up: number;
-  side: number;
-}
-
-export function personFrames(sheetRow: number): PersonFrames {
-  const base = sheetRow * SHEET_COLUMNS + 23;
-  return { down: base, downAlt: base + 1, up: base + 2, side: base + 3 };
-}
-
-/** The one player sprite for now; picking a look is still owed (GDD §3.2). */
-export const PLAYER_SHEET_ROW = 3;
-
-/** Everyone else, so the crowd does not look like one person cloned. */
-export const NPC_SHEET_ROWS: readonly number[] = [
-  0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-];
-
-/**
- * Cars are two tiles by two, drawn nose-up: [top-left, top-right, bottom-left,
- * bottom-right]. A car driving across the screen is the same sprite turned a
- * quarter turn - which in a top-down view is simply what it looks like, and a
- * 90 degree turn costs no pixels.
+ * Cars are two tiles by two: [top-left, top-right, bottom-left, bottom-right].
+ * The pack draws them NOSE-DOWN - lamps, windscreen, wheels and shadow are all
+ * on the bottom edge - so a car driving across the screen is that sprite turned
+ * a quarter turn with its bottom leading. Until Phase 6 this said nose-up, and
+ * every car in town drove backwards.
  */
 export const CAR_TILES: readonly (readonly [number, number, number, number])[] = [
   [447, 448, 474, 475],
@@ -220,6 +197,13 @@ export function doorOf(locationId: LocationId): { x: number; y: number } {
   const building = BUILDINGS.find((b) => b.locationId === locationId);
   if (!building) throw new Error(`No building for location: ${locationId}`);
   return { x: building.doorX, y: building.y + building.height - 1 };
+}
+
+/** The building covering this square, if any. */
+export function buildingAt(x: number, y: number): TownBuilding | undefined {
+  return BUILDINGS.find(
+    (b) => x >= b.x && x < b.x + b.width && y >= b.y && y < b.y + b.height,
+  );
 }
 
 /** The location whose door is on this square, if any. */

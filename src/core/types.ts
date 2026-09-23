@@ -71,10 +71,12 @@ export interface Character {
   focusId: FocusId;
   location: LocationId;
   /**
-   * Which of the tilesheet's 18 people this character looks like. Purely
-   * cosmetic - no rule anywhere reads it (GDD §3.2).
+   * Which tilesheet row this character looked like before Phase 6. Only read
+   * when `look` is missing, for saves made before looks existed.
    */
   appearanceRow: number;
+  /** Body and colours, see src/core/look.ts. Purely cosmetic (GDD §3.2). */
+  look?: number;
   /** Id of an entry in src/data/lifestyles.ts. Paid for every day. */
   lifestyleId: string;
   /** Ids of entries in src/data/possessions.ts, owned outright. */
@@ -133,6 +135,11 @@ export interface Person {
   job: string | null;
   /** Days spent at rock-bottom closeness, before they drift away for good. */
   neglectedDays: number;
+  /**
+   * Only set for someone whose face the player already saw (a stranger they
+   * greeted). Everyone else's look is worked out from their id.
+   */
+  look?: number;
 }
 
 /**

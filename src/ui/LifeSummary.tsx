@@ -1,6 +1,8 @@
+import { lookOf } from '../core/look';
 import { buildLifeSummary } from '../core/summary';
 import type { WorldState } from '../core/types';
 import { money, weekNumber } from './format';
+import { Portrait } from './Portrait';
 import { gameStore } from './useGame';
 
 /**
@@ -34,8 +36,8 @@ export function LifeSummary({ world }: { world: WorldState }): React.JSX.Element
           <dd>{money(life.peakMoney)}</dd>
         </div>
         <div>
-          <dt>Last job</dt>
-          <dd>{life.finalJob ?? 'None'}</dd>
+          <dt>Career</dt>
+          <dd>{life.finalCareer ?? 'None'}</dd>
         </div>
         <div>
           <dt>Started as</dt>
@@ -50,9 +52,14 @@ export function LifeSummary({ world }: { world: WorldState }): React.JSX.Element
       {life.survivors.length > 0 && (
         <>
           <h3 className="panel__subtitle">Who was still there</h3>
-          <p className="panel__hint">
-            {life.survivors.map((person) => person.name).join(' · ')}
-          </p>
+          <ul className="survivors">
+            {life.survivors.map((person) => (
+              <li key={person.id} className="survivors__item">
+                <Portrait look={lookOf(person)} scale={2} />
+                <span>{person.name}</span>
+              </li>
+            ))}
+          </ul>
         </>
       )}
 

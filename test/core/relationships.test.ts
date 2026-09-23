@@ -308,4 +308,14 @@ describe('helpers', () => {
     expect(childrenOf(people)).toHaveLength(2);
     expect(dependentChildren(people)).toHaveLength(1);
   });
+
+  it('never meets a colleague without a job to meet them at', () => {
+    // Every roll says yes except the friend-or-colleague coin, which says
+    // "colleague" - the case that used to hand the unemployed a workmate.
+    const rng: Rng = { ...certainRng(), chance: (p: number) => p !== 0.5 };
+
+    const outcome = rollRelationships([], [], 500, false, rng, false);
+
+    expect(outcome.people.map((p) => p.kind)).toEqual(['friend']);
+  });
 });

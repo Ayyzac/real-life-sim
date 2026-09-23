@@ -34,7 +34,7 @@ export function EventDialog({ pending }: { pending: PendingEvent }): React.JSX.E
                   {money(choice.effect.money)}
                 </span>
               )}
-              {(['health', 'energy', 'mood'] as const).map((key) => {
+              {(['health', 'energy', 'mood', 'intelligence', 'physical', 'charisma'] as const).map((key) => {
                 const value = choice.effect[key];
                 if (value === undefined) return null;
                 return (

@@ -1,6 +1,13 @@
 import { clampAppearance, DEFAULT_APPEARANCE_ROW, SCHEMA_VERSION } from '../character';
-import { DEFAULT_LIFESTYLE_ID } from '../../data/lifestyles';
-import type { Character } from '../types';
+import { BUSINESSES } from '../../data/businesses';
+import { EVENTS } from '../../data/events';
+import { DEFAULT_FOCUS_ID, FOCUSES } from '../../data/focuses';
+import { JOBS } from '../../data/jobs';
+import { DEFAULT_LIFESTYLE_ID, LIFESTYLES } from '../../data/lifestyles';
+import { LOCATIONS } from '../../data/locations';
+import { POSSESSIONS } from '../../data/possessions';
+import { SPORTS } from '../../data/sports';
+import type { CareerState, Character } from '../types';
 import type { WorldState } from '../types';
 import type { SaveProvider } from './SaveProvider';
 
@@ -53,7 +60,7 @@ export class LocalStorageSaveProvider implements SaveProvider {
       // corrupted or far-future file can never stop the game from opening.
       if (!migrated) return null;
 
-      return migrated;
+      return withKnownIds(migrated);
     } catch {
       return null;
     }
@@ -161,4 +168,41 @@ function safeLocalStorage(): StorageLike | null {
   } catch {
     return null;
   }
+}
+
+const known = (list: readonly { id: string }[], id: string | undefined): boolean =>
+  list.some((entry) => entry.id === id);
+
+/**
+ * Points every id in the save back at something that exists.
+ *
+ * A save can outlive the data it names: an event renamed in an update, a
+ * hand-edit, a job taken out. The screens look those ids up while drawing,
+ * and one missing entry used to throw mid-render and leave a blank page -
+ * with the reset button inside the page that failed. Falling back to a
+ * default here keeps the game open instead.
+ */
+export function withKnownIds(state: WorldState): WorldState {
+  const character = state.character;
+  const career = character.career;
+  const careerKnown =
+    career.type === 'none' ||
+    (career.type === 'job' && known(JOBS, career.jobId)) ||
+    (career.type === 'business' && known(BUSINESSES, career.businessId)) ||
+    (career.type === 'sports' && known(SPORTS, career.sportId));
+  const safeCareer: CareerState = careerKnown ? career : { type: 'none' };
+
+  return {
+    ...state,
+    pendingEvent:
+      state.pendingEvent && known(EVENTS, state.pendingEvent.eventId) ? state.pendingEvent : null,
+    character: {
+      ...character,
+      career: safeCareer,
+      focusId: known(FOCUSES, character.focusId) ? character.focusId : DEFAULT_FOCUS_ID,
+      lifestyleId: known(LIFESTYLES, character.lifestyleId) ? character.lifestyleId : DEFAULT_LIFESTYLE_ID,
+      location: known(LOCATIONS, character.location) ? character.location : 'home',
+      owned: character.owned.filter((id) => known(POSSESSIONS, id)),
+    },
+  };
 }

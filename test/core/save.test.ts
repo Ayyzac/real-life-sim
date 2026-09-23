@@ -5,6 +5,7 @@ import {
   LocalStorageSaveProvider,
   SAVE_KEY,
   type StorageLike,
+  withKnownIds,
 } from '../../src/core/save/LocalStorageSaveProvider';
 import { advanceWeek } from '../../src/core/clock';
 import { DEFAULT_LIFESTYLE_ID } from '../../src/data/lifestyles';
@@ -224,5 +225,40 @@ describe('migrating an older save', () => {
     storage.data.set(SAVE_KEY, JSON.stringify(ancient));
 
     expect(saves.load()).toBeNull();
+  });
+
+  it('points ids the game no longer knows back at something real, instead of a blank page', () => {
+    const world = createWorld({ name: 'Old', backgroundId: 'scholarship', seed: 9 });
+    const stale = {
+      ...world,
+      pendingEvent: { eventId: 'renamed_event', daysRemaining: 3 },
+      character: {
+        ...world.character,
+        focusId: 'juggling',
+        lifestyleId: 'bohemian',
+        location: 'moon' as never,
+        career: { type: 'job' as const, jobId: 'astronaut', tenureDays: 9, level: 1 },
+        owned: ['bicycle', 'time_machine'],
+      },
+    };
+
+    const fixed = withKnownIds(stale);
+
+    expect(fixed.pendingEvent).toBeNull();
+    expect(fixed.character.focusId).toBe('rest');
+    expect(fixed.character.lifestyleId).toBe(DEFAULT_LIFESTYLE_ID);
+    expect(fixed.character.location).toBe('home');
+    expect(fixed.character.career).toEqual({ type: 'none' });
+    expect(fixed.character.owned).toEqual(['bicycle']);
+  });
+
+  it('repairs stale ids on load, so a renamed event cannot crash the page', () => {
+    const world = createWorld({ name: 'Old', backgroundId: 'scholarship', seed: 9 });
+    storage.data.set(
+      SAVE_KEY,
+      JSON.stringify({ ...world, character: { ...world.character, focusId: 'juggling' } }),
+    );
+
+    expect(saves.load()?.character.focusId).toBe('rest');
   });
 });

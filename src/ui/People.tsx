@@ -5,8 +5,10 @@ import {
   marriageCandidates,
 } from '../core/relationships';
 import { DAYS_PER_WEEK } from '../core/clock';
+import { lookOf } from '../core/look';
 import type { Memory, Person, WorldState } from '../core/types';
 import { money } from './format';
+import { Portrait } from './Portrait';
 import { gameStore } from './useGame';
 
 /**
@@ -38,6 +40,7 @@ function PersonRow({
 
   return (
     <div className="person">
+      <Portrait look={lookOf(person)} scale={3} className="person__face" />
       <div className="person__main">
         <strong>{person.name}</strong> <span className="badge">{KIND_LABEL[person.kind]}</span>
         <p className="choice__text">

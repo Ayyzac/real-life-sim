@@ -38,10 +38,12 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
   const character = world.character;
   const openLocation = character.location;
   const location = LOCATIONS.find((l) => l.id === openLocation) ?? LOCATIONS[0]!;
-  // Minding a shop you do not own is not an option, so it is not offered.
+  // Working a job you do not have, or minding a shop you do not own, is not
+  // an option, so it is not offered.
   const focuses = FOCUSES.filter(
     (focus) =>
       focus.locationId === location.id &&
+      (!focus.worksJob || character.career.type === 'job') &&
       (!focus.runsBusiness || character.career.type === 'business') &&
       (!focus.trainsSport || character.career.type === 'sports'),
   );
@@ -96,10 +98,11 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
                 ))}
                 {focus.costPerDay !== undefined && (
                   <span className="eff eff--down">
-                    {money(focus.costPerDay * DAYS_PER_WEEK)}/wk
+                    {money(-focus.costPerDay * DAYS_PER_WEEK)}/wk
                   </span>
                 )}
                 {focus.worksJob && <span className="eff eff--up">salary</span>}
+                {focus.socialises && <span className="eff eff--up">closeness with everyone</span>}
               </span>
             </button>
           );
@@ -127,7 +130,9 @@ function JobSection({ character }: { character: Character }): React.JSX.Element 
         <button
           type="button"
           className="btn btn--quiet"
-          onClick={() => gameStore.dispatch({ type: 'quitJob' })}
+          onClick={() => {
+            if (confirm(`Quit your job as ${job.title}?`)) gameStore.dispatch({ type: 'quitJob' });
+          }}
         >
           Quit
         </button>

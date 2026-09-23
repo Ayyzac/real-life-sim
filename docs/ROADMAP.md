@@ -96,15 +96,15 @@ dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 `docs/GDD.md` §7 dan §11, keputusan teknis di `docs/ARCHITECTURE.md` §11.
 
-### A — Perbaikan & wajah
-- [ ] Mobil tidak lagi berjalan mundur
-- [ ] Karakter menghadap depan (kolom pose tilesheet dibetulkan)
-- [ ] Wajah beda-beda lewat palette swap; potret di People dan Life Summary
-- [ ] Pembuat karakter: rakit badan + warna rambut/baju/kulit + Acak
-- [ ] Bug: fokus tersembunyi setelah tutup usaha/pensiun/berhenti kerja; log yang tidak dipotong; save dengan id tak dikenal; efek atribut di dialog event; Life Summary untuk usaha/atlet
-- [ ] Klik bagian mana pun dari gedung → jalan ke pintunya; hover pintu disorot
-- [ ] Laporan "apa yang berubah" setelah Lanjut Hari/Minggu
-- [ ] **Checkpoint:** kota terlihat benar dan orang bisa dibedakan dari wajahnya
+### A — Perbaikan & wajah — SELESAI
+- [x] Mobil tidak lagi berjalan mundur
+- [x] Karakter menghadap depan (kolom pose tilesheet dibetulkan), dan berjalan dengan dua langkah
+- [x] Wajah beda-beda lewat palette swap (2.400 tampilan); potret di People dan Life Summary
+- [x] Pembuat karakter: rakit badan + warna rambut/baju/kulit + Acak
+- [x] Bug: fokus tersembunyi setelah tutup usaha/pensiun/berhenti kerja; log yang tidak dipotong; save dengan id tak dikenal; efek atribut di dialog event; Life Summary untuk usaha/atlet; kolega saat menganggur; konfirmasi berhenti kerja
+- [x] Klik bagian mana pun dari gedung → jalan ke pintunya; gedung disorot saat kursor di atasnya
+- [x] Laporan "apa yang berubah" setelah Lanjut Hari/Minggu
+- [x] **Checkpoint:** kota terlihat benar dan orang bisa dibedakan dari wajahnya — 309 test
 
 ### B — Jam, siang-malam, kebutuhan, tampilan baru
 - [ ] `SCHEMA_VERSION` 4 dengan migrasi

@@ -6,6 +6,7 @@ import { findBusiness } from '../data/businesses';
 import { findSport } from '../data/sports';
 import { findLifestyle } from '../data/lifestyles';
 import { childrenOf, partnerOf } from '../core/relationships';
+import { characterLook } from '../core/look';
 import { Portrait } from './Portrait';
 import { profitPerDay } from '../core/careers/business';
 import { DAYS_PER_WEEK } from '../core/clock';
@@ -104,7 +105,7 @@ export function Dashboard({
     <section className="panel dashboard">
       <header className="dashboard__head">
         <div className="dashboard__who">
-          <Portrait row={character.appearanceRow} scale={2} />
+          <Portrait look={characterLook(character)} scale={2} />
           <div>
           <h2 className="dashboard__name">{character.name}</h2>
           <p className="dashboard__meta">

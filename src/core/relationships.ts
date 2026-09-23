@@ -22,10 +22,6 @@ export function ageYearsOf(person: Person): number {
   return Math.floor(person.ageDays / 365);
 }
 
-export function livingCount(people: readonly Person[]): number {
-  return people.length;
-}
-
 export function partnerOf(people: readonly Person[]): Person | undefined {
   return people.find((p) => p.kind === 'partner');
 }
@@ -171,6 +167,8 @@ export function rollRelationships(
   day: number,
   married: boolean,
   rng: Rng,
+  /** Without a job there is nobody to meet at work. */
+  employed = true,
 ): RelationshipEvent {
   // 1. Old age, taken one person at a time so the eldest is checked first.
   const byAge = [...people].sort((a, b) => b.ageDays - a.ageDays);
@@ -245,7 +243,9 @@ export function rollRelationships(
 
   // 5. A new face, when there is room for one.
   if (people.length < R.maxLivingPeople && rng.chance(R.meetChancePerDay)) {
-    const kind: RelationKind = rng.chance(0.5) ? 'friend' : 'colleague';
+    // The coin is tossed either way so the RNG sequence does not shift.
+    const coin = rng.chance(0.5);
+    const kind: RelationKind = coin || !employed ? 'friend' : 'colleague';
     const person = makePerson(rng, kind, rng.int(19, 55), rng.int(15, 35));
     return {
       people: [...people, person],
