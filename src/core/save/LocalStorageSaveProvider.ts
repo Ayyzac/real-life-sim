@@ -1,4 +1,5 @@
 import { clampAppearance, DEFAULT_APPEARANCE_ROW, SCHEMA_VERSION } from '../character';
+import { BALANCE } from '../../data/balance';
 import { BUSINESSES } from '../../data/businesses';
 import { EVENTS } from '../../data/events';
 import { DEFAULT_FOCUS_ID, FOCUSES } from '../../data/focuses';
@@ -116,21 +117,15 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   const character = parsed.character as Partial<Character> | undefined;
   if (!character) return null;
 
-  if (version === SCHEMA_VERSION) {
-    // Even a current save can have been hand-edited; fill any gap rather than
-    // letting undefined reach the daily rules.
+  // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
+  // time of day and needs. Every field is filled if missing, so the same path
+  // also repairs a current save that was hand-edited, rather than letting
+  // undefined reach the daily rules.
+  if (version >= 2) {
     return {
-      ...withPhase5World(parsed),
-      character: withPhase5Fields(character),
-    };
-  }
-
-  // Version 2 -> 3: appearance, lifestyle and possessions did not exist.
-  if (version === 2) {
-    return {
-      ...withPhase5World(parsed),
+      ...withPhase6World(withPhase5World(parsed)),
       schemaVersion: SCHEMA_VERSION,
-      character: withPhase5Fields(character),
+      character: withPhase6Fields(withPhase5Fields(character)),
     };
   }
 
@@ -150,6 +145,19 @@ function withPhase5World(parsed: Partial<WorldState>): WorldState {
     people: Array.isArray(parsed.people) ? parsed.people : [],
     memories: Array.isArray(parsed.memories) ? parsed.memories : [],
   };
+}
+
+/** A migrated save wakes up at the start of a fresh day (GDD §11.1). */
+function withPhase6World(world: WorldState): WorldState {
+  return {
+    ...world,
+    minuteOfDay: typeof world.minuteOfDay === 'number' ? world.minuteOfDay : BALANCE.day.wake,
+    doneToday: Array.isArray(world.doneToday) ? world.doneToday : [],
+  };
+}
+
+function withPhase6Fields(character: Character): Character {
+  return { ...character, needs: character.needs ?? { ...BALANCE.day.morningNeeds } };
 }
 
 function withPhase5Fields(character: Partial<Character>): Character {

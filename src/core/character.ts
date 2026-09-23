@@ -8,11 +8,10 @@ import { startingPeople } from './relationships';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
- * 3 since Phase 5, which added appearance, lifestyle and possessions.
- * Unlike every earlier bump, version 2 saves are MIGRATED rather than thrown
- * away - see LocalStorageSaveProvider.
+ * 4 since Phase 6, which added the time of day and needs. Version 2 and 3
+ * saves are MIGRATED rather than thrown away - see LocalStorageSaveProvider.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export interface NewGameOptions {
   name: string;
@@ -58,6 +57,7 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
       physical: BALANCE.startAttributes.physical + (background.attributeBonus.physical ?? 0),
       charisma: BALANCE.startAttributes.charisma + (background.attributeBonus.charisma ?? 0),
     },
+    needs: { ...BALANCE.day.morningNeeds },
     career: { type: 'none' },
     focusId: DEFAULT_FOCUS_ID,
     location: 'home',
@@ -79,6 +79,8 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
   return {
     schemaVersion: SCHEMA_VERSION,
     clockDay: 0,
+    minuteOfDay: BALANCE.day.wake,
+    doneToday: [],
     character,
     rng: rng.snapshot(),
     eventLog: [birth],

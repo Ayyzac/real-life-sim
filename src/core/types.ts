@@ -16,6 +16,16 @@ export interface Stats {
   mood: number;
 }
 
+/**
+ * Hunger, thirst and hygiene, 0-100 (GDD §11.2). Only move while a day is
+ * played hour by hour; they never touch health.
+ */
+export interface Needs {
+  hunger: number;
+  thirst: number;
+  hygiene: number;
+}
+
 /** Slow-moving abilities, 0-100. They gate jobs and shift event odds. */
 export interface Attributes {
   intelligence: number;
@@ -66,6 +76,7 @@ export interface Character {
   startAgeYears: number;
   stats: Stats;
   attributes: Attributes;
+  needs: Needs;
   career: CareerState;
   /** What the character spends their days on until the player changes it. */
   focusId: FocusId;
@@ -159,6 +170,16 @@ export interface WorldState {
   /** Bumped whenever the saved shape changes, so old saves can be migrated. */
   schemaVersion: number;
   clockDay: number;
+  /**
+   * Time of day in minutes after midnight (GDD §11.1). Runs past 1440 when
+   * the character stays up after midnight. Back to waking time every morning.
+   */
+  minuteOfDay: number;
+  /**
+   * Things already done today, so a treat only counts once (GDD §11.2):
+   * action ids, and later who was talked to. Emptied every night.
+   */
+  doneToday: string[];
   character: Character;
   rng: RngState;
   /** Newest first. Trimmed to keep saves small; drives the Recent panel. */

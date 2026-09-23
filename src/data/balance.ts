@@ -199,6 +199,38 @@ export const BALANCE = {
     griefMoodPerCloseness: 0.45,
   },
 
+  /**
+   * One day, hour by hour (GDD §11, user decisions 23 Sep 2026).
+   *
+   * Times are minutes after midnight; after midnight keeps counting past
+   * 1440, so 01:00 is 1500. Needs only move while the clock is actually
+   * played - a day skipped with Advance is lived sensibly by assumption, which
+   * is what keeps every lifetime balance test above valid.
+   */
+  day: {
+    wake: 7 * 60,
+    blockStart: 9 * 60,
+    blockEnd: 17 * 60,
+    midnight: 24 * 60,
+    /** Staying up is allowed until 02:00; then the character falls asleep. */
+    latest: 26 * 60,
+
+    /** Where hunger, thirst and hygiene stand every morning. */
+    morningNeeds: { hunger: 60, thirst: 60, hygiene: 55 },
+    /** Lost per hour of played time. */
+    needsPerHour: { hunger: -4, thirst: -6, hygiene: -3 },
+    /** At work or training, lunch and water are part of the day. */
+    blockNeedsRate: 0.5,
+
+    /** Below this a need starts to cost mood and energy. */
+    lowNeed: 20,
+    lowNeedPerHour: { mood: -1.5, energy: -1 },
+    /** Going to bed hungry or thirsty: the next day starts behind. */
+    hungryBedtime: { energy: -8, mood: -3 },
+    /** Each hour awake past midnight, taken off tomorrow's energy. */
+    lateNightEnergyPerHour: -6,
+  },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

@@ -12,7 +12,9 @@ import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
 import { advanceDay, advanceWeek, resolveEvent, withLogEntry, withMilestone } from './clock';
+import { performAction, startBlock } from './day';
 import { createWorld, type NewGameOptions } from './character';
+import { BALANCE } from '../data/balance';
 import { dollars } from './money';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
@@ -33,6 +35,8 @@ export type GameIntent =
   | { type: 'newGame'; name: string; backgroundId: string; appearanceRow?: number; look?: number; seed?: number }
   | { type: 'advanceDay' }
   | { type: 'advanceWeek' }
+  | { type: 'doAction'; actionId: string }
+  | { type: 'startBlock' }
   | { type: 'setFocus'; focusId: FocusId }
   | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
@@ -173,6 +177,16 @@ export class GameStore {
 
       case 'advanceWeek':
         return state ? advanceWeek(state) : state;
+
+      case 'doAction': {
+        if (!state) return state;
+        const next = performAction(state, intent.actionId);
+        // 02:00 is as late as it goes: the character falls asleep where they stand.
+        return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
+      }
+
+      case 'startBlock':
+        return state ? startBlock(state) : state;
 
       case 'chooseEventOption':
         return state ? resolveEvent(state, intent.choiceId) : state;

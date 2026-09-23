@@ -6,6 +6,7 @@ import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
 import { partnerOf, relationshipsOneDay, rollRelationships } from './relationships';
 import { workOneDay } from './careers/job';
 import { ageInYears } from './character';
+import { bedtimeCost, morningNeeds } from './day';
 import { applyEffect, findChoice, findEvent, needsDecision, rollEvent } from './events';
 import { restoreRng, type Rng } from './rng';
 import type { Attributes, EventLogEntry, Stats, WorldState } from './types';
@@ -114,6 +115,12 @@ export function applyDailyRules(state: WorldState): WorldState {
   let eventLog = state.eventLog;
   let milestones = state.milestones;
 
+  // Bedtime (GDD §11.2): going to bed hungry, or long after midnight, costs.
+  // A day skipped with Advance was never played, so this is always zero for it.
+  const bedtime = bedtimeCost(state);
+  stats.energy += bedtime.energy;
+  stats.mood += bedtime.mood;
+
   stats.energy += effects.energy ?? 0;
   stats.mood += effects.mood ?? 0;
   stats.health += effects.health ?? 0;
@@ -192,11 +199,15 @@ export function applyDailyRules(state: WorldState): WorldState {
   const afterRules: WorldState = {
     ...state,
     clockDay: state.clockDay + 1,
+    // A new morning (GDD §11.1).
+    minuteOfDay: BALANCE.day.wake,
+    doneToday: [],
     people: social.people,
     eventLog,
     milestones,
     character: {
       ...character,
+      needs: morningNeeds(),
       ageInDays: character.ageInDays + 1,
       stats: clampStats(stats),
       attributes: clampAttributes(attributes),

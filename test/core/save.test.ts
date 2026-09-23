@@ -261,4 +261,19 @@ describe('migrating an older save', () => {
 
     expect(saves.load()?.character.focusId).toBe('rest');
   });
+
+  it('carries a save from before the clock existed into a fresh morning (v3 -> v4)', () => {
+    const world = createWorld({ name: 'Before Clocks', backgroundId: 'scholarship', seed: 9 });
+    const { minuteOfDay: _m, doneToday: _d, ...oldWorld } = world;
+    const { needs: _n, ...oldCharacter } = world.character;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...oldWorld, schemaVersion: 3, character: oldCharacter }));
+
+    const loaded = saves.load();
+
+    expect(loaded?.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(loaded?.minuteOfDay).toBe(7 * 60);
+    expect(loaded?.doneToday).toEqual([]);
+    expect(loaded?.character.needs).toEqual({ hunger: 60, thirst: 60, hygiene: 55 });
+    expect(loaded?.character.name).toBe('Before Clocks');
+  });
 });
