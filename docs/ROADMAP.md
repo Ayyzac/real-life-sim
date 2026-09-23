@@ -144,5 +144,21 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Sapa orang asing di jalan → peluang jadi kenalan dengan wajah yang sama, maks 3 sapaan sehari
 - [x] **Checkpoint:** hubungan terasa seperti mengenal orang, bukan angka — 387 test
 
+## Fase 7 — Kota hidup
+
+Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
+`docs/GDD.md` §7 dan §12, keputusan teknis di `docs/ARCHITECTURE.md` §11.
+
+- [ ] **A** — Rumah kosong (keluarga datang hanya kalau diundang) + membership gym
+- [ ] **B** — Jam berjalan sendiri: pause, 1×/2×/4×, pilihan pukul 09:00
+- [ ] **C** — Supermarket + tas (inventory), diskon harian
+- [ ] **D** — Hujan: jalan sepi, payung, prakiraan
+- [ ] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar
+- [ ] **F** — Bank, saham, crypto
+- [ ] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game)
+- [ ] **H** — Casino + slot online
+- [ ] **I** — Obrolan pohon dialog per topik
+- [ ] **J** — Media sosial
+
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.

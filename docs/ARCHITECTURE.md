@@ -660,6 +660,18 @@ browser sesi ini yang sering tidak menggambar, jam di layar melompat langsung
 ke waktu akhir; state-nya tetap benar (diuji lewat DOM). FPS tetap belum
 diukur.
 
+### 2026-09-23 — Fase 7 (keputusan, ditulis sebelum kode)
+
+Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| **Jam berjalan sendiri** | Detak jam hidup di lapisan UI dan mengirim intent `tick` lewat `GameStore`. Core tetap tanpa timer. | Mengubah `CLAUDE.md` aturan 3 atas persetujuan user. Core tetap murni dan bisa dites headless. |
+| `tick` tidak menyimpan tiap kali | Save hanya saat jam game berganti; intent lain tetap langsung. | Tanpa ini localStorage ditulis beberapa kali per detik. |
+| Turunan = hash | Cuaca, diskon, berita, harga pasar, hasil lamaran, feed medsos dihitung dari `hashText`, tidak memakai RNG simulasi. | Alasan yang sama dengan jadwal orang (Fase 6): tampilan dan fitur baru tidak boleh menggeser urutan event, jadi semua test seumur hidup tetap sama persis. |
+| Judi memakai RNG simulasi | Pola `greetStranger`: aksi untung-untungan pemain sendiri. | Hasilnya memang acak dan tersimpan, jadi muat ulang tidak bisa membatalkan kekalahan. |
+| Field save baru diisi di `migrate()` | `SCHEMA_VERSION` naik di tiap sub-fase yang menambah field. | Save yang sedang berjalan tetap lanjut, sama seperti migrasi sebelumnya. |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

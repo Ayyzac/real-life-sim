@@ -134,6 +134,12 @@ Percakapannya **ditulis sebelumnya sebagai data** oleh Claude saat development �
 **bukan** AI saat game dijalankan, jadi larangan LLM di `CLAUDE.md` tetap utuh.
 Rinciannya di §11.
 
+**Perubahan scope, 23 Sep 2026 (Fase 7).** Atas permintaan eksplisit user:
+**jam berjalan sendiri** (mencabut "waktu tidak pernah maju sendiri" di §2),
+**belanja & tas** dan **waktu tempuh jalan kaki** (dicoret dari §11.8), plus HP,
+laptop, bank, saham/crypto, casino/judol, hujan, dan media sosial. Semua tetap
+berjalan di browser tanpa server dan tanpa AI saat main. Rinciannya di §12.
+
 ## 8. Daftar layar UI (v1)
 
 1. Layar utama / dashboard karakter (selalu terlihat sebagian, mis. bar status di atas)
@@ -309,3 +315,25 @@ Gedung baru di Eastside. Isinya:
 Waktu tempuh jalan kaki antar tempat · isi kulkas/belanja bahan · kenalan
 bernama berkeliaran di jalan (mereka ada di dalam ruangan) · mode per jam tanpa
 skip · AI saat main · cerai · NPC saling menikah · musik latar.
+
+## 12. Kota hidup (Fase 7)
+
+Diputuskan user lewat empat putaran tanya-jawab pada **23 Sep 2026**. Anggap
+FINAL — jangan tanya ulang. Angka persisnya di `src/data/balance.ts` dan data
+terkait; **aturannya** tidak.
+
+| Hal | Aturan |
+|---|---|
+| Jam | Berjalan sendiri: **1 jam game = 1 menit nyata** di kecepatan 1×. Pause dan 1×/2×/4×. Berhenti otomatis saat dialog, HP, laptop, mini-game, atau casino terbuka, dan saat tab browser ditinggal. Tidur dan Lanjut Minggu tetap ada. Jalan kaki jadi makan waktu. |
+| Pukul 09:00 | Jam berhenti, muncul "Berangkat kerja" / "Bolos" (bukan pegawai: "Mulai"). Berangkat = jam lompat ke 17:00 seperti §11.1. |
+| Rumah | Kosong, kecuali pasangan dan anak. Keluarga/teman datang **hanya kalau diundang lewat HP**. |
+| Gym | Butuh **membership**, dipotong otomatis tiap 30 hari, bisa berhenti kapan saja. Latihan dan fokus Exercise hanya untuk member. |
+| HP | Punya dari awal. Kontak (telepon, ajak jalan, undang ke rumah), berita, diskon, cuaca, taksi, pesan antar, bank, saham, crypto, slot online, media sosial. |
+| Laptop | Dibeli di Mall (barang permanen), dipakai di rumah. Semua app HP + lamar kerja, email, kerja lepas lewat 4 mini-game (ketik cepat, hitung cepat, cocokkan kartu, sortir paket). |
+| Lamaran | Lamar dari laptop → balasan email besok pagi. Papan lowongan kantor tetap langsung. |
+| Tas | Masak di rumah tetap gratis. Supermarket menjual bekal dan payung; makan dari tas di mana saja. ±12 slot, tanpa kedaluwarsa. Diskon harian. |
+| Hujan | Jalan lebih sepi, sebagian orang berpayung. Kehujanan tanpa payung: kebersihan dan mood turun sedikit. Prakiraan di HP. |
+| Pasar | Saham bergerak harian (hari kerja), crypto per jam game dan jauh lebih liar. |
+| Bank | Tabungan berbunga kecil; pinjaman dengan cicilan harian. |
+| Judi | Casino (slot, roulette, blackjack) dan slot online. Bandar selalu unggul; online lebih curang dari casino. **Tanpa kecanduan** — cuma untung-rugi uang. |
+| Obrolan | **Pohon dialog per topik**: pilih topik, beberapa giliran, bisa ajak jalan di tengah obrolan, pamit kapan saja. Ditulis sebelumnya sebagai data (bahasa Inggris). |
