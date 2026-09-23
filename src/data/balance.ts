@@ -269,6 +269,12 @@ export const BALANCE = {
     unwashedStrike: 0.5,
   },
 
+  /**
+   * Gym membership (GDD §12). Paid a month ahead, renewed automatically.
+   * About $1.50 a day: a real line on the budget, not a wall.
+   */
+  gym: { fee: 45, days: 30 },
+
   /** Promotion gates: index = level being reached. */
   promotion: {
     tenureDaysRequired: [0, 180, 540, 1260],

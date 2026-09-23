@@ -22,6 +22,17 @@ describe('where people are (GDD §11.4)', () => {
     expect(whereIs(person('partner'), 2, 20 * 60)).toBe('home');
   });
 
+  it('leaves home empty for someone who lives alone: family and friends never drop in', () => {
+    for (let n = 0; n < 40; n += 1) {
+      for (const kind of ['family', 'friend', 'colleague', 'dating'] as const) {
+        const someone = person(kind, `${kind}-${n}`);
+        for (let hour = 7; hour < 26; hour += 1) {
+          expect(whereIs(someone, n, hour * 60), `${kind} ${n} ${hour}:00`).not.toBe('home');
+        }
+      }
+    }
+  });
+
   it('has colleagues at work on weekdays, and never at the weekend', () => {
     const colleague = person('colleague');
     expect(whereIs(colleague, 1, 11 * 60)).toBe('work');

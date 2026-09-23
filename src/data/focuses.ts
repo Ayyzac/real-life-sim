@@ -45,6 +45,8 @@ export interface FocusDefinition {
    * (src/core/relationships.ts).
    */
   socialises?: boolean;
+  /** Gym members only (GDD §12). */
+  membersOnly?: boolean;
   /**
    * The button that starts the 09:00-17:00 block (GDD §11.1), in the
    * player's words. Resting has no block, so no button.
@@ -102,6 +104,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
     label: 'Exercise',
     description: 'Train hard. Raises Physical and slowly repairs your health.',
     locationId: 'gym',
+    membersOnly: true,
     effects: { energy: -9, mood: 0.4, health: 0.55, physical: 0.045 },
   },
   {

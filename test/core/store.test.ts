@@ -88,6 +88,7 @@ describe('GameStore', () => {
   it('setFocus also moves the character to that focus location', () => {
     store.dispatch({ type: 'newGame', name: 'Ayu', backgroundId: 'athlete', seed: 5 });
 
+    store.dispatch({ type: 'joinGym' });
     store.dispatch({ type: 'setFocus', focusId: 'exercise' });
 
     expect(store.getState()?.character.focusId).toBe('exercise');

@@ -8,6 +8,7 @@ import {
 } from './careers/business';
 import { findSport, meetsRequirements as meetsSportRequirements } from './careers/sports';
 import { findPossession, replacedBy, withPurchase } from './belongings';
+import { isGymMember } from './gym';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -60,6 +61,8 @@ export type GameIntent =
   | { type: 'buyPossession'; possessionId: string }
   | { type: 'setLifestyle'; lifestyleId: string }
   | { type: 'marry'; personId: string }
+  | { type: 'joinGym' }
+  | { type: 'leaveGym' }
   | { type: 'reset' };
 
 interface StoreEvents {
@@ -179,6 +182,48 @@ export class GameStore {
         };
       }
 
+      case 'joinGym': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        if (isGymMember(state.character)) return state;
+        // The first month is paid up front, and like any purchase it cannot
+        // be paid with money you do not have. Renewals are bills, and can.
+        if (state.character.stats.money < BALANCE.gym.fee) return state;
+        return {
+          ...state,
+          eventLog: withLogEntry(state.eventLog, {
+            day: state.clockDay,
+            tone: 'good',
+            text: `Joined the gym, ${dollars(BALANCE.gym.fee)} a month.`,
+          }),
+          character: {
+            ...state.character,
+            stats: { ...state.character.stats, money: state.character.stats.money - BALANCE.gym.fee },
+            gymPaidUntil: state.clockDay + BALANCE.gym.days,
+          },
+        };
+      }
+
+      case 'leaveGym': {
+        if (!state || state.deceased || state.pendingEvent) return state;
+        if (!isGymMember(state.character)) return state;
+        // Nothing back for the rest of the month. Training at the gym stops
+        // with the membership, the same way minding a shop stops with the shop.
+        const focus = findFocus(state.character.focusId);
+        return {
+          ...state,
+          eventLog: withLogEntry(state.eventLog, {
+            day: state.clockDay,
+            tone: 'neutral',
+            text: 'Cancelled the gym membership.',
+          }),
+          character: {
+            ...state.character,
+            gymPaidUntil: null,
+            focusId: focus.membersOnly ? DEFAULT_FOCUS_ID : focus.id,
+          },
+        };
+      }
+
       case 'reset':
         return null;
 
@@ -241,6 +286,7 @@ export class GameStore {
         if (!state || state.deceased || state.pendingEvent) return state;
         const focus = findFocus(intent.focusId);
         if (state.character.focusId === focus.id) return state;
+        if (focus.membersOnly && !isGymMember(state.character)) return state;
         return {
           ...state,
           character: { ...state.character, focusId: focus.id, location: focus.locationId },

@@ -100,6 +100,11 @@ export interface Character {
   lifestyleId: string;
   /** Ids of entries in src/data/possessions.ts, owned outright. */
   owned: string[];
+  /**
+   * Gym membership (GDD §12): the day the next monthly fee is due, or null
+   * for someone who is not a member.
+   */
+  gymPaidUntil: number | null;
 }
 
 /**

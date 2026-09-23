@@ -276,4 +276,19 @@ describe('migrating an older save', () => {
     expect(loaded?.character.needs).toEqual({ hunger: 60, thirst: 60, hygiene: 55 });
     expect(loaded?.character.name).toBe('Before Clocks');
   });
+
+  it('signs nobody up to the gym without asking when a v4 save arrives (v4 -> v5)', () => {
+    const world = createWorld({ name: 'Gym Rat', backgroundId: 'athlete', seed: 9 });
+    const { gymPaidUntil: _g, ...oldCharacter } = world.character;
+    storage.data.set(
+      SAVE_KEY,
+      JSON.stringify({ ...world, schemaVersion: 4, character: { ...oldCharacter, focusId: 'exercise' } }),
+    );
+
+    const loaded = saves.load();
+
+    expect(loaded?.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(loaded?.character.gymPaidUntil).toBeNull();
+    expect(loaded?.character.focusId).toBe('rest');
+  });
 });

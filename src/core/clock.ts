@@ -6,6 +6,7 @@ import { tradeOneDay } from './careers/business';
 import { matchIsDue, playMatch, trainOneDay } from './careers/sports';
 import { partnerOf, relationshipsOneDay, rollRelationships } from './relationships';
 import { workOneDay } from './careers/job';
+import { gymRenewal } from './gym';
 import { ageInYears } from './character';
 import { bedtimeCost, isWeekend, morningNeeds, SKIPPED_WORK } from './day';
 import { withLogEntry, withMilestone } from './log';
@@ -190,6 +191,10 @@ export function applyDailyRules(state: WorldState): WorldState {
   // Buying, however, is not: you cannot spend money you do not have (store.ts).
   stats.money -= BALANCE.livingCostPerDay + (today?.costPerDay ?? 0) + upkeep.costPerDay + social.costPerDay;
 
+  // The gym renews itself every 30 days until it is stopped (GDD §12).
+  const gym = gymRenewal(character, state.clockDay);
+  stats.money -= gym.cost;
+
   // Marks for missed work fade on their own (GDD §11.3).
   if (career.type === 'job' && (career.strikes ?? 0) > 0) {
     career = { ...career, strikes: Math.max(0, (career.strikes ?? 0) - BALANCE.work.strikeFadePerDay) };
@@ -229,6 +234,7 @@ export function applyDailyRules(state: WorldState): WorldState {
       stats: clampStats(stats),
       attributes: clampAttributes(attributes),
       career,
+      gymPaidUntil: gym.gymPaidUntil,
     },
   };
 

@@ -672,6 +672,17 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Judi memakai RNG simulasi | Pola `greetStranger`: aksi untung-untungan pemain sendiri. | Hasilnya memang acak dan tersimpan, jadi muat ulang tidak bisa membatalkan kekalahan. |
 | Field save baru diisi di `migrate()` | `SCHEMA_VERSION` naik di tiap sub-fase yang menambah field. | Save yang sedang berjalan tetap lanjut, sama seperti migrasi sebelumnya. |
 
+#### Fase 7A — rumah kosong & gym (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Keluarga tidak lagi "mampir" | Baris kunjungan malam di `whereIs()` dihapus. Undangan ke rumah datang di 7E. | Keputusan user: yang tinggal sendiri pulang ke rumah kosong. |
+| Membership = `character.gymPaidUntil` | `null` = bukan member; angka = hari tagihan berikutnya. Diperpanjang di `applyDailyRules` lewat `gymRenewal()` (`src/core/gym.ts`). | Satu angka cukup untuk "langganan otomatis". Perpanjangan boleh bikin utang seperti biaya hidup; **pendaftaran** tidak (pola `buyPossession`). |
+| Penanda `membersOnly` di data | Di aksi (workout, shower, air) dan fokus Exercise. | Konten = data; gedung lain bisa memakai penanda yang sama nanti. |
+| Tombol Join/Cancel di tab Here, bukan furnitur | Sama-sama satu klik; furnitur gym tetap menampilkan "Members only". | Ponytail: jalur klik furnitur hanya kenal aksi, menambah jenis kedua tidak sepadan. |
+| Migrasi v4 → 5 | `gymPaidUntil: null`; yang sedang berfokus Exercise kembali ke Rest. | Tidak ada yang didaftarkan dan ditagih tanpa ditanya. Pencarian fokus memakai `FOCUSES.find`, bukan `findFocus` yang melempar error dan akan menghapus save. |
+| Simulasi atlet membayar gym | `liveAsAthlete` jadi member selama berfokus Exercise. | Supaya biaya gym masuk angka seumur hidup. Semua test keseimbangan tetap lolos tanpa disetel. |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

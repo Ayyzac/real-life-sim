@@ -3,6 +3,7 @@ import { BALANCE } from '../data/balance';
 import { DEFAULT_FOCUS_ID, findFocus } from '../data/focuses';
 import { findJob } from '../data/jobs';
 import { LOCATIONS } from '../data/locations';
+import { isGymMember } from './gym';
 import { withLogEntry, withMilestone } from './log';
 import type { EventLogEntry, Needs, Stats, WorldState } from './types';
 
@@ -134,6 +135,7 @@ export function closedReason(locationId: string, minute: number): string | null 
 export function actionBlocker(state: WorldState, action: ActionDefinition): string | null {
   if (busy(state)) return 'Not now';
   if (state.character.location !== action.locationId) return `Only at the ${placeName(action.locationId)}`;
+  if (action.membersOnly && !isGymMember(state.character)) return 'Members only';
   if (!action.needs && state.doneToday.includes(action.id)) return 'Already done today';
   const closed = closedReason(action.locationId, state.minuteOfDay);
   if (closed) return closed;

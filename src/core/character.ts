@@ -8,10 +8,11 @@ import { startingPeople } from './relationships';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
- * 4 since Phase 6, which added the time of day and needs. Version 2 and 3
- * saves are MIGRATED rather than thrown away - see LocalStorageSaveProvider.
+ * 5 since Phase 7A (gym membership); 4 added the time of day and needs.
+ * Older saves back to version 2 are MIGRATED rather than thrown away - see
+ * LocalStorageSaveProvider.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export interface NewGameOptions {
   name: string;
@@ -68,6 +69,7 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
     ...(look === undefined ? {} : { look: encodeLook(decodeLook(look)) }),
     lifestyleId: DEFAULT_LIFESTYLE_ID,
     owned: [],
+    gymPaidUntil: null,
   };
 
   const birth: EventLogEntry = {

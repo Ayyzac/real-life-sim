@@ -34,6 +34,8 @@ import { openTalk } from './talk';
 import { ActionList } from './ActionList';
 import { duration, money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
+import { isGymMember } from '../core/gym';
+import { BALANCE } from '../data/balance';
 
 /**
  * The place menus, reachable two ways: walk into a building on the map, or
@@ -84,6 +86,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
 
       {location.id === 'home' && <HomeSection character={character} />}
       {location.id === 'mall' && <MallSection world={world} />}
+      {location.id === 'gym' && <GymSection world={world} />}
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}
@@ -100,6 +103,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
         {focuses.map((focus) => {
           const active = character.focusId === focus.id;
           const effects = Object.entries(focus.effects) as [string, number][];
+          const locked = focus.membersOnly === true && !isGymMember(character);
 
           return (
             <button
@@ -108,6 +112,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
               className={`choice ${active ? 'choice--on' : ''}`}
               onClick={() => gameStore.dispatch({ type: 'setFocus', focusId: focus.id })}
               aria-pressed={active}
+              disabled={locked}
             >
               <strong className="choice__title">
                 {focus.label}
@@ -127,6 +132,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
                 )}
                 {focus.worksJob && <span className="eff eff--up">salary</span>}
                 {focus.socialises && <span className="eff eff--up">closeness with everyone</span>}
+                {locked && <span className="eff eff--down">members only</span>}
               </span>
             </button>
           );
@@ -535,6 +541,37 @@ function HereNow({ world }: { world: WorldState }): React.JSX.Element | null {
  * The Mall's shops (GDD §11.5): clothes that change how you look, and the
  * big things money buys - which used to be sold from the Home tab.
  */
+function GymSection({ world }: { world: WorldState }): React.JSX.Element {
+  const character = world.character;
+  const member = isGymMember(character);
+  const { fee, days } = BALANCE.gym;
+
+  return (
+    <>
+      <h3 className="panel__subtitle">Membership</h3>
+      <div className="job">
+        <div>
+          <strong>{member ? 'Member' : 'Not a member'}</strong>{' '}
+          <span className="job__pay">{money(fee)} every {days} days</span>
+          <p className="choice__text">
+            {member
+              ? `Renews by itself in ${Math.max(0, (character.gymPaidUntil ?? 0) - world.clockDay)} days. Cancel any time; nothing back for the rest of the month.`
+              : 'Members only past the front desk: the machines, the showers and the water.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn"
+          disabled={!member && character.stats.money < fee}
+          onClick={() => gameStore.dispatch({ type: member ? 'leaveGym' : 'joinGym' })}
+        >
+          {member ? 'Cancel' : character.stats.money < fee ? 'Too dear' : 'Join'}
+        </button>
+      </div>
+    </>
+  );
+}
+
 function MallSection({ world }: { world: WorldState }): React.JSX.Element {
   const character = world.character;
   const busy = useProgress() !== null;

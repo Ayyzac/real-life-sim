@@ -293,6 +293,14 @@ function liveAsAthlete(seed: number, sportId: string, retireAtAge = 200): WorldS
       };
     }
 
+    // Exercising needs the gym (GDD §12): a member while training there,
+    // cancelled the week they stop, so the fee is in the numbers.
+    const exercising = next.focusId === 'exercise';
+    next = {
+      ...next,
+      gymPaidUntil: exercising ? (next.gymPaidUntil ?? state.clockDay) : null,
+    };
+
     state = resolveAll(advanceWeek({ ...state, character: next }));
   }
 

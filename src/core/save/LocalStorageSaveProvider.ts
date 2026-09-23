@@ -118,14 +118,14 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   if (!character) return null;
 
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
-  // time of day and needs. Every field is filled if missing, so the same path
+  // time of day and needs; 4 -> 5 the gym membership. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
     return {
       ...withPhase6World(withPhase5World(parsed)),
       schemaVersion: SCHEMA_VERSION,
-      character: withPhase6Fields(withPhase5Fields(character)),
+      character: withPhase7Fields(withPhase6Fields(withPhase5Fields(character))),
     };
   }
 
@@ -154,6 +154,19 @@ function withPhase6World(world: WorldState): WorldState {
     minuteOfDay: typeof world.minuteOfDay === 'number' ? world.minuteOfDay : BALANCE.day.wake,
     doneToday: Array.isArray(world.doneToday) ? world.doneToday : [],
   };
+}
+
+/**
+ * Nobody had a gym membership before Phase 7. Someone who was training at the
+ * gym goes back to resting rather than being signed up and charged without
+ * asking - they can join at the gym.
+ */
+function withPhase7Fields(character: Character): Character {
+  const gymPaidUntil = typeof character.gymPaidUntil === 'number' ? character.gymPaidUntil : null;
+  // Not findFocus: an unknown id would throw here and lose the save. Unknown
+  // ids are repaired later, in withKnownIds.
+  const lapsed = gymPaidUntil === null && FOCUSES.find((f) => f.id === character.focusId)?.membersOnly === true;
+  return { ...character, gymPaidUntil, focusId: lapsed ? DEFAULT_FOCUS_ID : character.focusId };
 }
 
 function withPhase6Fields(character: Character): Character {

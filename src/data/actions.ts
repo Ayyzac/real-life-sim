@@ -25,6 +25,8 @@ export interface ActionDefinition {
   effects?: Partial<Pick<Stats, 'energy' | 'mood' | 'health'>> & Partial<Attributes>;
   /** Has a screen of its own (the clothes shop), so it is not listed with the rest. */
   custom?: boolean;
+  /** Gym members only (GDD §12). */
+  membersOnly?: boolean;
 }
 
 export const ACTIONS: readonly ActionDefinition[] = [
@@ -89,6 +91,7 @@ export const ACTIONS: readonly ActionDefinition[] = [
   // Gym.
   {
     id: 'workout',
+    membersOnly: true,
     label: 'Work out',
     description: 'An hour on the machines. You will want a shower after.',
     locationId: 'gym',
@@ -98,6 +101,7 @@ export const ACTIONS: readonly ActionDefinition[] = [
   },
   {
     id: 'gym_shower',
+    membersOnly: true,
     label: 'Shower at the gym',
     description: 'Cold water, but it does the job.',
     locationId: 'gym',
@@ -106,6 +110,7 @@ export const ACTIONS: readonly ActionDefinition[] = [
   },
   {
     id: 'gym_water',
+    membersOnly: true,
     label: 'Water fountain',
     description: 'Free, and exactly as good as it sounds.',
     locationId: 'gym',
