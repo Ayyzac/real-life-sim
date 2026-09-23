@@ -23,6 +23,8 @@ export interface ActionDefinition {
   needs?: Partial<Needs>;
   /** The treat: first time each day only. */
   effects?: Partial<Pick<Stats, 'energy' | 'mood' | 'health'>> & Partial<Attributes>;
+  /** Has a screen of its own (the clothes shop), so it is not listed with the rest. */
+  custom?: boolean;
 }
 
 export const ACTIONS: readonly ActionDefinition[] = [
@@ -109,6 +111,47 @@ export const ACTIONS: readonly ActionDefinition[] = [
     locationId: 'gym',
     minutes: 5,
     needs: { thirst: 30 },
+  },
+  // Mall (GDD §11.5).
+  {
+    id: 'food_court',
+    label: 'Food court',
+    description: 'Noodles, rice, something fried. Quick and filling.',
+    locationId: 'mall',
+    minutes: 30,
+    cost: 12,
+    needs: { hunger: 60, thirst: 10 },
+    effects: { mood: 2 },
+  },
+  {
+    id: 'bubble_tea',
+    label: 'Bubble tea',
+    description: 'Mostly sugar. Nobody minds.',
+    locationId: 'mall',
+    minutes: 10,
+    cost: 5,
+    needs: { thirst: 40 },
+    effects: { mood: 2 },
+  },
+  {
+    id: 'cinema',
+    label: 'Watch a film',
+    description: 'Two hours somewhere else entirely.',
+    locationId: 'mall',
+    minutes: 120,
+    cost: 15,
+    effects: { mood: 8 },
+  },
+  {
+    id: 'buy_clothes',
+    label: 'New clothes',
+    description: 'A new top. It changes how you look, and a little how you feel.',
+    locationId: 'mall',
+    minutes: 30,
+    cost: 60,
+    needs: {},
+    effects: { mood: 3 },
+    custom: true,
   },
 ];
 

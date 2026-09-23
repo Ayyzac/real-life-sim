@@ -1151,3 +1151,19 @@ body {
   font-size: 0.7rem;
 }
 
+.clothes {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.swatch--on:disabled {
+  opacity: 1;
+}
+

@@ -130,10 +130,11 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Orang yang dikenal hadir menurut jadwal, dengan nama — juga tampil di tab Here dan di keterangan gedung di peta
 - [x] **Checkpoint:** masuk kafe dan melihat siapa di dalam — 362 test
 
-### E — Mall
-- [ ] Gedung Mall di Eastside
-- [ ] Food court, toko barang, toko baju, bioskop
-- [ ] **Checkpoint:** belanja dan hiburan punya tempatnya sendiri
+### E — Mall — SELESAI
+- [x] Gedung Mall di Eastside, seberang Stadion, buka 10:00–22:00, dengan ruangannya sendiri
+- [x] Food court, bubble tea, bioskop (2 jam), toko baju (ganti warna atasan, $60), toko barang (pindah dari tab Home)
+- [x] Keluarga dan teman kadang ada di Mall (malam hari, akhir pekan)
+- [x] **Checkpoint:** belanja dan hiburan punya tempatnya sendiri — 366 test
 
 ### F — Ngobrol & hubungan
 - [ ] Dialog tertulis dengan jawaban bercabang dan sifat tersembunyi

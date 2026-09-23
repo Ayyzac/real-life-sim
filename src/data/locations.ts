@@ -39,4 +39,11 @@ export const LOCATIONS: readonly LocationDefinition[] = [
     opens: 6 * 60,
     closes: 22 * 60,
   },
+  {
+    id: 'mall',
+    label: 'Mall',
+    blurb: 'Food, films, clothes, and the bigger things money buys.',
+    opens: 10 * 60,
+    closes: 22 * 60,
+  },
 ];

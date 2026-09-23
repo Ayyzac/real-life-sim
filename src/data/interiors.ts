@@ -326,6 +326,40 @@ function shop(id: string, label: string, pieces: readonly Piece[]): Interior {
   };
 }
 
+const MALL: Interior = {
+  id: 'mall',
+  label: 'Mall',
+  floor: T.beige,
+  wall: T.orangeWall,
+  pieces: [
+    { x: 1, y: 2, frames: I.counter, action: 'food_court' },
+    { x: 4, y: 2, frames: I.bottles, action: 'bubble_tea' },
+    { x: 6, y: 2, frames: I.bookshelf },
+    { x: 10, y: 2, frames: [[400, 400, 400, 400]], action: 'cinema' },
+    { x: 10, y: 4, frames: [[217, 217, 217, 217]] },
+    { x: 10, y: 5, frames: [[217, 217, 217, 217]] },
+    { x: 1, y: 5, frames: I.roundTable, action: 'food_court' },
+    { x: 0, y: 5, frames: I.chairRight },
+    { x: 2, y: 5, frames: I.chairLeft },
+    { x: 4, y: 5, frames: I.roundTable, action: 'food_court' },
+    { x: 3, y: 5, frames: I.chairRight },
+    { x: 5, y: 5, frames: I.chairLeft },
+    { x: 6, y: 4, frames: I.rugOrange, walkable: true },
+    { x: 13, y: 6, frames: I.plantTall },
+  ],
+  staff: [
+    { x: 2, y: 3, role: 'Cook', look: look(4, 0, 6, 3) },
+    { x: 8, y: 3, role: 'Shop', look: look(1, 4, 9, 1) },
+  ],
+  spots: [
+    { x: 1, y: 6 },
+    { x: 4, y: 6 },
+    { x: 7, y: 5 },
+    { x: 9, y: 6 },
+    { x: 12, y: 6 },
+  ],
+};
+
 const EMPTY_UNIT: Interior = {
   id: 'business_empty',
   label: 'Empty unit',
@@ -377,6 +411,7 @@ export const INTERIORS: readonly Interior[] = [
   GYM,
   WORK,
   STADIUM,
+  MALL,
   EMPTY_UNIT,
   ...Object.values(BUSINESSES),
 ];
@@ -401,6 +436,8 @@ export function interiorFor(locationId: LocationId, character: Pick<Character, '
       return WORK;
     case 'stadium':
       return STADIUM;
+    case 'mall':
+      return MALL;
     case 'business':
       return character.career.type === 'business'
         ? (BUSINESSES[character.career.businessId] ?? EMPTY_UNIT)

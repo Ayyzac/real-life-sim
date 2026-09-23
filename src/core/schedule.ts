@@ -42,12 +42,12 @@ export function whereIs(person: Person, clockDay: number, minuteOfDay: number): 
       if (!daytime || weekend) place = 'home';
       break;
     case 'family':
-      if (weekend && hour >= 10 && hour < 18 && roll < 35) place = 'cafe';
+      if (weekend && hour >= 10 && hour < 18 && roll < 40) place = roll < 20 ? 'cafe' : 'mall';
       else if (evening && roll < 12) place = 'home';
       break;
     case 'friend':
-      if (evening) place = roll < 35 ? 'cafe' : roll < 50 ? 'gym' : null;
-      else if (weekend && daytime && roll < 25) place = 'cafe';
+      if (evening) place = roll < 30 ? 'cafe' : roll < 42 ? 'gym' : roll < 55 ? 'mall' : null;
+      else if (weekend && daytime && roll < 30) place = roll < 15 ? 'cafe' : 'mall';
       break;
     case 'colleague':
       if (!weekend && daytime) place = 'work';

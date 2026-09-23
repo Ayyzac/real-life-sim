@@ -630,6 +630,14 @@ cepat" tetap lolos.
 | Label & sorot di atas langit malam | Kedalaman di atas lapisan malam. | Nama gedung harus tetap terbaca di malam hari. |
 | Jadwal orang = hash | `whereIs()` di `src/core/schedule.ts`; hormati jam buka. | Lihat keputusan Fase 6 di atas: tampilan tidak boleh menggeser RNG simulasi. |
 
+#### Fase 6E — Mall (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Mall = `LocationId` ke-8 | Gedung di (35,9) 8×4, pintu (38,12). Tidak mengubah bentuk save. | Menambah nilai ke union tidak merusak save lama. |
+| Baju baru = aksi biasa + ganti tampilan | Intent `buyClothes {top}` menjalankan aksi `buy_clothes` (30 menit, $60, mood sekali sehari) lalu mengganti warna atasan di `character.look`. Aksi ini ditandai `custom` sehingga tidak ikut daftar tombol. | Jam, harga, jam buka, dan "tidak cukup uang" semuanya memakai aturan yang sudah dites, tanpa jalur kedua. |
+| Toko barang pindah dari Home | Tombol beli ada di Mall; Home tinggal daftar milik. `buyPossession` di store **tidak** memeriksa lokasi. | Pintu satu-satunya ke tombol itu ada di Mall; menambah pemeriksaan lokasi di store akan merusak test lama tanpa menambah keamanan bagi pemain. |
+
 **Test tata letak menangkap empat kesalahan sebelum dilihat mata:** satu titik
 pengunjung di rumah besar tertutup kursi, dan tiga di ruang usaha tertutup
 konter, rak, dan meja. Test-nya memeriksa setiap titik pengunjung dan setiap

@@ -23,12 +23,15 @@ import { POSSESSIONS } from '../data/possessions';
 import { JOBS, findJob } from '../data/jobs';
 import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
-import { closedReason } from '../core/day';
-import { lookOf } from '../core/look';
+import { actionBlocker, closedReason } from '../core/day';
+import { findAction } from '../data/actions';
+import { TOP_COLOURS } from '../data/looks';
+import { runTimed, useProgress } from './progress';
+import { characterLook, decodeLook, lookOf } from '../core/look';
 import { whoIsHere } from '../core/schedule';
 import { Portrait } from './Portrait';
 import { ActionList } from './ActionList';
-import { money, signed, signedMoney } from './format';
+import { duration, money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
 
 /**
@@ -79,6 +82,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
       <ActionList world={world} />
 
       {location.id === 'home' && <HomeSection character={character} />}
+      {location.id === 'mall' && <MallSection world={world} />}
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}
@@ -489,7 +493,7 @@ function HomeSection({ character }: { character: Character }): React.JSX.Element
 
       <h3 className="panel__subtitle">What you own</h3>
       {character.owned.length === 0 ? (
-        <p className="panel__hint">Nothing yet. Everything below is paid for outright.</p>
+        <p className="panel__hint">Nothing yet. The Mall sells homes, vehicles and the rest, paid for outright.</p>
       ) : (
         <p className="panel__hint">
           {belongings.map((p) => p.name).join(' \u00b7 ')}
@@ -497,6 +501,73 @@ function HomeSection({ character }: { character: Character }): React.JSX.Element
         </p>
       )}
 
+    </>
+  );
+}
+
+/** The people the player knows who are here right now (GDD §11.4). */
+function HereNow({ world }: { world: WorldState }): React.JSX.Element | null {
+  const here = whoIsHere(world, world.character.location);
+  if (here.length === 0) return null;
+
+  return (
+    <div className="here-now">
+      <h3 className="panel__subtitle">Here now</h3>
+      <ul className="survivors">
+        {here.map((person) => (
+          <li key={person.id} className="survivors__item">
+            <Portrait look={lookOf(person)} scale={2} />
+            <span>
+              {person.name} <span className="here-now__kind">{person.kind}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * The Mall's shops (GDD §11.5): clothes that change how you look, and the
+ * big things money buys - which used to be sold from the Home tab.
+ */
+function MallSection({ world }: { world: WorldState }): React.JSX.Element {
+  const character = world.character;
+  const busy = useProgress() !== null;
+  const clothes = findAction('buy_clothes');
+  const blocker = actionBlocker(world, clothes);
+  const current = decodeLook(characterLook(character));
+
+  return (
+    <>
+      <h3 className="panel__subtitle">Clothes shop</h3>
+      <div className="clothes">
+        <Portrait look={characterLook(character)} scale={3} className="person__face" />
+        <div>
+          <p className="panel__hint">
+            A new top, {money(clothes.cost ?? 0)} and {duration(clothes.minutes)}.
+            {blocker ? ` ${blocker}.` : ''}
+          </p>
+          <div className="look__row" role="group" aria-label="Tops">
+            {TOP_COLOURS.map((ramp, top) =>
+              ramp === null ? null : (
+                <button
+                  type="button"
+                  key={top}
+                  className={`swatch ${current.top === top ? 'swatch--on' : ''}`}
+                  style={{ background: ramp[ramp.length - 2] }}
+                  disabled={busy || blocker !== null || current.top === top}
+                  onClick={() => runTimed(clothes.label, clothes.minutes, { type: 'buyClothes', top })}
+                  aria-label={`Buy a top in colour ${top}`}
+                  aria-pressed={current.top === top}
+                />
+              ),
+            )}
+          </div>
+        </div>
+      </div>
+
+      <h3 className="panel__subtitle">Shops</h3>
       <div className="jobs">
         {POSSESSIONS.map((possession) => {
           const owned = character.owned.includes(possession.id);
@@ -546,27 +617,5 @@ function HomeSection({ character }: { character: Character }): React.JSX.Element
         })}
       </div>
     </>
-  );
-}
-
-/** The people the player knows who are here right now (GDD §11.4). */
-function HereNow({ world }: { world: WorldState }): React.JSX.Element | null {
-  const here = whoIsHere(world, world.character.location);
-  if (here.length === 0) return null;
-
-  return (
-    <div className="here-now">
-      <h3 className="panel__subtitle">Here now</h3>
-      <ul className="survivors">
-        {here.map((person) => (
-          <li key={person.id} className="survivors__item">
-            <Portrait look={lookOf(person)} scale={2} />
-            <span>
-              {person.name} <span className="here-now__kind">{person.kind}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

@@ -16,6 +16,7 @@ import { performAction, skipWork, startBlock } from './day';
 import { withLogEntry, withMilestone } from './log';
 import { createWorld, type NewGameOptions } from './character';
 import { BALANCE } from '../data/balance';
+import { characterLook, decodeLook, encodeLook } from './look';
 import { dollars } from './money';
 import { LocalStorageSaveProvider } from './save/LocalStorageSaveProvider';
 import type { SaveProvider } from './save/SaveProvider';
@@ -39,6 +40,7 @@ export type GameIntent =
   | { type: 'doAction'; actionId: string }
   | { type: 'startBlock' }
   | { type: 'skipWork' }
+  | { type: 'buyClothes'; top: number }
   | { type: 'setFocus'; focusId: FocusId }
   | { type: 'enterLocation'; locationId: LocationId }
   | { type: 'chooseEventOption'; choiceId: string }
@@ -192,6 +194,25 @@ export class GameStore {
 
       case 'skipWork':
         return state ? skipWork(state) : state;
+
+      case 'buyClothes': {
+        // A new top from the Mall (GDD §11.5): the time, price and mood of an
+        // ordinary action, and then the look changes.
+        if (!state) return state;
+        const parts = decodeLook(characterLook(state.character));
+        if (parts.top === intent.top) return state;
+        const shopped = performAction(state, 'buy_clothes');
+        if (shopped === state) return state;
+        return {
+          ...shopped,
+          eventLog: withLogEntry(shopped.eventLog, {
+            day: shopped.clockDay,
+            tone: 'good',
+            text: 'Bought some new clothes.',
+          }),
+          character: { ...shopped.character, look: encodeLook({ ...parts, top: intent.top }) },
+        };
+      }
 
       case 'chooseEventOption':
         return state ? resolveEvent(state, intent.choiceId) : state;

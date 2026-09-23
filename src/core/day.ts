@@ -148,7 +148,7 @@ export function actionBlocker(state: WorldState, action: ActionDefinition): stri
 
 /** The actions on offer where the character is standing. */
 export function actionsHere(state: WorldState): readonly ActionDefinition[] {
-  return ACTIONS.filter((action) => action.locationId === state.character.location);
+  return ACTIONS.filter((action) => action.locationId === state.character.location && !action.custom);
 }
 
 /**

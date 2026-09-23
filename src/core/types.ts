@@ -40,7 +40,8 @@ export type LocationId =
   | 'hospital'
   | 'cafe'
   | 'business'
-  | 'stadium';
+  | 'stadium'
+  | 'mall';
 
 /** Id of an entry in src/data/focuses.ts. */
 export type FocusId = string;
