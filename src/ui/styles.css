@@ -1519,3 +1519,114 @@ body {
   width: 60px;
   height: 20px;
 }
+
+/* ---------- laptop apps & mini-games ---------- */
+
+.mail {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.mail--new {
+  border-color: var(--accent);
+}
+
+.mail__head {
+  font: inherit;
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.mail__from {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.mail__body {
+  padding: 0 10px 10px;
+  font-size: 0.82rem;
+}
+
+.mail__body p {
+  margin: 0 0 8px;
+}
+
+.mini {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 12px 0;
+}
+
+.mini__head {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.mini__timer {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.mini__timer--low {
+  color: var(--bad);
+}
+
+.mini__big {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.mini__input {
+  font: inherit;
+  font-size: 1.1rem;
+  width: min(260px, 100%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  text-align: center;
+}
+
+.mini__cards {
+  display: grid;
+  grid-template-columns: repeat(4, 56px);
+  gap: 8px;
+}
+
+.mini__card {
+  font: inherit;
+  font-size: 1.6rem;
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.mini__card--found {
+  border-color: var(--good);
+  color: var(--good);
+}
+
+.mini__parcel {
+  padding: 18px 28px;
+  border: 3px solid;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}

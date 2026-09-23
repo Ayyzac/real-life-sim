@@ -122,7 +122,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
 
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
   // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag; 6 -> 7 deliveries;
-  // 7 -> 8 the bank and the markets. Every field is filled if missing, so the same path
+  // 7 -> 8 the bank and the markets; 8 -> 9 applications and email. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
@@ -195,6 +195,8 @@ function withPhase7World(world: WorldState): WorldState {
     },
     portfolio: world.portfolio && typeof world.portfolio === 'object' ? world.portfolio : {},
     bank: world.bank ?? { savings: 0, loan: 0 },
+    applications: Array.isArray(world.applications) ? world.applications : [],
+    inbox: Array.isArray(world.inbox) ? world.inbox : [],
   };
 }
 
@@ -245,6 +247,8 @@ export function withKnownIds(state: WorldState): WorldState {
   return {
     ...state,
     portfolio: Object.fromEntries(Object.entries(state.portfolio).filter(([id]) => known(ASSETS, id))),
+    applications: state.applications.filter((a) => known(JOBS, a.jobId)),
+    inbox: state.inbox.map((email) => (email.offer && !known(JOBS, email.offer.jobId) ? { ...email, offer: undefined } : email)),
     pendingEvent:
       state.pendingEvent && known(EVENTS, state.pendingEvent.eventId) ? state.pendingEvent : null,
     character: {

@@ -212,6 +212,18 @@ export interface Bank {
   loan: number;
 }
 
+/** A message on the laptop (GDD §12). */
+export interface Email {
+  id: string;
+  day: number;
+  from: string;
+  subject: string;
+  body: string;
+  /** A job offer that can be accepted until `expires` (a clockDay). */
+  offer?: { jobId: string; expires: number };
+  read: boolean;
+}
+
 export interface WorldState {
   /** Bumped whenever the saved shape changes, so old saves can be migrated. */
   schemaVersion: number;
@@ -248,6 +260,10 @@ export interface WorldState {
   /** What the player owns on the markets, by asset id. */
   portfolio: Record<string, Holding>;
   bank: Bank;
+  /** Sent from the laptop, answered overnight. */
+  applications: { jobId: string; day: number }[];
+  /** Newest first, trimmed. */
+  inbox: Email[];
   deceased: boolean;
   /** Plain-language reason, set at the moment of death. */
   deathCause?: string;

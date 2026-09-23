@@ -34,6 +34,14 @@ export interface PossessionDefinition {
 
 export const POSSESSIONS: readonly PossessionDefinition[] = [
   {
+    id: 'laptop',
+    name: 'Laptop',
+    blurb: 'Job hunting, email and side work from home - and something to watch at night.',
+    price: 1_200,
+    category: 'luxury',
+    perDay: { mood: 0.2 },
+  },
+  {
     id: 'bicycle',
     name: 'Bicycle',
     blurb: 'Gets you across town without the walk. Cheap enough to be an early win.',

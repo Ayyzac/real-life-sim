@@ -319,6 +319,28 @@ export const BALANCE = {
     historyDays: 30,
   },
 
+  /**
+   * The laptop (GDD §12). Applications are answered overnight; the better
+   * you clear a job's bar, the likelier the yes. Side work is pocket money.
+   */
+  laptop: {
+    inboxLimit: 30,
+    maxApplications: 3,
+    offerDays: 3,
+    baseHireChance: 0.4,
+    hireChancePerPoint: 0.02,
+    minHireChance: 0.2,
+    maxHireChance: 0.9,
+    /** For a job with no bar at all: as if cleared by this much. */
+    noBarMargin: 20,
+    emailMinutes: 15,
+    emailCloseness: 1.5,
+    gigMinutes: 60,
+    gigsPerDay: 2,
+    gigEnergy: -5,
+    gigEnergyNeeded: 10,
+  },
+
   weather: {
     rainChance: 0.25,
     earliestHour: 6,

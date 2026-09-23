@@ -323,4 +323,13 @@ describe('migrating an older save', () => {
     expect(loaded?.market.hour).toBe(40 * 24 + 7);
     expect(Object.keys(loaded?.market.prices ?? {}).length).toBeGreaterThan(5);
   });
+
+  it('gives an older save an empty inbox and no applications (v8 -> v9)', () => {
+    const world = createWorld({ name: 'Mailer', backgroundId: 'athlete', seed: 9 });
+    const { applications: _a, inbox: _i, ...oldWorld } = world;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...oldWorld, schemaVersion: 8 }));
+    const loaded = saves.load();
+    expect(loaded?.applications).toEqual([]);
+    expect(loaded?.inbox).toEqual([]);
+  });
 });

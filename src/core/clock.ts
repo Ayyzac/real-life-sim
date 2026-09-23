@@ -8,6 +8,7 @@ import { partnerOf, relationshipsOneDay, rollRelationships } from './relationshi
 import { workOneDay } from './careers/job';
 import { gymRenewal } from './gym';
 import { bankOneDay, netWorth } from './finance';
+import { answerApplications } from './laptop';
 import { ageInYears } from './character';
 import { bedtimeCost, isWeekend, morningNeeds, SKIPPED_WORK } from './day';
 import { withLogEntry, withMilestone } from './log';
@@ -234,6 +235,8 @@ export function applyDailyRules(state: WorldState): WorldState {
     eventLog,
     milestones,
     bank: banked.bank,
+    // Job applications sent today are answered by the morning (GDD §12).
+    ...answerApplications(state),
     character: {
       ...character,
       needs: morningNeeds(),

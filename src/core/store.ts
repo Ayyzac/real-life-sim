@@ -13,6 +13,7 @@ import { buyItem, consumeItem } from './bag';
 import { caughtInRain } from './weather';
 import { deliverDue, orderFood, takeTaxi } from './phone';
 import { advanceMarket, bankMove, buyAsset, sellAsset, type BankMove } from './finance';
+import { applyForJob, doGig, emailPerson, offerBlocker } from './laptop';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -55,6 +56,11 @@ export type GameIntent =
   | { type: 'buyAsset'; assetId: string; dollars: number }
   | { type: 'sellAsset'; assetId: string; share: number }
   | { type: 'bank'; move: BankMove; amount: number }
+  | { type: 'applyJob'; jobId: string }
+  | { type: 'acceptOffer'; emailId: string }
+  | { type: 'readEmail'; emailId: string }
+  | { type: 'emailPerson'; personId: string }
+  | { type: 'freelance'; gigId: string; score: number }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
   | { type: 'greetStranger'; look: number }
@@ -323,6 +329,39 @@ export class GameStore {
 
       case 'bank':
         return state ? bankMove(state, intent.move, intent.amount) : state;
+
+      case 'applyJob':
+        return state ? applyForJob(state, intent.jobId) : state;
+
+      case 'readEmail': {
+        if (!state) return state;
+        const email = state.inbox.find((e) => e.id === intent.emailId);
+        if (!email || email.read) return state;
+        return { ...state, inbox: state.inbox.map((e) => (e === email ? { ...e, read: true } : e)) };
+      }
+
+      case 'acceptOffer': {
+        if (!state) return state;
+        const email = state.inbox.find((e) => e.id === intent.emailId);
+        if (!email?.offer || offerBlocker(state, email) !== null) return state;
+        // The same door as the job board, with every guard it has - a
+        // business owner still cannot walk away from their shop by email.
+        const hired = this.reduce({ type: 'takeJob', jobId: email.offer.jobId });
+        if (!hired || hired === state) return state;
+        return {
+          ...hired,
+          inbox: hired.inbox.map((e) => (e.id === email.id ? { ...e, read: true, offer: undefined } : e)),
+        };
+      }
+
+      case 'emailPerson':
+        return state ? emailPerson(state, intent.personId) : state;
+
+      case 'freelance': {
+        if (!state) return state;
+        const next = doGig(state, intent.gigId, intent.score);
+        return next.minuteOfDay >= BALANCE.day.latest ? advanceDay(next) : next;
+      }
 
       case 'askOut':
         return state ? askOut(state, intent.personId) : state;

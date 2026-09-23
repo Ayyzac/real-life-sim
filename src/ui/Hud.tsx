@@ -17,6 +17,7 @@ import { useShownMinute } from './progress';
 import { SPEEDS, setSpeed, togglePause, useClock } from './clock';
 import { blockPending, freeUntil } from '../core/day';
 import { openDevice } from './device/device';
+import { laptopBlocker, unread } from '../core/laptop';
 
 /**
  * Everything about the character at a glance, always on screen: who, when,
@@ -160,6 +161,17 @@ export function Hud({ world }: { world: WorldState }): React.JSX.Element {
           >
             Phone
           </button>
+          {character.owned.includes('laptop') && (
+            <button
+              type="button"
+              className="btn btn--small"
+              disabled={laptopBlocker(world) !== null}
+              onClick={() => openDevice('laptop')}
+              title={laptopBlocker(world) ?? 'Jobs, email, side work, and everything the phone does'}
+            >
+              Laptop{unread(world.inbox) > 0 ? ` · ${unread(world.inbox)}` : ''}
+            </button>
+          )}
         </div>
       </div>
 

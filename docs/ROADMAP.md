@@ -155,7 +155,7 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 - [x] **D** — Hujan: jalan sepi, payung (prakiraan menyusul di app HP, 7E) — 416 test
 - [x] **E** — HP: kontak, undang ke rumah, berita, diskon, cuaca, taksi, pesan antar — 426 test
 - [x] **F** — Bank, saham, crypto — 436 test
-- [ ] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game)
+- [x] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game) — 445 test
 - [ ] **H** — Casino + slot online
 - [ ] **I** — Obrolan pohon dialog per topik
 - [ ] **J** — Media sosial

@@ -749,6 +749,18 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 | Fee 0,5% saham, 1% crypto, minimal $10 | Beli tidak bisa pakai utang. | Bolak-balik trading pelan-pelan merugi, sesuai kenyataan. |
 | Schema → 8 | `market`, `portfolio`, `bank` di `WorldState`. Migrasi membuka pasar di jam save itu; aset baru di update mendatang otomatis dapat harga awal. | |
 
+#### Fase 7G — laptop (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Laptop = barang permanen | `laptop` di `possessions.ts` ($1.200, mood +0,2/hari, dijual di Mall). Dipakai hanya di rumah (`laptopBlocker`). Tombol "Laptop" di HUD dengan jumlah email belum dibaca. | Keputusan user. Test data barang mewajibkan tiap barang memberi sesuatu dan lebih dari $1.000. |
+| Lamaran dijawab saat tidur | `WorldState.applications`; `answerApplications()` dipanggil dari `applyDailyRules`, hasil dari hash + seberapa jauh atribut melampaui syarat (20–90%). Maks 3 lamaran. | Tidak menyentuh RNG. Simulasi seumur hidup tidak pernah melamar, jadi angkanya tidak berubah. |
+| Terima tawaran = pintu `takeJob` yang sama | Intent `acceptOffer` memanggil `reduce({ type: 'takeJob' })` sendiri; kedaluwarsa 3 hari. | Semua penjaga papan lowongan ikut: pemilik usaha tetap tidak bisa kabur lewat email. Dipatok test. |
+| Email = `WorldState.inbox` | Maks 30, terbaru di depan. Kirim email ke kenalan: 15 menit, kedekatan +1,5, sekali sehari per orang. | |
+| Kerja lepas | `src/data/gigs.ts` (4 gig) + `MINI_GAMES` di `src/ui/minigames/`. Skor 0–1 dikirim ke core, di-*clamp* di sana. Bayar = dasar × skor × (1 + atribut/100) ≈ $10–15/jam, 2 gig sehari, energi −5. | Uang saku, bukan pengganti kerja (kasir < $5/jam tapi 40 jam seminggu). |
+| Isi mini-game diacak dengan `createRng(Date.now())` | Instans RNG sendiri, bukan RNG yang disimpan. | Kata atau paket berikutnya tidak boleh menggeser dadu hidup. `Math.random()` tetap tidak dipakai. |
+| Schema → 9 | `applications`, `inbox`. | |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.
