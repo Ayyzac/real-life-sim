@@ -13,6 +13,7 @@ import {
   PROPS,
   SHEET_SPACING,
   TILE_SIZE,
+  TOWN_COLUMNS,
   TOWN_ROWS,
   TOWN_ZOOM,
   VIEW_COLUMNS,
@@ -27,6 +28,7 @@ import { createCrowd, stepPose, type Crowd } from '../crowd';
 import { lookTexture } from '../lookTexture';
 import { POSE, VIEW, lookFrame } from '../looks';
 import { findPath, type Point } from '../pathfinding';
+import { skyAt } from '../sky';
 
 /**
  * The town map: the Phase 2 replacement for the Phase 0 placeholder.
@@ -45,7 +47,10 @@ const TEXTURE = 'town';
 /** Tiles per second. Fast enough not to be a wait, slow enough to read. */
 const WALK_SPEED = 6;
 
-const DEPTH = { ground: 0, building: 1, highlight: 1.5, prop: 2, crowd: 5, player: 6, lock: 10, hud: 20 };
+const DEPTH = { ground: 0, building: 1, highlight: 1.5, prop: 2, crowd: 5, player: 6, sky: 8, lock: 10, hud: 20 };
+
+/** How quickly the sky catches up with the clock, per second. */
+const SKY_EASE = 1.5;
 
 /**
  * Phaser draws text at 1x and the camera then magnifies it, which left every
@@ -95,6 +100,11 @@ export class TownScene extends Phaser.Scene {
   private walkElapsed = 0;
   private highlight?: Phaser.GameObjects.Rectangle;
   private hovered?: TownBuilding;
+  /** The day-night wash over the whole town (GDD §11.1). Render only. */
+  private sky?: Phaser.GameObjects.Rectangle;
+  private skyNow = { r: 0, g: 0, b: 0, a: 0 };
+  /** Day and minute last seen, to tell a jump in time from a walk. */
+  private lastTime = -1;
   private crowd?: Crowd;
   private lockOverlay?: Phaser.GameObjects.Container;
   private arrows: { left?: Phaser.GameObjects.Text; right?: Phaser.GameObjects.Text } = {};
@@ -149,6 +159,16 @@ export class TownScene extends Phaser.Scene {
       .setDepth(DEPTH.highlight)
       .setVisible(false);
 
+    this.sky = this.add
+      .rectangle(0, 0, TOWN_COLUMNS * TILE_SIZE, TOWN_ROWS * TILE_SIZE, 0x000000, 0)
+      .setOrigin(0)
+      .setDepth(DEPTH.sky);
+    if (world) {
+      const start = skyAt(world.minuteOfDay);
+      this.skyNow = { r: start.colour[0], g: start.colour[1], b: start.colour[2], a: start.alpha };
+      this.lastTime = timeKey(world);
+    }
+
     this.buildLockOverlay();
     this.refreshLock(world);
 
@@ -180,6 +200,21 @@ export class TownScene extends Phaser.Scene {
     this.followPlayer();
     this.slideCamera(delta);
     this.placeHud();
+    this.paintSky(delta);
+  }
+
+  /** Eases the wash towards the colour of the current hour. */
+  private paintSky(delta: number): void {
+    const world = this.store.getState();
+    if (!this.sky || !world) return;
+    const target = skyAt(world.minuteOfDay);
+    const t = Math.min(1, (SKY_EASE * delta) / 1000);
+    const now = this.skyNow;
+    now.r += (target.colour[0] - now.r) * t;
+    now.g += (target.colour[1] - now.g) * t;
+    now.b += (target.colour[2] - now.b) * t;
+    now.a += (target.alpha - now.a) * t;
+    this.sky.setFillStyle(Phaser.Display.Color.GetColor(now.r, now.g, now.b), now.a);
   }
 
   // --- districts ----------------------------------------------------------
@@ -490,8 +525,21 @@ export class TownScene extends Phaser.Scene {
     if (!world) return;
 
     const location = world.character.location;
+    const time = timeKey(world);
+    const clockMoved = time !== this.lastTime;
+    this.lastTime = time;
     if (location === this.lastLocation) return;
     this.lastLocation = location;
+
+    // The clock jumped with the move - a working day went by - so the
+    // character did not walk there afterwards: they were there all along.
+    if (clockMoved) {
+      this.path = [];
+      this.tile = doorOf(location);
+      this.player?.setPosition(centre(this.tile.x), centre(this.tile.y));
+      this.lookAt(districtOf(this.tile.x));
+      return;
+    }
 
     // Something outside the map moved the character - a location tab, or
     // picking a focus that lives somewhere else. Walk there so the two views
@@ -526,6 +574,11 @@ export class TownScene extends Phaser.Scene {
     this.crowd?.destroy();
     this.crowd = undefined;
   }
+}
+
+/** One number for "which moment of which day", to spot the clock moving. */
+function timeKey(world: WorldState): number {
+  return world.clockDay * 10_000 + world.minuteOfDay;
 }
 
 /** Centre of a tile, in pixels. Sprites are drawn from their middle. */

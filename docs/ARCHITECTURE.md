@@ -587,6 +587,24 @@ dilepas (energi terkuras tanpa hasil); aksi di `store.ts` menambah log tanpa
 memotongnya; dan save yang menyebut id data tak dikenal membuat halaman kosong
 tanpa tombol reset. Ketiganya sekarang dipatok test.
 
+#### Fase 6B — jam, kebutuhan, tampilan baru (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| **Treat sekali sehari, kebutuhan selalu** | Efek mood/energi/kesehatan/atribut sebuah aksi hanya dihitung pertama kali per hari (`doneToday`); lapar/haus/kebersihan selalu terisi. | Satu aturan umum menggantikan penanda "sekali sehari" per aksi. Tanpa ini sepuluh kopi = sepuluh kali energi, dan check-up harian membuat karakter abadi. Dipatok test: semua treat sekaligus dalam sehari tidak melebihi fokus terbaik untuk tiap angka. |
+| Waktu berlalu dulu, hasil belakangan | `performAction` memajukan jam dulu, baru mengisi kebutuhan. | Kenyang di akhir makan, bukan di awal. |
+| Efek fokus tetap saat tidur | `startBlock` hanya memajukan jam dan memindahkan karakter; statistik fokus diterapkan `applyDailyRules`. | `applyDailyRules` tidak disentuh, jadi semua simulasi seumur hidup tetap sama persis. Petunjuk di layar menjelaskan "counts when you sleep". |
+| 02:00 = tidur otomatis di `store` | Aksi yang berakhir tepat 02:00 langsung disusul `advanceDay`. | `day.ts` tidak boleh mengimpor `clock.ts` (clock sudah mengimpor day). |
+| Animasi = menahan intent, bukan timer simulasi | `runTimed()` di `src/ui/progress.ts` menampilkan bar lalu mengirim intent **sekali**. 15 menit ≈ 0,5 dtk, 1 jam ≈ 1 dtk, maks 3 dtk; nol kalau pengguna memilih kurangi gerak. | `CLAUDE.md` aturan 3: waktu tetap hanya maju karena klik pemain. |
+| Langit peta dan pita hari dari satu file | `src/world/sky.ts`: `SKY` untuk lapisan di peta, `SKY_BAND` untuk pita di HUD. | Dua tampilan jam yang sama tidak boleh berbeda warna. |
+| Jam melompat = karakter sudah di sana | Kalau lokasi berubah bersamaan dengan jam (blok kerja), karakter dipindah langsung, tidak berjalan. | Tanpa ini karakter berjalan ke kantor pukul 17:00, setelah kerjanya selesai. |
+| Aksen jadi kuning lampu jalan | `--accent: #ffc861`, sama dengan sorot gedung di peta. | Aksen hijau lama adalah warna bawaan yang generik; kuning = "sekarang" dan "bisa diklik", di peta maupun di panel. |
+
+**Catatan pengukuran:** animasi jam memakai `requestAnimationFrame`. Di pane
+browser sesi ini yang sering tidak menggambar, jam di layar melompat langsung
+ke waktu akhir; state-nya tetap benar (diuji lewat DOM). FPS tetap belum
+diukur.
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

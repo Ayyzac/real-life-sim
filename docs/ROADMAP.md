@@ -106,14 +106,14 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 5. Scope diubah dulu di
 - [x] Laporan "apa yang berubah" setelah Lanjut Hari/Minggu
 - [x] **Checkpoint:** kota terlihat benar dan orang bisa dibedakan dari wajahnya — 309 test
 
-### B — Jam, siang-malam, kebutuhan, tampilan baru
-- [ ] `SCHEMA_VERSION` 4 dengan migrasi
-- [ ] Jam, nama hari, langit pagi→malam di peta
-- [ ] Lapar, Haus, Kebersihan
-- [ ] Aksi berdurasi (makan, minum, mandi, kopi, check-up, workout) dengan progress bar
-- [ ] Blok fokus 09–17, begadang s/d 02:00
-- [ ] Tata letak baru: bar status atas, peta + panel bertab
-- [ ] **Checkpoint:** satu hari bisa dimainkan per jam, dan skip tetap aman
+### B — Jam, siang-malam, kebutuhan, tampilan baru — SELESAI
+- [x] `SCHEMA_VERSION` 4 dengan migrasi (save lama bangun pukul 07:00)
+- [x] Jam, nama hari, langit pagi→malam di peta, dan pita hari di bar atas
+- [x] Lapar, Haus, Kebersihan
+- [x] Aksi berdurasi (masak, minum, mandi, kopi, makan di luar, check-up, workout) dengan progress bar dan jam yang berjalan
+- [x] Blok fokus 09–17, begadang s/d 02:00
+- [x] Tata letak baru: bar status atas, peta + panel bertab (Here / People / Log); People bisa dibuka dari mana saja
+- [x] **Checkpoint:** satu hari bisa dimainkan per jam, dan skip tetap aman — 335 test, semua test keseimbangan seumur hidup lolos tanpa disentuh
 
 ### C — Aturan kerja
 - [ ] Sabtu–Minggu libur kerja, gaji mingguan tetap

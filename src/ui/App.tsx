@@ -3,14 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { ChangeReport } from './ChangeReport';
 import { changesBetween, type ChangeReport as Report } from './changes';
 import { CharacterCreation } from './CharacterCreation';
-import { Dashboard } from './Dashboard';
+import { DayControls } from './DayControls';
 import { EventDialog } from './EventDialog';
-import { EventLog } from './EventLog';
 import { GameCanvas } from './GameCanvas';
+import { Hud } from './Hud';
 import { LifeSummary } from './LifeSummary';
-import { LocationMenu } from './LocationMenu';
 import { Settings } from './Settings';
-import { TimeControls } from './TimeControls';
+import { SidePanel } from './SidePanel';
 import { play, preload, soundFor } from './sound';
 import { useGame } from './useGame';
 import type { WorldState } from '../core/types';
@@ -81,31 +80,27 @@ export function App(): React.JSX.Element {
   const waiting = world.pendingEvent !== null;
 
   return (
-    <main className="app">
-      <h1 className="app__title">Real Life Sim</h1>
+    <main className="app app--play">
+      <h1 className="sr-only">Real Life Sim</h1>
 
-      <Dashboard character={world.character} clockDay={world.clockDay} people={world.people} />
+      <Hud world={world} />
 
-      <section className="panel world">
-        <GameCanvas />
-        <p className="panel__hint">Click a building to walk there. Doors open the menu below.</p>
-      </section>
+      <div className="play">
+        <div className="play__main">
+          <section className="panel world">
+            <GameCanvas />
+            <p className="panel__hint">Click a building to walk there. The Here tab shows what you can do inside.</p>
+          </section>
 
-      {waiting ? (
-        <EventDialog pending={world.pendingEvent!} />
-      ) : (
-        <>
-          <TimeControls />
+          {waiting ? <EventDialog pending={world.pendingEvent!} /> : <DayControls world={world} />}
           {report && <ChangeReport report={report} />}
-          <LocationMenu world={world} />
-        </>
-      )}
+        </div>
 
-      <EventLog entries={world.eventLog} />
+        <SidePanel world={world} locked={waiting} />
+      </div>
 
       <Settings />
-
-      <footer className="app__footer">A life, one week at a time.</footer>
+      <footer className="app__footer">A life, one day at a time.</footer>
     </main>
   );
 }

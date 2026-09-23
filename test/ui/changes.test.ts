@@ -53,4 +53,22 @@ describe('what an advance changed (GDD §11.7)', () => {
     const after = { ...createWorld({ name: 'Other', backgroundId: 'scholarship', seed: 4 }), clockDay: 7 };
     expect(changesBetween(before, after)).toBeNull();
   });
+
+  it('reports what something done within the day changed, needs included', () => {
+    const before = world();
+    const after: WorldState = {
+      ...before,
+      minuteOfDay: before.minuteOfDay + 15,
+      character: {
+        ...before.character,
+        needs: { ...before.character.needs, thirst: before.character.needs.thirst + 35 },
+      },
+    };
+
+    const report = changesBetween(before, after)!;
+
+    expect(report.days).toBe(0);
+    expect(report.minutes).toBe(15);
+    expect(report.changes).toContainEqual({ label: 'thirst', amount: 35 });
+  });
 });

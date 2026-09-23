@@ -18,7 +18,10 @@ export interface Change {
 }
 
 export interface ChangeReport {
+  /** Whole days that passed; 0 for something done within the day. */
   days: number;
+  /** Minutes that passed within the day, when `days` is 0. */
+  minutes: number;
   changes: Change[];
   /** New names in the circle, and those who left it. */
   met: string[];
@@ -36,8 +39,10 @@ function round(value: number, places: number): number {
 }
 
 export function changesBetween(before: WorldState | null, after: WorldState | null): ChangeReport | null {
-  if (!before || !after || after.clockDay <= before.clockDay) return null;
-  if (before.character.id !== after.character.id) return null;
+  if (!before || !after || before.character.id !== after.character.id) return null;
+  const days = after.clockDay - before.clockDay;
+  const minutes = after.minuteOfDay - before.minuteOfDay;
+  if (days < 0 || (days === 0 && minutes <= 0)) return null;
 
   const changes: Change[] = [];
   const b = before.character;
@@ -49,6 +54,14 @@ export function changesBetween(before: WorldState | null, after: WorldState | nu
   for (const key of ['health', 'energy', 'mood'] as const) {
     const delta = a.stats[key] - b.stats[key];
     if (Math.abs(delta) >= STAT_NOISE) changes.push({ label: key, amount: round(delta, 0) });
+  }
+  // Within a day, needs are the news. Across a night they reset to morning,
+  // which is not something the player did.
+  if (days === 0) {
+    for (const key of ['hunger', 'thirst', 'hygiene'] as const) {
+      const delta = a.needs[key] - b.needs[key];
+      if (Math.abs(delta) >= STAT_NOISE) changes.push({ label: key, amount: round(delta, 0) });
+    }
   }
   for (const key of ['intelligence', 'physical', 'charisma'] as const) {
     const delta = a.attributes[key] - b.attributes[key];
@@ -65,7 +78,8 @@ export function changesBetween(before: WorldState | null, after: WorldState | nu
 
   const now = new Set(after.people.map((person) => person.id));
   return {
-    days: after.clockDay - before.clockDay,
+    days,
+    minutes: days === 0 ? minutes : 0,
     changes,
     met: after.people.filter((person) => !earlier.has(person.id)).map((person) => person.name),
     lost: before.people.filter((person) => !now.has(person.id)).map((person) => person.name),

@@ -1,9 +1,17 @@
 import type { ChangeReport as Report } from './changes';
-import { signed, signedMoney } from './format';
+import { duration, signed, signedMoney } from './format';
+import { lastTimedLabel } from './progress';
 
 /** "This week: +$120 · energy -12 · Cinta +6" (GDD §11.7). */
 export function ChangeReport({ report }: { report: Report }): React.JSX.Element {
-  const period = report.days === 1 ? 'Today' : report.days === 7 ? 'This week' : `These ${report.days} days`;
+  const period =
+    report.days === 0
+      ? `${lastTimedLabel() ?? 'Just now'} · ${duration(report.minutes)}`
+      : report.days === 1
+        ? 'Yesterday'
+        : report.days === 7
+          ? 'Last week'
+          : `Last ${report.days} days`;
 
   return (
     <section className="report" aria-live="polite">

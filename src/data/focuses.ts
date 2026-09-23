@@ -45,6 +45,11 @@ export interface FocusDefinition {
    * (src/core/relationships.ts).
    */
   socialises?: boolean;
+  /**
+   * The button that starts the 09:00-17:00 block (GDD §11.1), in the
+   * player's words. Resting has no block, so no button.
+   */
+  startLabel?: string;
 }
 
 export const FOCUSES: readonly FocusDefinition[] = [
@@ -58,6 +63,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'work',
+    startLabel: 'Go to work',
     label: 'Work',
     description: 'Put in the hours at your job. No job means no pay.',
     locationId: 'work',
@@ -66,6 +72,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'mind_business',
+    startLabel: 'Open the shop',
     label: 'Mind the shop',
     description: 'Be there all day. Your business takes full money instead of ticking over.',
     locationId: 'business',
@@ -74,6 +81,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'train',
+    startLabel: 'Go to training',
     label: 'Train',
     description: 'Drill, repeat, recover. Raises your sporting skill and brings the next fixture closer.',
     locationId: 'stadium',
@@ -82,6 +90,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'study',
+    startLabel: 'Hit the books',
     label: 'Study',
     description: 'Grind through books. Raises Intelligence, which unlocks better jobs.',
     locationId: 'home',
@@ -89,6 +98,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'exercise',
+    startLabel: 'Go to the gym',
     label: 'Exercise',
     description: 'Train hard. Raises Physical and slowly repairs your health.',
     locationId: 'gym',
@@ -96,6 +106,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'socialize',
+    startLabel: 'Go out with people',
     label: 'Socialize',
     description: 'See people. The fastest way to lift a sinking mood, but it costs.',
     locationId: 'cafe',
@@ -105,6 +116,7 @@ export const FOCUSES: readonly FocusDefinition[] = [
   },
   {
     id: 'treatment',
+    startLabel: 'Go to the hospital',
     label: 'Get treatment',
     description: 'Let the doctors fix you. Effective and expensive.',
     locationId: 'hospital',

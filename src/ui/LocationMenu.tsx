@@ -15,7 +15,6 @@ import {
 import { ageInYears } from '../core/character';
 import { DAYS_PER_WEEK } from '../core/clock';
 import type { Character, WorldState } from '../core/types';
-import { People } from './People';
 import { FOCUSES } from '../data/focuses';
 import { ownedPossessions, replacedBy } from '../core/belongings';
 import { BUSINESSES, findBusiness } from '../data/businesses';
@@ -24,6 +23,7 @@ import { POSSESSIONS } from '../data/possessions';
 import { JOBS, findJob } from '../data/jobs';
 import { SPORTS, findSport } from '../data/sports';
 import { LOCATIONS } from '../data/locations';
+import { ActionList } from './ActionList';
 import { money, signed, signedMoney } from './format';
 import { gameStore } from './useGame';
 
@@ -49,7 +49,7 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
   );
 
   return (
-    <section className="panel places">
+    <section className="places">
       <nav className="tabs" aria-label="Places in town">
         {LOCATIONS.map((place) => (
           <button
@@ -66,12 +66,21 @@ export function LocationMenu({ world }: { world: WorldState }): React.JSX.Elemen
 
       <p className="panel__hint">{location.blurb}</p>
 
+      <ActionList world={world} />
+
       {location.id === 'home' && <HomeSection character={character} />}
       {location.id === 'work' && <JobSection character={character} />}
       {location.id === 'business' && <BusinessSection character={character} />}
       {location.id === 'stadium' && <SportsSection character={character} />}
-      {location.id === 'cafe' && <People world={world} />}
 
+      {focuses.length > 0 && (
+        <>
+          <h3 className="panel__subtitle">How you spend your days</h3>
+          <p className="panel__hint">
+            Your days, 09:00&ndash;17:00, until you change it. Skipped days are lived this way too.
+          </p>
+        </>
+      )}
       <div className="choices">
         {focuses.map((focus) => {
           const active = character.focusId === focus.id;
