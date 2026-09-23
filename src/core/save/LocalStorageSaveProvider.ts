@@ -46,7 +46,7 @@ export class LocalStorageSaveProvider implements SaveProvider {
       if (!raw) return null;
 
       const parsed = JSON.parse(raw) as Partial<WorldState>;
-      if (!parsed.character || typeof parsed.clockDay !== 'number') return null;
+      if (!looksLikeASave(parsed)) return null;
 
       const migrated = migrate(parsed);
       // Anything we still cannot read is treated as no save at all, so a
@@ -67,6 +67,27 @@ export class LocalStorageSaveProvider implements SaveProvider {
       // Nothing useful to do; the next save overwrites it anyway.
     }
   }
+}
+
+/**
+ * Is this actually one of our saves?
+ *
+ * Valid JSON is not the same as a valid save. A file that parses but holds
+ * something else entirely - a half-written write, a hand-edit, another app
+ * using the same key - must be refused here rather than reaching the daily
+ * rules and crashing on a missing `stats`.
+ */
+function looksLikeASave(parsed: Partial<WorldState>): boolean {
+  if (typeof parsed.clockDay !== 'number' || !Number.isFinite(parsed.clockDay)) return false;
+
+  const character = parsed.character as Partial<Character> | undefined;
+  if (!character || typeof character !== 'object') return false;
+  if (typeof character.name !== 'string') return false;
+  if (!character.stats || typeof character.stats.money !== 'number') return false;
+  if (!character.attributes || typeof character.attributes.intelligence !== 'number') return false;
+  if (typeof character.ageInDays !== 'number') return false;
+
+  return true;
 }
 
 /**

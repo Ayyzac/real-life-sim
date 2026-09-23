@@ -637,3 +637,17 @@ body {
   font-size: 0.72rem;
   color: var(--muted);
 }
+
+/* ---------- settings ---------- */
+
+.settings__summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.settings__slider {
+  width: 100%;
+  max-width: 320px;
+  accent-color: var(--good);
+}

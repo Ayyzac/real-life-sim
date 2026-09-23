@@ -84,12 +84,12 @@ dicoba, bukan menunggu semuanya selesai. Keputusan lengkap ada di
 - [x] Penyetelan menyeluruh lewat simulasi seumur hidup, target di GDD §9.4
 - [x] **Checkpoint:** satu kehidupan terasa tidak mengulang, dan uang terasa jadi pilihan
 
-### D — Suara & penutup
-- [ ] Efek suara CC0 (tanpa musik), termasuk membereskan AudioContext yang dimatikan sejak Fase 0
-- [ ] Menu pengaturan: volume dan reset save — menutup utang GDD §8 butir 7
-- [ ] Save tahan error (save rusak tidak boleh membuat game gagal dibuka)
-- [ ] Ukur ulang FPS dengan jujur, dan periksa ukuran bundel
-- [ ] **Checkpoint:** game terasa utuh dari layar pertama sampai Life Summary
+### D — Suara & penutup — SELESAI
+- [x] Efek suara CC0 (tanpa musik) — 6 berkas, 73 KB, **tidak lewat Phaser** sehingga AudioContext Fase 0 tidak perlu disentuh sama sekali
+- [x] Menu pengaturan: volume dan reset save — menutup utang GDD §8 butir 7
+- [x] Save tahan error: berkas yang JSON-nya valid tapi isinya bukan save ditolak sebelum menyentuh aturan harian
+- [ ] ~~Ukur ulang FPS~~ — **tidak bisa diukur di lingkungan sesi ini**, lihat `ARCHITECTURE.md` §11. Jangan percaya angka FPS apa pun sampai diukur di jendela yang benar-benar menggambar.
+- [x] **Checkpoint:** game terasa utuh dari layar pertama sampai Life Summary
 
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.

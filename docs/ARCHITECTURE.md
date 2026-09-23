@@ -519,6 +519,25 @@ menelusuri satu kehidupan langkah demi langkah sampai angkanya masuk akal,
 bukan mempercayai tabel ringkasan. **Kalau hasil simulasi mengejutkan, curigai
 skripnya dulu.**
 
+#### Fase 5D — suara & penutup (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| Suara **tidak lewat Phaser** | `src/ui/sound.ts` memakai elemen `Audio` biasa. | Rencana semula adalah membereskan `audio: { noAudio: true }` dari Fase 0. Ternyata tidak perlu: suara ini tidak ada hubungannya dengan peta, dan memakai `Audio` biasa **menghindari** seluruh masalah AudioContext alih-alih memperbaikinya. Lebih sedikit kode, satu kelas bug lebih sedikit. |
+| Suara dipilih dari **perbandingan state**, bukan dipanggil per tempat | `soundFor(before, after)` menebak apa yang baru terjadi; `App` memanggilnya sekali. | Kalau tiap komponen memanggil `play()` sendiri, setiap jenis kejadian baru butuh seseorang ingat menambah satu baris. Dengan cara ini, event baru berbunyi tanpa disentuh. Satu bunyi per perubahan, dengan urutan prioritas: kematian di atas segalanya. |
+| Hanya **6 berkas** dari 100 | 73 KB, diganti nama sesuai perannya. | Menyimpan seluruh paket berarti ratusan KB yang tidak pernah dibunyikan. Daftar lengkapnya di `ASSETS.md`. |
+| Volume disimpan di **kunci localStorage sendiri**, bukan di save | `real-life-sim:volume`. | Volume milik perangkat, bukan milik karakter: harus bertahan saat mulai hidup baru, dan tidak boleh ikut di dalam save atau memaksa `SCHEMA_VERSION` naik. |
+| Penjaga bentuk save | `looksLikeASave()` menolak berkas yang JSON-nya valid tapi isinya bukan save. | JSON yang valid bukan berarti save yang valid. Tanpa ini, tulisan setengah jadi atau hasil edit tangan lolos ke aturan harian dan crash di `stats` yang tidak ada. Sudah diuji dengan tujuh bentuk sampah. |
+
+**FPS tetap belum terukur.** Percobaan pengukuran di sesi ini menghasilkan
+`document.hidden: true` dan **nol frame dalam 4,5 detik** — jendela browsernya
+memang tidak menggambar. Angka apa pun yang dilaporkan dari keadaan seperti itu
+akan mengarang. Yang diketahui: angka Fase 2 (165 fps, frame terburuk 7,3 ms)
+diambil saat **dua** game Phaser berjalan sekaligus, jadi itu batas bawah yang
+aman — tapi sejak itu keramaian dinaikkan ke 40 orang + 14 mobil dan peta jadi
+dua kali lebih besar. **Belum terbukti. Ukur di jendela yang benar-benar
+menggambar sebelum mempercayainya.**
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

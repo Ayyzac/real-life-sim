@@ -201,6 +201,23 @@ describe('migrating an older save', () => {
     expect(saves.load()).toBeNull();
   });
 
+  it('refuses a file that parses but is not one of our saves', () => {
+    // Valid JSON is not a valid save. Anything that gets past here reaches
+    // the daily rules and crashes on a missing `stats`.
+    for (const junk of [
+      '{"clockDay": 5, "character": "not an object"}',
+      '{"clockDay": 5, "character": {}}',
+      '{"clockDay": "soon", "character": {"name": "x"}}',
+      '{"character": {"name": "x", "ageInDays": 1, "stats": {"money": 1}}}',
+      '[1, 2, 3]',
+      '"a string"',
+      'null',
+    ]) {
+      storage.setItem(SAVE_KEY, junk);
+      expect(saves.load(), junk).toBeNull();
+    }
+  });
+
   it('refuses a save so old there is nothing sensible to carry across', () => {
     const ancient = JSON.parse(version2Save()) as Record<string, unknown>;
     ancient.schemaVersion = 1;

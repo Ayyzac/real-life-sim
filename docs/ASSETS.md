@@ -79,6 +79,29 @@ Sumber cadangan (kalau ada celah yang tidak dicover Kenney):
 - **OpenGameArt.org** — filter berdasarkan lisensi CC0/CC-BY sebelum pakai
 - Kreator itch.io yang rilis paket CC0 lengkap: **Pixel Frog**, **Ansimuz**, **0x72** — biasa dipakai untuk tileset & karakter pixel-art bergaya serupa
 
+### Sudah diunduh & dipakai: Kenney "Interface Sounds" (Fase 5D)
+
+- **Sumber:** https://kenney.nl/assets/interface-sounds — diunduh 23 Sep 2026 atas izin user
+- **Lisensi:** **CC0 1.0** (`public/assets/sfx/LICENSE.txt`, salinan asli dari paket)
+- **Isi paket:** 100 berkas `.ogg`
+- **Yang disimpan di repo:** **6 berkas saja**, total **73 KB**, diganti nama sesuai perannya:
+
+| Berkas | Asal | Dibunyikan saat |
+|---|---|---|
+| `week.ogg` | `tick_002` | Satu minggu berlalu |
+| `good.ogg` | `confirmation_001` | Kejadian baik |
+| `bad.ogg` | `error_004` | Kejadian buruk |
+| `decide.ogg` | `question_002` | Event yang menghentikan minggu |
+| `buy.ogg` | `confirmation_004` | Membeli barang |
+| `death.ogg` | `minimize_008` | Karakter meninggal |
+
+94 berkas sisanya tidak disimpan. Menyimpan seluruh paket berarti menambah
+ratusan KB yang tidak pernah dibunyikan.
+
+**Tidak ada musik latar**, sesuai keputusan user — musik yang sama selama
+berjam-jam menyiksa, dan lisensi musik gratis lebih rumit daripada SFX
+(lihat catatan Jamendo di bawah).
+
 ## 4. Audio (SFX & musik, gratis)
 
 - **Kenney.nl** juga punya paket sound effect gratis CC0
