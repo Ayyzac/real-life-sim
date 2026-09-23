@@ -788,6 +788,14 @@ Aturan mainnya di `GDD.md` §12. **FINAL — jangan tanya ulang.**
 
 Test pohon memeriksa: tiap `next` menuju baris yang ada, tiap baris bisa dicapai, tidak ada putaran, semua placeholder terisi.
 
+#### Fase 7J — media sosial (hasil implementasi)
+
+| Keputusan | Isi | Alasan |
+|---|---|---|
+| App "Pixl" di HP & laptop | `src/core/social.ts` + `src/data/social.ts`. Posting 15 menit, maks 2 sehari; follower dari hash + karisma; post pertama hari itu mood +2, karisma +0,01. | Treat sekali sehari, sama seperti aksi lain. Karisma atribut, jadi bergerak dalam hitungan tahun. |
+| Feed = turunan hash | Maks 5 kiriman dari kenalan yang bekerja; kalimat berurutan dari titik awal harian supaya tidak ada dua orang yang menulis hal sama (ketahuan di browser). | Membaca feed tidak mengubah apa pun. |
+| Schema → 11 | `social: { followers, posts }`. | |
+
 ### Belum diputuskan (tanyakan user sebelum mengerjakan)
 
 - ~~**Linter/formatter** (ESLint, Prettier)~~ — **sudah diputuskan: tidak dipasang** (user, 22 Sep 2026). TypeScript mode ketat, 207 test, penjaga kemurnian core dan gerbang CI sudah menangkap yang penting, dan cuma ada satu penulis kode sehingga format tidak pernah bertengkar. Memasangnya berarti dependency dev baru dan pembersihan peringatan, untuk manfaat kecil.

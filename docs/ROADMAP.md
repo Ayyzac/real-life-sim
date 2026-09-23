@@ -158,7 +158,8 @@ Diminta user 23 Sep 2026 setelah memainkan hasil Fase 6. Scope diubah dulu di
 - [x] **G** — Laptop: lamar kerja, email, kerja lepas (4 mini-game) — 445 test
 - [x] **H** — Casino + slot online — 452 test
 - [x] **I** — Obrolan pohon dialog per topik — 456 test
-- [ ] **J** — Media sosial
+- [x] **J** — Media sosial — 460 test
+- [x] **Checkpoint:** kota terasa hidup — jam berjalan, HP & laptop, uang punya tempat baru (bank, pasar, casino), hujan, dan obrolan yang mengalir
 
 ## Di luar roadmap v1 (lihat `docs/GDD.md` §7 untuk daftar lengkap)
 Jangan dikerjakan kecuali user secara eksplisit meminta dan mengubah dokumen ini dulu.

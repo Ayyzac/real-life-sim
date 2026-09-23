@@ -368,6 +368,21 @@ export const BALANCE = {
     gigEnergyNeeded: 10,
   },
 
+  /**
+   * The social app (GDD §12). The mood and charisma only count for the first
+   * post of a day, like any treat; charisma is an attribute, so it moves in
+   * years, not days.
+   */
+  social: {
+    postMinutes: 15,
+    postsPerDay: 2,
+    baseFollowers: 4,
+    followersPerCharisma: 0.3,
+    mood: 2,
+    charisma: 0.01,
+    feedLength: 5,
+  },
+
   weather: {
     rainChance: 0.25,
     earliestHour: 6,

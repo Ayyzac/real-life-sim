@@ -16,6 +16,7 @@ import { closeDevice } from './device';
 import { Bank, Crypto, Stocks } from './finance';
 import { Freelance, Jobs, Mail } from './laptopApps';
 import { OnlineSlots } from '../Casino';
+import { feedFor, nextCaption, postBlocker } from '../../core/social';
 
 /**
  * The apps (GDD §12), as a list: adding an app = adding an entry here. `on`
@@ -87,6 +88,40 @@ function Contacts({ world }: { world: WorldState }): React.JSX.Element {
         );
       })}
     </div>
+  );
+}
+
+function Social({ world }: { world: WorldState }): React.JSX.Element {
+  const busy = useProgress() !== null;
+  const why = postBlocker(world);
+  return (
+    <>
+      <p className="panel__hint">
+        {world.social.followers.toLocaleString('en-US')} followers &middot; {world.social.posts} posts
+      </p>
+      <div className="news__item">
+        <p className="choice__text">{nextCaption(world)}</p>
+        <button
+          type="button"
+          className="btn btn--small btn--primary"
+          disabled={busy || why !== null}
+          title={why ?? undefined}
+          onClick={() => runTimed('Posting', BALANCE.social.postMinutes, { type: 'post' })}
+        >
+          Post it
+        </button>
+        {why && <span className="action__why"> {why}</span>}
+      </div>
+      <h3 className="panel__subtitle">From people you know</h3>
+      {feedFor(world).length === 0 && <p className="panel__hint">Nobody you know posts here.</p>}
+      <ul className="news">
+        {feedFor(world).map((line) => (
+          <li key={line} className="news__item">
+            {line}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -209,6 +244,7 @@ export const APPS: readonly DeviceApp[] = [
   { id: 'bank', label: 'Bank', icon: '$', on: 'both', Component: Bank },
   { id: 'stocks', label: 'Stocks', icon: '↗', on: 'both', Component: Stocks },
   { id: 'crypto', label: 'Crypto', icon: '₿', on: 'both', Component: Crypto },
+  { id: 'social', label: 'Pixl', icon: '\u2665', on: 'both', Component: Social },
   { id: 'slots', label: 'Slots', icon: '7', on: 'both', Component: OnlineSlots },
   { id: 'jobs', label: 'Jobs', icon: '⚒', on: 'laptop', Component: Jobs },
   { id: 'mail', label: 'Email', icon: '✉', on: 'laptop', Component: Mail },

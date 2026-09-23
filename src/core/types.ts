@@ -284,6 +284,8 @@ export interface WorldState {
   inbox: Email[];
   blackjack: BlackjackHand | null;
   lastBet: LastBet | null;
+  /** The social app (GDD §12). */
+  social: { followers: number; posts: number };
   deceased: boolean;
   /** Plain-language reason, set at the moment of death. */
   deathCause?: string;

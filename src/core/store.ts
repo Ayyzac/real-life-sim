@@ -16,6 +16,7 @@ import { advanceMarket, bankMove, buyAsset, sellAsset, type BankMove } from './f
 import { applyForJob, doGig, emailPerson, offerBlocker } from './laptop';
 import { dealBlackjack, hitBlackjack, spinRoulette, spinSlot, standBlackjack, type RouletteBet } from './gamble';
 import type { Venue } from '../data/gambling';
+import { post } from './social';
 import { findLifestyle } from '../data/lifestyles';
 import { marriageCandidates, RELATIONSHIP_BALANCE } from './relationships';
 import { findJob } from '../data/jobs';
@@ -67,6 +68,7 @@ export type GameIntent =
   | { type: 'dealBlackjack'; bet: number }
   | { type: 'hitBlackjack' }
   | { type: 'standBlackjack' }
+  | { type: 'post' }
   | { type: 'askOut'; personId: string }
   | { type: 'invite'; personId: string; outing: Outing }
   | { type: 'greetStranger'; look: number; goodReplies?: number }
@@ -364,6 +366,9 @@ export class GameStore {
 
       case 'emailPerson':
         return state ? emailPerson(state, intent.personId) : state;
+
+      case 'post':
+        return state ? post(state) : state;
 
       case 'freelance': {
         if (!state) return state;

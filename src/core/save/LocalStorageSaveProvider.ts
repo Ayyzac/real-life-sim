@@ -123,7 +123,7 @@ export function migrate(parsed: Partial<WorldState>): WorldState | null {
   // Version 2 -> 3 added appearance, lifestyle and possessions; 3 -> 4 the
   // time of day and needs; 4 -> 5 the gym membership; 5 -> 6 the bag; 6 -> 7 deliveries;
   // 7 -> 8 the bank and the markets; 8 -> 9 applications and email;
-  // 9 -> 10 the casino. Every field is filled if missing, so the same path
+  // 9 -> 10 the casino; 10 -> 11 social media. Every field is filled if missing, so the same path
   // also repairs a current save that was hand-edited, rather than letting
   // undefined reach the daily rules.
   if (version >= 2) {
@@ -200,6 +200,7 @@ function withPhase7World(world: WorldState): WorldState {
     inbox: Array.isArray(world.inbox) ? world.inbox : [],
     blackjack: world.blackjack ?? null,
     lastBet: world.lastBet ?? null,
+    social: world.social ?? { followers: 0, posts: 0 },
   };
 }
 

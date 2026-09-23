@@ -341,4 +341,11 @@ describe('migrating an older save', () => {
     expect(loaded?.blackjack).toBeNull();
     expect(loaded?.lastBet).toBeNull();
   });
+
+  it('starts an older save with no followers (v10 -> v11)', () => {
+    const world = createWorld({ name: 'Poster', backgroundId: 'athlete', seed: 9 });
+    const { social: _s, ...oldWorld } = world;
+    storage.data.set(SAVE_KEY, JSON.stringify({ ...oldWorld, schemaVersion: 10 }));
+    expect(saves.load()?.social).toEqual({ followers: 0, posts: 0 });
+  });
 });

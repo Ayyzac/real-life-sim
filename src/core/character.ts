@@ -9,13 +9,13 @@ import { startingMarket } from './finance';
 import type { Character, EventLogEntry, WorldState } from './types';
 
 /**
- * 10 since Phase 7H (the casino); 9 added applications and email, 8 the
- * bank and markets, 7 deliveries, 6 the bag, 5 the gym membership, 4 the
- * time of day and needs.
+ * 11 since Phase 7J (social media); 10 added the casino, 9 applications and
+ * email, 8 the bank and markets, 7 deliveries, 6 the bag, 5 the gym
+ * membership, 4 the time of day and needs.
  * Older saves back to version 2 are MIGRATED rather than thrown away - see
  * LocalStorageSaveProvider.
  */
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 export interface NewGameOptions {
   name: string;
@@ -105,6 +105,7 @@ export function createWorld({ name, backgroundId, appearanceRow, look, seed }: N
     inbox: [],
     blackjack: null,
     lastBet: null,
+    social: { followers: 0, posts: 0 },
   };
 }
 
